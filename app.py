@@ -4,6 +4,7 @@ import pandas as pd
 
 from datetime import date, timedelta, datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 st.set_page_config(
     page_title="Smart Sports Analyzer",
@@ -91,6 +92,11 @@ st.markdown(
 
 
 TOKEN = st.secrets["SPORTMONKS_TOKEN"]
+
+try:
+    APIFOOTBALL_KEY = st.secrets["APIFOOTBALL_KEY"]
+except Exception:
+    APIFOOTBALL_KEY = ""
 BASE_URL = "https://api.sportmonks.com/v3/football"
 ARQUIVO_HISTORICO = Path("historico_partidas.csv")
 ARQUIVO_ALERTAS = Path("historico_alertas.csv")
@@ -2949,6 +2955,888 @@ def mostrar_partida_hibrida(
 
             st.line_chart(grafico)
 
+
+def data_hoje_brasil():
+    return datetime.now(
+        ZoneInfo("America/Sao_Paulo")
+    ).date()
+
+
+def buscar_jogos_hoje_sportmonks():
+    hoje = data_hoje_brasil()
+
+    url = (
+        f"{BASE_URL}/fixtures/"
+        f"between/"
+        f"{hoje.isoformat()}/"
+        f"{hoje.isoformat()}"
+    )
+
+    params = {
+        "api_token": TOKEN,
+        "include": "participants;state;scores",
+        "per_page": 100
+    }
+
+    dados, status = requisicao(
+        url,
+        params
+    )
+
+    if status != 200:
+        return [], status
+
+    jogos = dados.get(
+        "data",
+        []
+    )
+
+    jogos = [
+        jogo
+        for jogo in jogos
+        if jogo.get("league_id") in LIGAS
+    ]
+
+    jogos.sort(
+        key=lambda jogo: str(
+            jogo.get("starting_at", "")
+        )
+    )
+
+    return jogos, 200
+
+
+def buscar_jogos_hoje_apifootball():
+    if not APIFOOTBALL_KEY:
+        return [], "SEM_CHAVE", None
+
+    hoje = data_hoje_brasil()
+
+    url = "https://v3.football.api-sports.io/fixtures"
+
+    params = {
+        "date": hoje.isoformat(),
+        "timezone": "America/Sao_Paulo"
+    }
+
+    headers = {
+        "x-apisports-key": APIFOOTBALL_KEY
+    }
+
+    try:
+        resposta = requests.get(
+            url,
+            params=params,
+            headers=headers,
+            timeout=25
+        )
+
+        restante = resposta.headers.get(
+            "x-ratelimit-requests-remaining"
+        )
+
+        if resposta.status_code != 200:
+            return [], resposta.status_code, restante
+
+        payload = resposta.json()
+
+        erros = payload.get("errors")
+        if erros:
+            return [], f"API: {erros}", restante
+
+        return (
+            payload.get("response", []) or [],
+            200,
+            restante
+        )
+
+    except requests.exceptions.RequestException:
+        return [], -1, None
+
+
+
+@st.cache_data(ttl=60, show_spinner=False)
+def buscar_estatisticas_api_football(fixture_id):
+    if not APIFOOTBALL_KEY:
+        return [], "SEM_CHAVE", None
+
+    url = "https://v3.football.api-sports.io/fixtures/statistics"
+
+    headers = {
+        "x-apisports-key": APIFOOTBALL_KEY
+    }
+
+    params = {
+        "fixture": fixture_id
+    }
+
+    try:
+        resposta = requests.get(
+            url,
+            params=params,
+            headers=headers,
+            timeout=25
+        )
+
+        restante = resposta.headers.get(
+            "x-ratelimit-requests-remaining"
+        )
+
+        if resposta.status_code != 200:
+            return [], resposta.status_code, restante
+
+        payload = resposta.json()
+
+        erros = payload.get("errors")
+        if erros:
+            return [], f"API: {erros}", restante
+
+        return (
+            payload.get("response", []) or [],
+            200,
+            restante
+        )
+
+    except requests.exceptions.RequestException:
+        return [], -1, None
+
+
+def normalizar_valor_api_football(valor):
+    if valor is None:
+        return 0.0
+
+    if isinstance(valor, str):
+        valor = valor.strip().replace("%", "")
+
+    try:
+        return float(valor)
+    except Exception:
+        return 0.0
+
+
+def extrair_estatisticas_api_football(resposta):
+    times = []
+
+    for bloco in resposta:
+        nome_time = (
+            (bloco.get("team") or {}).get("name")
+            or "Time"
+        )
+
+        mapa = {}
+
+        for stat in bloco.get("statistics", []) or []:
+            tipo = str(stat.get("type", "")).strip()
+            valor = normalizar_valor_api_football(
+                stat.get("value")
+            )
+            mapa[tipo] = valor
+
+        times.append(
+            {
+                "nome": nome_time,
+                "stats": mapa
+            }
+        )
+
+    return times
+
+
+def participacao_segura(a, b):
+    total = float(a) + float(b)
+
+    if total <= 0:
+        return 50.0, 50.0
+
+    pct_a = float(a) / total * 100
+    return pct_a, 100 - pct_a
+
+
+def calcular_pressao_api_football(times):
+    if len(times) < 2:
+        return None
+
+    a = times[0]
+    b = times[1]
+
+    sa = a["stats"]
+    sb = b["stats"]
+
+    sog_a = sa.get("Shots on Goal", 0)
+    sog_b = sb.get("Shots on Goal", 0)
+
+    shots_a = sa.get("Total Shots", 0)
+    shots_b = sb.get("Total Shots", 0)
+
+    corners_a = sa.get("Corner Kicks", 0)
+    corners_b = sb.get("Corner Kicks", 0)
+
+    posse_a = sa.get("Ball Possession", 0)
+    posse_b = sb.get("Ball Possession", 0)
+
+    sog_pa, sog_pb = participacao_segura(sog_a, sog_b)
+    shots_pa, shots_pb = participacao_segura(shots_a, shots_b)
+    corners_pa, corners_pb = participacao_segura(corners_a, corners_b)
+
+    if posse_a + posse_b <= 0:
+        posse_pa, posse_pb = 50.0, 50.0
+    else:
+        posse_pa, posse_pb = participacao_segura(posse_a, posse_b)
+
+    indice_a = (
+        sog_pa * 0.35
+        + shots_pa * 0.25
+        + corners_pa * 0.20
+        + posse_pa * 0.20
+    )
+
+    indice_b = (
+        sog_pb * 0.35
+        + shots_pb * 0.25
+        + corners_pb * 0.20
+        + posse_pb * 0.20
+    )
+
+    total = indice_a + indice_b
+
+    if total <= 0:
+        final_a = 50.0
+        final_b = 50.0
+    else:
+        final_a = indice_a / total * 100
+        final_b = 100 - final_a
+
+    if final_a >= final_b:
+        dominante = a["nome"]
+        dominante_indice = final_a
+    else:
+        dominante = b["nome"]
+        dominante_indice = final_b
+
+    diferenca = abs(final_a - final_b)
+
+    if dominante_indice >= 67 and diferenca >= 20:
+        nivel = "ALTA"
+        icone = "🔥"
+    elif dominante_indice >= 58 and diferenca >= 10:
+        nivel = "MODERADA"
+        icone = "📈"
+    else:
+        nivel = "BAIXA"
+        icone = "⚖️"
+
+    return {
+        "time_a": a["nome"],
+        "time_b": b["nome"],
+        "indice_a": round(final_a, 1),
+        "indice_b": round(final_b, 1),
+        "dominante": dominante,
+        "nivel": nivel,
+        "icone": icone,
+        "sog_a": int(sog_a),
+        "sog_b": int(sog_b),
+        "shots_a": int(shots_a),
+        "shots_b": int(shots_b),
+        "corners_a": int(corners_a),
+        "corners_b": int(corners_b),
+        "posse_a": round(posse_a, 1),
+        "posse_b": round(posse_b, 1),
+        "yellow_a": int(sa.get("Yellow Cards", 0)),
+        "yellow_b": int(sb.get("Yellow Cards", 0)),
+        "red_a": int(sa.get("Red Cards", 0)),
+        "red_b": int(sb.get("Red Cards", 0)),
+        "saves_a": int(sa.get("Goalkeeper Saves", 0)),
+        "saves_b": int(sb.get("Goalkeeper Saves", 0)),
+    }
+
+
+
+@st.cache_data(ttl=60, show_spinner=False)
+def buscar_eventos_api_football(fixture_id):
+    if not APIFOOTBALL_KEY:
+        return [], "SEM_CHAVE", None
+
+    url = "https://v3.football.api-sports.io/fixtures/events"
+
+    headers = {
+        "x-apisports-key": APIFOOTBALL_KEY
+    }
+
+    params = {
+        "fixture": fixture_id
+    }
+
+    try:
+        resposta = requests.get(
+            url,
+            params=params,
+            headers=headers,
+            timeout=25
+        )
+
+        restante = resposta.headers.get(
+            "x-ratelimit-requests-remaining"
+        )
+
+        if resposta.status_code != 200:
+            return [], resposta.status_code, restante
+
+        payload = resposta.json()
+
+        erros = payload.get("errors")
+        if erros:
+            return [], f"API: {erros}", restante
+
+        return (
+            payload.get("response", []) or [],
+            200,
+            restante
+        )
+
+    except requests.exceptions.RequestException:
+        return [], -1, None
+
+
+def resumir_evento_api_football(evento):
+    tempo = evento.get("time", {}) or {}
+    time = evento.get("team", {}) or {}
+    jogador = evento.get("player", {}) or {}
+
+    minuto = tempo.get("elapsed")
+    extra = tempo.get("extra")
+
+    minuto_txt = "-"
+    if minuto is not None:
+        minuto_txt = str(minuto)
+        if extra:
+            minuto_txt += f"+{extra}"
+
+    tipo = str(evento.get("type", "") or "")
+    detalhe = str(evento.get("detail", "") or "")
+    comentario = str(evento.get("comments", "") or "")
+
+    icone = "📌"
+
+    if tipo.lower() == "goal":
+        icone = "⚽"
+    elif tipo.lower() == "card":
+        if "yellow" in detalhe.lower():
+            icone = "🟨"
+        elif "red" in detalhe.lower():
+            icone = "🟥"
+        else:
+            icone = "🟨"
+    elif tipo.lower() == "subst":
+        icone = "🔄"
+    elif "var" in tipo.lower():
+        icone = "🖥️"
+
+    return {
+        "minuto": minuto_txt,
+        "time": time.get("name") or "Time",
+        "jogador": jogador.get("name") or "",
+        "tipo": tipo,
+        "detalhe": detalhe,
+        "comentario": comentario,
+        "icone": icone
+    }
+
+
+
+def calcular_momento_por_eventos(eventos, time_casa, time_fora, minuto_atual=None):
+    """
+    Indicador simplificado de momento baseado somente em eventos oficiais.
+    Sempre parte de 50/50 e conhece os dois times pelo fixture.
+    """
+    if minuto_atual is None:
+        minutos_validos = [
+            (evento.get("time") or {}).get("elapsed")
+            for evento in eventos
+            if (evento.get("time") or {}).get("elapsed") is not None
+        ]
+        minuto_atual = max(minutos_validos) if minutos_validos else 0
+
+    janela = 10
+    inicio = max(0, minuto_atual - janela)
+
+    # Pontuação pequena de propósito: eventos não equivalem a estatísticas de pressão.
+    pontos = {time_casa: 0.0, time_fora: 0.0}
+
+    for evento in eventos:
+        tempo = evento.get("time", {}) or {}
+        minuto = tempo.get("elapsed")
+        if minuto is None or minuto < inicio:
+            continue
+
+        nome_time = (evento.get("team") or {}).get("name")
+        if nome_time not in pontos:
+            continue
+
+        tipo = str(evento.get("type", "") or "")
+        detalhe = str(evento.get("detail", "") or "")
+
+        # Quanto mais antigo dentro da janela, menor o peso.
+        idade = max(0, minuto_atual - minuto)
+        fator_recencia = max(0.25, 1.0 - (idade / max(1, janela)))
+
+        impacto = 0.0
+        if tipo == "Goal":
+            impacto = 12.0
+        elif tipo == "Card":
+            if "Red" in detalhe:
+                impacto = -10.0
+            elif "Yellow" in detalhe:
+                impacto = -2.0
+        elif tipo == "subst":
+            impacto = 0.5
+        elif "Var" in tipo:
+            impacto = 2.0
+
+        pontos[nome_time] += impacto * fator_recencia
+
+    # Base igual para os dois lados. Limita o indicador para não parecer
+    # uma probabilidade matemática ou estatística completa.
+    base = 50.0
+    bruto_casa = base + pontos[time_casa]
+    bruto_fora = base + pontos[time_fora]
+    total = max(1.0, bruto_casa + bruto_fora)
+
+    pct_casa = 100.0 * bruto_casa / total
+    pct_fora = 100.0 - pct_casa
+
+    # Evita extremos quando temos apenas eventos.
+    pct_casa = min(75.0, max(25.0, pct_casa))
+    pct_fora = 100.0 - pct_casa
+
+    diferenca = abs(pct_casa - pct_fora)
+    if diferenca >= 22:
+        nivel, icone = "FORTE", "🔥"
+    elif diferenca >= 10:
+        nivel, icone = "ATENÇÃO", "🟡"
+    else:
+        nivel, icone = "EQUILIBRADO", "⚖️"
+
+    destaque = time_casa if pct_casa > pct_fora else time_fora if pct_fora > pct_casa else "Equilíbrio"
+
+    return {
+        "janela": janela,
+        "time_casa": time_casa,
+        "time_fora": time_fora,
+        "pct_casa": round(pct_casa, 1),
+        "pct_fora": round(pct_fora, 1),
+        "destaque": destaque,
+        "nivel": nivel,
+        "icone": icone,
+    }
+
+
+
+def classificar_alerta_momento(leitura):
+    diferenca = abs(
+        leitura["pct_casa"]
+        - leitura["pct_fora"]
+    )
+
+    if leitura["pct_casa"] > leitura["pct_fora"]:
+        destaque = leitura["time_casa"]
+        indice = leitura["pct_casa"]
+    elif leitura["pct_fora"] > leitura["pct_casa"]:
+        destaque = leitura["time_fora"]
+        indice = leitura["pct_fora"]
+    else:
+        destaque = "Equilíbrio"
+        indice = 50.0
+
+    if diferenca >= 22:
+        return {
+            "nivel": "ALERTA",
+            "icone": "🔥",
+            "mensagem": (
+                f"Momento forte para {destaque}"
+            ),
+            "destaque": destaque,
+            "indice": indice
+        }
+
+    if diferenca >= 10:
+        return {
+            "nivel": "ATENÇÃO",
+            "icone": "🟡",
+            "mensagem": (
+                f"Momento crescendo para {destaque}"
+            ),
+            "destaque": destaque,
+            "indice": indice
+        }
+
+    return {
+        "nivel": "EQUILIBRADO",
+        "icone": "⚖️",
+        "mensagem": (
+            "Sem desequilíbrio relevante por eventos"
+        ),
+        "destaque": destaque,
+        "indice": indice
+    }
+
+
+def renderizar_momento_eventos_api_football(eventos, time_casa, time_fora):
+    leitura = calcular_momento_por_eventos(eventos, time_casa, time_fora)
+
+    st.markdown("#### 📈 Momento por eventos")
+
+    c1, c2, c3 = st.columns(3)
+    c1.metric(leitura["time_casa"], f"{leitura['pct_casa']:.1f}%")
+    c2.metric("Momento recente", f"{leitura['icone']} {leitura['nivel']}")
+    c3.metric(leitura["time_fora"], f"{leitura['pct_fora']:.1f}%")
+
+    st.caption(
+        f"Janela aproximada: últimos {leitura['janela']} minutos • "
+        f"Destaque: {leitura['destaque']}"
+    )
+    st.progress(max(0.0, min(1.0, leitura["pct_casa"] / 100)))
+
+    alerta = classificar_alerta_momento(
+        leitura
+    )
+
+    st.markdown("#### 🚨 Alerta automático")
+
+    if alerta["nivel"] == "ALERTA":
+        st.error(
+            f"{alerta['icone']} {alerta['mensagem']}"
+        )
+    elif alerta["nivel"] == "ATENÇÃO":
+        st.warning(
+            f"{alerta['icone']} {alerta['mensagem']}"
+        )
+    else:
+        st.info(
+            f"{alerta['icone']} {alerta['mensagem']}"
+        )
+
+    st.caption(
+        f"Índice do time em destaque: {alerta['indice']:.1f}% • "
+        "Este alerta usa somente eventos recentes quando não há estatísticas completas."
+    )
+
+    st.caption(
+        "Indicador experimental baseado somente em eventos oficiais recentes. "
+        "Parte de 50/50; cartões amarelos têm impacto pequeno e eventos antigos "
+        "perdem peso. Não representa probabilidade de vitória nem substitui "
+        "pressão calculada com posse, chutes e escanteios."
+    )
+
+
+def renderizar_eventos_api_football(fixture_id, time_casa=None, time_fora=None):
+    eventos, status, restante = (
+        buscar_eventos_api_football(
+            fixture_id
+        )
+    )
+
+    st.markdown("#### 🧭 Eventos ao vivo")
+
+    if status != 200:
+        st.warning(
+            f"Não foi possível carregar os eventos deste jogo agora ({status})."
+        )
+        return False
+
+    if restante is not None:
+        st.caption(
+            f"Requisições restantes na API-Football: {restante}"
+        )
+
+    if not eventos:
+        st.info(
+            "Ainda não há eventos detalhados disponíveis para esta partida."
+        )
+        return False
+
+    # Os nomes vêm do fixture; se não vierem, tentamos inferir dos eventos.
+    nomes_eventos = []
+    for _evento in eventos:
+        _nome = ((_evento.get("team") or {}).get("name"))
+        if _nome and _nome not in nomes_eventos:
+            nomes_eventos.append(_nome)
+
+    if not time_casa:
+        time_casa = nomes_eventos[0] if nomes_eventos else "Mandante"
+    if not time_fora:
+        time_fora = nomes_eventos[1] if len(nomes_eventos) > 1 else "Visitante"
+
+    renderizar_momento_eventos_api_football(
+        eventos, time_casa, time_fora
+    )
+
+    eventos_formatados = [
+        resumir_evento_api_football(evento)
+        for evento in eventos
+    ]
+
+    for evento in reversed(eventos_formatados[-12:]):
+        linha = (
+            f"{evento['icone']} **{evento['minuto']}' — "
+            f"{evento['time']}**"
+        )
+
+        if evento["jogador"]:
+            linha += f" • {evento['jogador']}"
+
+        if evento["detalhe"]:
+            linha += f" • {evento['detalhe']}"
+
+        st.write(linha)
+
+        if evento["comentario"]:
+            st.caption(evento["comentario"])
+
+    return True
+
+
+def renderizar_analise_api_football(fixture_id, time_casa=None, time_fora=None):
+    estatisticas, status, restante = (
+        buscar_estatisticas_api_football(
+            fixture_id
+        )
+    )
+
+    if status != 200:
+        st.warning(
+            f"Não foi possível carregar as estatísticas "
+            f"deste jogo agora ({status})."
+        )
+        return
+
+    times = extrair_estatisticas_api_football(
+        estatisticas
+    )
+
+    leitura = calcular_pressao_api_football(
+        times
+    )
+
+    if leitura is None:
+        st.info(
+            "A API-Football ainda não disponibilizou estatísticas "
+            "detalhadas para esta partida."
+        )
+
+        teve_eventos = renderizar_eventos_api_football(
+            fixture_id,
+            time_casa,
+            time_fora
+        )
+
+        if teve_eventos:
+            st.caption(
+                "Como não há estatísticas completas, o painel mostra "
+                "os eventos oficiais disponíveis. Eles ajudam no acompanhamento, "
+                "mas não são suficientes para calcular pressão com a mesma qualidade."
+            )
+
+        return
+
+    st.markdown("#### 📊 Análise ao vivo")
+
+    if restante is not None:
+        st.caption(
+            f"Requisições restantes na API-Football: {restante}"
+        )
+
+    c1, c2, c3 = st.columns(3)
+
+    c1.metric(
+        leitura["time_a"],
+        f"{leitura['indice_a']:.1f}%"
+    )
+
+    c2.metric(
+        "Pressão atual",
+        f"{leitura['icone']} {leitura['nivel']}"
+    )
+
+    c3.metric(
+        leitura["time_b"],
+        f"{leitura['indice_b']:.1f}%"
+    )
+
+    st.progress(
+        max(
+            0.0,
+            min(
+                1.0,
+                leitura["indice_a"] / 100
+            )
+        )
+    )
+
+    st.caption(
+        f"Time em destaque: **{leitura['dominante']}**"
+    )
+
+    tabela = pd.DataFrame(
+        {
+            "Estatística": [
+                "Chutes no gol",
+                "Finalizações",
+                "Escanteios",
+                "Posse (%)",
+                "Amarelos",
+                "Vermelhos",
+                "Defesas"
+            ],
+            leitura["time_a"]: [
+                leitura["sog_a"],
+                leitura["shots_a"],
+                leitura["corners_a"],
+                leitura["posse_a"],
+                leitura["yellow_a"],
+                leitura["red_a"],
+                leitura["saves_a"]
+            ],
+            leitura["time_b"]: [
+                leitura["sog_b"],
+                leitura["shots_b"],
+                leitura["corners_b"],
+                leitura["posse_b"],
+                leitura["yellow_b"],
+                leitura["red_b"],
+                leitura["saves_b"]
+            ]
+        }
+    )
+
+    st.dataframe(
+        tabela,
+        hide_index=True,
+        width="stretch"
+    )
+
+    if leitura["nivel"] == "ALTA":
+        st.error(
+            f"🔥 PRESSÃO ALTA — {leitura['dominante']}"
+        )
+    elif leitura["nivel"] == "MODERADA":
+        st.warning(
+            f"📈 PRESSÃO MODERADA — {leitura['dominante']}"
+        )
+    else:
+        st.info(
+            "⚖️ Pressão baixa/equilibrada neste momento."
+        )
+
+    st.caption(
+        "Índice experimental calculado com chutes no gol (35%), "
+        "finalizações (25%), escanteios (20%) e posse (20%). "
+        "Não é previsão de gol nem garantia de resultado."
+    )
+
+
+
+def jogo_api_football_ao_vivo(jogo):
+    status_curto = str(
+        jogo.get("status_curto", "")
+    ).upper()
+
+    status_longo = str(
+        jogo.get("status_longo", "")
+    ).lower()
+
+    status_live = {
+        "1H", "HT", "2H", "ET", "BT", "P", "SUSP", "INT", "LIVE"
+    }
+
+    if status_curto in status_live:
+        return True
+
+    if jogo.get("elapsed") is not None:
+        return True
+
+    termos = (
+        "first half",
+        "second half",
+        "extra time",
+        "in progress",
+        "primeiro tempo",
+        "segundo tempo",
+        "ao vivo"
+    )
+
+    return any(
+        termo in status_longo
+        for termo in termos
+    )
+
+
+def chave_competicao_api_football(jogo):
+    pais = jogo.get("pais") or "Internacional"
+    liga = jogo.get("liga") or "Competição"
+    return f"{pais} • {liga}"
+
+
+def separar_libertadores_api_football(jogos):
+    libertadores = []
+
+    for item in jogos:
+        liga = item.get("league", {}) or {}
+        liga_id = liga.get("id")
+        nome = str(liga.get("name", "")).lower()
+
+        if liga_id == 13 or "libertadores" in nome:
+            libertadores.append(item)
+
+    return libertadores
+
+
+def formatar_fixture_api_football(item):
+    fixture = item.get("fixture", {}) or {}
+    teams = item.get("teams", {}) or {}
+    league = item.get("league", {}) or {}
+    goals = item.get("goals", {}) or {}
+    status = fixture.get("status", {}) or {}
+
+    casa = (teams.get("home") or {}).get("name") or "Casa"
+    visitante = (teams.get("away") or {}).get("name") or "Visitante"
+    liga = league.get("name") or "Competição"
+    pais = league.get("country") or ""
+
+    data_iso = str(fixture.get("date", ""))
+    horario = "-"
+    if "T" in data_iso:
+        horario = data_iso.split("T", 1)[1][:5]
+
+    return {
+        "id": fixture.get("id"),
+        "casa": casa,
+        "visitante": visitante,
+        "liga": liga,
+        "pais": pais,
+        "horario": horario,
+        "status_longo": str(status.get("long", "")),
+        "elapsed": status.get("elapsed"),
+        "gols_h": goals.get("home"),
+        "gols_a": goals.get("away")
+    }
+
+
+def nome_estado_jogo(jogo):
+    estado = jogo.get(
+        "state",
+        {}
+    ) or {}
+
+    nome = (
+        estado.get("name")
+        or estado.get("state")
+        or estado.get("short_name")
+        or ""
+    )
+
+    return str(nome).strip()
+
+
 def buscar_jogos_live():
     url = (
         f"{BASE_URL}/livescores/inplay"
@@ -3254,6 +4142,7 @@ def criar_ranking_hibrido(
     aba_ranking,
     aba_replay,
     aba_sim,
+    aba_hoje,
     aba_futuros,
     aba_historico,
     aba_alertas,
@@ -3265,6 +4154,7 @@ def criar_ranking_hibrido(
         "🏆 Ranking",
         "🎞️ Replay histórico",
         "🧪 Simulador",
+        "⚽ Jogos de hoje",
         "📅 Próximas partidas",
         "💾 Histórico salvo",
         "🚨 Histórico de alertas",
@@ -4098,6 +4988,363 @@ with aba_sim:
     ):
         st.session_state.ultimo_nivel_simulador = None
         st.rerun()
+
+
+with aba_hoje:
+
+    hoje_br = data_hoje_brasil()
+
+    st.subheader(
+        "⚽ Jogos de hoje"
+    )
+
+    st.caption(
+        f"Data no Brasil: {hoje_br.strftime('%d/%m/%Y')} • "
+        "SportMonks + fonte gratuita complementar."
+    )
+
+    jogos_sm, status_sm = buscar_jogos_hoje_sportmonks()
+
+    st.write(
+        "### 🟢 Jogos cobertos pela SportMonks"
+    )
+
+    if status_sm != 200:
+        st.warning(
+            f"Não foi possível consultar a SportMonks agora "
+            f"(status {status_sm})."
+        )
+
+    elif not jogos_sm:
+        st.info(
+            "Nenhuma partida de hoje foi encontrada nas ligas "
+            "SportMonks configuradas no sistema."
+        )
+
+    else:
+        st.success(
+            f"✅ {len(jogos_sm)} partida(s) encontrada(s)"
+        )
+
+        for jogo in jogos_sm:
+            (
+                casa,
+                visitante,
+                _,
+                _
+            ) = identificar_times(
+                jogo
+            )
+
+            liga = LIGAS.get(
+                jogo.get("league_id"),
+                "Liga"
+            )
+
+            gols_h, gols_a = placar_atual(
+                jogo
+            )
+
+            estado = nome_estado_jogo(
+                jogo
+            )
+
+            inicio = str(
+                jogo.get(
+                    "starting_at",
+                    "-"
+                )
+            )
+
+            st.markdown(
+                f"⚽ **{casa} × {visitante}**"
+            )
+
+            detalhes = (
+                f"🏆 {liga} • 🕒 {inicio}"
+            )
+
+            if estado:
+                detalhes += f" • 📍 {estado}"
+
+            if gols_h or gols_a:
+                detalhes += (
+                    f" • Placar: {gols_h} × {gols_a}"
+                )
+
+            st.caption(
+                detalhes
+            )
+
+            st.divider()
+
+    st.write(
+        "### 🏆 Libertadores — API-Football"
+    )
+
+    jogos_api, status_api, restante_api = (
+        buscar_jogos_hoje_apifootball()
+    )
+
+    if status_api == "SEM_CHAVE":
+        st.warning(
+            "A chave APIFOOTBALL_KEY ainda não está disponível neste ambiente."
+        )
+
+    elif status_api != 200:
+        st.warning(
+            f"API-Football não respondeu corretamente: {status_api}"
+        )
+
+    else:
+        libertadores = separar_libertadores_api_football(jogos_api)
+
+        if restante_api is not None:
+            st.caption(
+                f"Requisições restantes hoje na API-Football: {restante_api}"
+            )
+
+        if not libertadores:
+            st.info(
+                "Nenhum jogo da Libertadores foi retornado para hoje."
+            )
+        else:
+            st.success(
+                f"✅ {len(libertadores)} jogo(s) da Libertadores hoje"
+            )
+
+            for item in libertadores:
+                jogo = formatar_fixture_api_football(item)
+
+                st.markdown(
+                    f"⚽ **{jogo['casa']} × {jogo['visitante']}**"
+                )
+
+                detalhes = (
+                    f"🕒 {jogo['horario']} • "
+                    f"🏆 {jogo['liga']}"
+                )
+
+                if jogo["status_longo"]:
+                    detalhes += f" • {jogo['status_longo']}"
+
+                if (
+                    jogo["gols_h"] is not None
+                    and jogo["gols_a"] is not None
+                ):
+                    detalhes += (
+                        f" • Placar: {jogo['gols_h']} × {jogo['gols_a']}"
+                    )
+
+                if jogo["elapsed"] is not None:
+                    detalhes += f" • {jogo['elapsed']}'"
+
+                st.caption(detalhes)
+
+                status_jogo = str(
+                    jogo.get("status_longo", "")
+                ).lower()
+
+                esta_ao_vivo = (
+                    jogo.get("elapsed") is not None
+                    or "first half" in status_jogo
+                    or "second half" in status_jogo
+                    or "primeiro tempo" in status_jogo
+                    or "segundo tempo" in status_jogo
+                    or "in progress" in status_jogo
+                )
+
+                if esta_ao_vivo:
+                    renderizar_analise_api_football(
+                        jogo["id"]
+                    )
+                else:
+                    st.caption(
+                        "📌 A análise detalhada será liberada quando "
+                        "a partida estiver ao vivo e a API enviar estatísticas."
+                    )
+
+                st.divider()
+
+        st.write(
+            "### 🌎 Todos os jogos de hoje — API-Football"
+        )
+
+        if not jogos_api:
+            st.info(
+                "A API-Football não retornou jogos para esta data."
+            )
+        else:
+            filtro_competicao = st.text_input(
+                "Filtrar competição ou time",
+                "",
+                placeholder="Ex.: Brasil, Premier League, Corinthians...",
+                key="filtro_api_football_hoje"
+            )
+
+            jogos_formatados = [
+                formatar_fixture_api_football(item)
+                for item in jogos_api
+            ]
+
+            if filtro_competicao.strip():
+                termo = filtro_competicao.strip().lower()
+
+                jogos_formatados = [
+                    jogo
+                    for jogo in jogos_formatados
+                    if (
+                        termo in jogo["casa"].lower()
+                        or termo in jogo["visitante"].lower()
+                        or termo in jogo["liga"].lower()
+                        or termo in jogo["pais"].lower()
+                    )
+                ]
+
+            jogos_ao_vivo = [
+                jogo
+                for jogo in jogos_formatados
+                if jogo_api_football_ao_vivo(jogo)
+            ]
+
+            c1, c2, c3 = st.columns(3)
+
+            c1.metric(
+                "Jogos encontrados",
+                len(jogos_formatados)
+            )
+
+            c2.metric(
+                "🔴 Ao vivo agora",
+                len(jogos_ao_vivo)
+            )
+
+            competicoes = sorted(
+                {
+                    chave_competicao_api_football(jogo)
+                    for jogo in jogos_formatados
+                }
+            )
+
+            c3.metric(
+                "Competições",
+                len(competicoes)
+            )
+
+            if jogos_ao_vivo:
+                st.success(
+                    f"🔴 {len(jogos_ao_vivo)} jogo(s) ao vivo. "
+                    "Abra uma competição e clique em 'Analisar este jogo agora' "
+                    "somente no jogo que quiser acompanhar."
+                )
+
+            grupos = {}
+
+            for jogo in jogos_formatados:
+                chave = chave_competicao_api_football(
+                    jogo
+                )
+
+                grupos.setdefault(
+                    chave,
+                    []
+                ).append(
+                    jogo
+                )
+
+            for competicao in sorted(grupos):
+                jogos_comp = grupos[competicao]
+
+                ao_vivo_comp = sum(
+                    1
+                    for jogo in jogos_comp
+                    if jogo_api_football_ao_vivo(jogo)
+                )
+
+                titulo_comp = (
+                    f"🏆 {competicao} — "
+                    f"{len(jogos_comp)} jogo(s)"
+                )
+
+                if ao_vivo_comp:
+                    titulo_comp += (
+                        f" • 🔴 {ao_vivo_comp} ao vivo"
+                    )
+
+                with st.expander(
+                    titulo_comp,
+                    expanded=bool(ao_vivo_comp)
+                ):
+                    for jogo in jogos_comp:
+                        ao_vivo = (
+                            jogo_api_football_ao_vivo(
+                                jogo
+                            )
+                        )
+
+                        prefixo = (
+                            "🔴"
+                            if ao_vivo
+                            else "⚽"
+                        )
+
+                        st.markdown(
+                            f"{prefixo} **{jogo['casa']} × "
+                            f"{jogo['visitante']}**"
+                        )
+
+                        detalhes = (
+                            f"🕒 {jogo['horario']} • "
+                            f"{jogo['status_longo'] or 'Status indisponível'}"
+                        )
+
+                        if (
+                            jogo["gols_h"] is not None
+                            and jogo["gols_a"] is not None
+                        ):
+                            detalhes += (
+                                f" • Placar: "
+                                f"{jogo['gols_h']} × {jogo['gols_a']}"
+                            )
+
+                        if jogo["elapsed"] is not None:
+                            detalhes += (
+                                f" • {jogo['elapsed']}'"
+                            )
+
+                        st.caption(
+                            detalhes
+                        )
+
+                        if ao_vivo:
+                            st.caption(
+                                "🔎 Jogo ao vivo. A análise detalhada só será "
+                                "consultada quando você pedir, para economizar "
+                                "a cota diária da API-Football."
+                            )
+
+                            if st.button(
+                                "📊 Analisar este jogo agora",
+                                key=f"analisar_api_{jogo['id']}"
+                            ):
+                                renderizar_analise_api_football(
+                                    jogo["id"],
+                                    jogo.get("casa"),
+                                    jogo.get("visitante")
+                                )
+                        else:
+                            st.caption(
+                                "📌 A análise ficará disponível quando "
+                                "a partida entrar ao vivo."
+                            )
+
+                        st.divider()
+
+    st.info(
+        "ℹ️ A aba 'Jogos de hoje' reúne SportMonks + API-Football. "
+        "A API-Football amplia a agenda, incluindo Libertadores quando disponível. "
+        "Por enquanto, pressão, score e validação automática continuam na estrutura SportMonks."
+    )
 
 
 with aba_futuros:
