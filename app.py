@@ -102,6 +102,35 @@ ARQUIVO_HISTORICO = Path("historico_partidas.csv")
 ARQUIVO_ALERTAS = Path("historico_alertas.csv")
 ARQUIVO_VALIDACAO = Path("validacao_alertas.csv")
 
+# Persistência remota opcional via GitHub.
+# Configure no .streamlit/secrets.toml ou no Streamlit Cloud:
+# GITHUB_TOKEN = "..."
+# GITHUB_REPO = "usuario/repositorio"
+# GITHUB_BRANCH = "main"
+# GITHUB_VALIDACAO_PATH = "data/validacao_alertas.csv"
+try:
+    GITHUB_TOKEN = st.secrets.get("GITHUB_TOKEN", "")
+except Exception:
+    GITHUB_TOKEN = ""
+
+try:
+    GITHUB_REPO = st.secrets.get("GITHUB_REPO", "")
+except Exception:
+    GITHUB_REPO = ""
+
+try:
+    GITHUB_BRANCH = st.secrets.get("GITHUB_BRANCH", "main")
+except Exception:
+    GITHUB_BRANCH = "main"
+
+try:
+    GITHUB_VALIDACAO_PATH = st.secrets.get(
+        "GITHUB_VALIDACAO_PATH",
+        "data/validacao_alertas.csv"
+    )
+except Exception:
+    GITHUB_VALIDACAO_PATH = "data/validacao_alertas.csv"
+
 LIGAS = {
     271: "Superliga",
     501: "Premiership",
@@ -1175,6 +1204,166 @@ def registrar_transicao_alerta(
 
 
 
+
+
+def persistencia_github_ativa():
+    return bool(
+        GITHUB_TOKEN
+        and GITHUB_REPO
+        and GITHUB_VALIDACAO_PATH
+    )
+
+
+def baixar_validacao_github():
+    """
+    Baixa o CSV remoto do GitHub. Retorna DataFrame ou None.
+    """
+    if not persistencia_github_ativa():
+        return None
+
+    url = (
+        f"https://api.github.com/repos/{GITHUB_REPO}/contents/"
+        f"{GITHUB_VALIDACAO_PATH}"
+    )
+
+    headers = {
+        "Authorization": f"Bearer {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+    }
+
+    params = {
+        "ref": GITHUB_BRANCH
+    }
+
+    try:
+        resposta = requests.get(
+            url,
+            headers=headers,
+            params=params,
+            timeout=20
+        )
+
+        if resposta.status_code == 404:
+            return None
+
+        if resposta.status_code != 200:
+            return None
+
+        payload = resposta.json()
+        conteudo_b64 = payload.get("content", "")
+
+        if not conteudo_b64:
+            return None
+
+        import base64
+        from io import StringIO
+
+        texto_csv = base64.b64decode(
+            conteudo_b64
+        ).decode("utf-8-sig")
+
+        return pd.read_csv(
+            StringIO(texto_csv)
+        )
+
+    except Exception:
+        return None
+
+
+def salvar_validacao_github(df):
+    """
+    Salva o CSV no GitHub. Retorna True/False.
+    Mantém o arquivo local como fallback.
+    """
+    if not persistencia_github_ativa():
+        return False
+
+    import base64
+
+    url = (
+        f"https://api.github.com/repos/{GITHUB_REPO}/contents/"
+        f"{GITHUB_VALIDACAO_PATH}"
+    )
+
+    headers = {
+        "Authorization": f"Bearer {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+    }
+
+    sha = None
+
+    try:
+        atual = requests.get(
+            url,
+            headers=headers,
+            params={"ref": GITHUB_BRANCH},
+            timeout=20
+        )
+
+        if atual.status_code == 200:
+            sha = atual.json().get("sha")
+
+        csv_bytes = df.to_csv(
+            index=False
+        ).encode("utf-8")
+
+        payload = {
+            "message": "Atualiza validação automática",
+            "content": base64.b64encode(
+                csv_bytes
+            ).decode("ascii"),
+            "branch": GITHUB_BRANCH,
+        }
+
+        if sha:
+            payload["sha"] = sha
+
+        resposta = requests.put(
+            url,
+            headers=headers,
+            json=payload,
+            timeout=25
+        )
+
+        return resposta.status_code in (200, 201)
+
+    except Exception:
+        return False
+
+
+def validar_backup_validacao(df):
+    """
+    Valida se um CSV possui a estrutura mínima esperada antes de restaurar
+    a base de validações.
+    """
+    colunas_obrigatorias = {
+        "id_alerta",
+        "data_hora_alerta",
+        "fixture_id",
+        "jogo",
+        "minuto_alerta",
+        "placar_alerta",
+        "time_destaque",
+        "indice_alerta",
+        "momento_10_min",
+        "qualidade_score",
+        "qualidade_nivel",
+        "gol_time_destaque_5_min",
+        "gol_time_destaque_10_min",
+        "escanteio_time_destaque_5_min",
+        "escanteio_time_destaque_10_min",
+        "status",
+    }
+
+    faltantes = sorted(
+        colunas_obrigatorias - set(df.columns)
+    )
+
+    return len(faltantes) == 0, faltantes
+
+
 def ler_validacoes():
     colunas = [
         "id_alerta",
@@ -1207,6 +1396,26 @@ def ler_validacoes():
     ]
 
     if not ARQUIVO_VALIDACAO.exists():
+        remoto = baixar_validacao_github()
+
+        if remoto is not None:
+            for coluna in colunas:
+                if coluna not in remoto.columns:
+                    remoto[coluna] = ""
+
+            remoto = remoto[colunas]
+
+            # Recria também o cache local.
+            try:
+                remoto.to_csv(
+                    ARQUIVO_VALIDACAO,
+                    index=False
+                )
+            except Exception:
+                pass
+
+            return remoto
+
         return pd.DataFrame(columns=colunas)
 
     try:
@@ -1222,9 +1431,15 @@ def ler_validacoes():
 
 
 def salvar_validacoes(df):
+    # Sempre salva localmente primeiro.
     df.to_csv(
         ARQUIVO_VALIDACAO,
         index=False
+    )
+
+    # Se configurado, replica no GitHub.
+    salvar_validacao_github(
+        df
     )
 
 
@@ -1802,6 +2017,129 @@ def resumo_resultados_validacao(df):
         "taxa_sem_gol": taxa_sem_gol
     }
 
+
+
+
+
+def tabela_validacoes_em_andamento(df):
+    """
+    Retorna apenas alertas REAIS ainda em acompanhamento,
+    com uma leitura simples da próxima etapa esperada.
+    """
+    if df.empty:
+        return pd.DataFrame()
+
+    base = df[
+        (df["status"].astype(str) != "DEMO")
+        & (
+            df["gol_time_destaque_10_min"].astype(str).eq("PENDENTE")
+            | df["escanteio_time_destaque_10_min"].astype(str).eq("PENDENTE")
+        )
+    ].copy()
+
+    if base.empty:
+        return pd.DataFrame()
+
+    def etapa(row):
+        gol5 = str(row.get("gol_time_destaque_5_min", ""))
+        corner5 = str(row.get("escanteio_time_destaque_5_min", ""))
+        gol10 = str(row.get("gol_time_destaque_10_min", ""))
+        corner10 = str(row.get("escanteio_time_destaque_10_min", ""))
+
+        if gol5 == "PENDENTE" or corner5 == "PENDENTE":
+            return "⏳ Aguardando fechar 5 min"
+
+        if gol10 == "PENDENTE" or corner10 == "PENDENTE":
+            return "🕒 Aguardando fechar 10 min"
+
+        return "✅ Concluído"
+
+    base["etapa_atual"] = base.apply(etapa, axis=1)
+
+    colunas = [
+        "data_hora_alerta",
+        "jogo",
+        "minuto_alerta",
+        "placar_alerta",
+        "time_destaque",
+        "indice_alerta",
+        "momento_10_min",
+        "qualidade_score",
+        "qualidade_nivel",
+        "etapa_atual",
+    ]
+
+    existentes = [c for c in colunas if c in base.columns]
+
+    return base[existentes].sort_values(
+        "data_hora_alerta",
+        ascending=False
+    )
+
+
+def resumo_status_validacao(df):
+    """
+    Mostra em que etapa estão os alertas REAIS:
+    - aguardando completar a janela de 5 minutos;
+    - janela de 5 min concluída e aguardando 10 minutos;
+    - janelas de 5 e 10 minutos já concluídas.
+
+    Registros DEMO não entram.
+    """
+    if df.empty:
+        return {
+            "reais": 0,
+            "aguardando_5": 0,
+            "aguardando_10": 0,
+            "concluidos": 0,
+        }
+
+    base = df[
+        df["status"].astype(str) != "DEMO"
+    ].copy()
+
+    if base.empty:
+        return {
+            "reais": 0,
+            "aguardando_5": 0,
+            "aguardando_10": 0,
+            "concluidos": 0,
+        }
+
+    gol5 = base["gol_time_destaque_5_min"].astype(str)
+    corner5 = base["escanteio_time_destaque_5_min"].astype(str)
+    gol10 = base["gol_time_destaque_10_min"].astype(str)
+    corner10 = base["escanteio_time_destaque_10_min"].astype(str)
+
+    pendente_5 = (gol5 == "PENDENTE") | (corner5 == "PENDENTE")
+
+    cinco_resolvido = (
+        gol5.isin(["SIM", "NÃO"])
+        & corner5.isin(["SIM", "NÃO"])
+    )
+
+    pendente_10 = (
+        (gol10 == "PENDENTE")
+        | (corner10 == "PENDENTE")
+    )
+
+    dez_resolvido = (
+        gol10.isin(["SIM", "NÃO"])
+        & corner10.isin(["SIM", "NÃO"])
+    )
+
+    aguardando_5 = int(pendente_5.sum())
+    aguardando_10 = int(
+        (cinco_resolvido & pendente_10).sum()
+    )
+    concluidos = int(dez_resolvido.sum())
+
+    return {
+        "reais": len(base),
+        "aguardando_5": aguardando_5,
+        "aguardando_10": aguardando_10,
+        "concluidos": concluidos,
+    }
 
 
 def resumo_janelas_validacao(df):
@@ -5812,7 +6150,154 @@ with aba_validacao:
         "o fixture ao vivo é consultado com events.type e statistics.type."
     )
 
+    st.write(
+        "### 💾 Backup da validação"
+    )
+
+    if persistencia_github_ativa():
+        st.success(
+            "☁️ Persistência remota GitHub ATIVA — "
+            "as validações são salvas localmente e replicadas no repositório."
+        )
+    else:
+        st.info(
+            "☁️ Persistência remota ainda não configurada. "
+            "O sistema continua funcionando com CSV local + backup manual."
+        )
+
+    df_backup_atual = ler_validacoes()
+
+    csv_backup = df_backup_atual.to_csv(
+        index=False
+    ).encode("utf-8-sig")
+
+    b1, b2 = st.columns(2)
+
+    with b1:
+        st.download_button(
+            "⬇️ Baixar backup da validação",
+            data=csv_backup,
+            file_name="validacao_alertas_backup.csv",
+            mime="text/csv",
+            use_container_width=True
+        )
+
+    with b2:
+        arquivo_backup = st.file_uploader(
+            "Restaurar backup CSV",
+            type=["csv"],
+            key="upload_backup_validacao"
+        )
+
+    if arquivo_backup is not None:
+        try:
+            df_importado = pd.read_csv(
+                arquivo_backup
+            )
+
+            valido, faltantes = validar_backup_validacao(
+                df_importado
+            )
+
+            if not valido:
+                st.error(
+                    "O arquivo não parece ser um backup válido da validação. "
+                    "Colunas ausentes: "
+                    + ", ".join(faltantes)
+                )
+            else:
+                st.warning(
+                    f"Backup válido detectado com {len(df_importado)} registro(s). "
+                    "Restaurar substituirá a base atual de validação."
+                )
+
+                confirmar = st.checkbox(
+                    "Confirmo que desejo substituir a base atual",
+                    key="confirmar_restore_validacao"
+                )
+
+                if st.button(
+                    "♻️ Restaurar este backup",
+                    disabled=not confirmar,
+                    use_container_width=True
+                ):
+                    df_importado.to_csv(
+                        ARQUIVO_VALIDACAO,
+                        index=False
+                    )
+                    st.success(
+                        f"Backup restaurado com sucesso: "
+                        f"{len(df_importado)} registro(s)."
+                    )
+                    st.rerun()
+
+        except Exception as erro:
+            st.error(
+                f"Não foi possível ler este CSV: {erro}"
+            )
+
+    st.caption(
+        "O backup contém os registros da validação. "
+        "Antes de restaurar, o sistema confere a estrutura mínima do CSV."
+    )
+
+    st.divider()
+
     df_validacao = ler_validacoes()
+
+    status_validacao = resumo_status_validacao(
+        df_validacao
+    )
+
+    st.write(
+        "### ⏱️ Status da validação real"
+    )
+
+    s1, s2, s3, s4 = st.columns(4)
+
+    s1.metric(
+        "Alertas reais",
+        status_validacao["reais"]
+    )
+
+    s2.metric(
+        "⏳ Aguardando 5 min",
+        status_validacao["aguardando_5"]
+    )
+
+    s3.metric(
+        "🕒 Aguardando 10 min",
+        status_validacao["aguardando_10"]
+    )
+
+    s4.metric(
+        "✅ Concluídos",
+        status_validacao["concluidos"]
+    )
+
+    st.caption(
+        "DEMO não entra neste quadro. "
+        "Um alerta só conta como concluído quando as janelas de gol e escanteio "
+        "até 10 minutos já foram resolvidas."
+    )
+
+    fila_validacao = tabela_validacoes_em_andamento(
+        df_validacao
+    )
+
+    if not fila_validacao.empty:
+        st.write(
+            "### 📋 Alertas em acompanhamento"
+        )
+        st.caption(
+            "Mostra somente alertas REAIS que ainda estão aguardando "
+            "o fechamento das janelas de 5 ou 10 minutos."
+        )
+        st.dataframe(
+            fila_validacao,
+            width="stretch",
+            hide_index=True
+        )
 
     if not df_validacao.empty:
         painel_desempenho_real(
