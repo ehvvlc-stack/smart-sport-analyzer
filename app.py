@@ -870,7 +870,7 @@ def classificar_pressao_live(
 
     diferenca = abs(combinado_h - combinado_a)
 
-    if diferenca >= 25 and momento >= 65:
+    if diferenca >= 25 and momento >= 60:
         return "ALTA", "🔥", dominante
 
     if diferenca >= 12 and momento >= 58:
@@ -1800,6 +1800,81 @@ def resumo_resultados_validacao(df):
         "taxa_destaque": taxa_destaque,
         "taxa_adversario": taxa_adversario,
         "taxa_sem_gol": taxa_sem_gol
+    }
+
+
+
+def resumo_janelas_validacao(df):
+    """
+    Consolida o desempenho real dos alertas ALTA nas janelas de 5 e 10 minutos.
+    Usa somente registros não-DEMO e apenas linhas em que cada campo já foi
+    efetivamente validado como SIM/NÃO.
+    """
+    if df.empty:
+        return {
+            "concluidos": 0,
+            "gol5": 0,
+            "gol5_base": 0,
+            "gol5_taxa": 0.0,
+            "gol10": 0,
+            "gol10_base": 0,
+            "gol10_taxa": 0.0,
+            "corner5": 0,
+            "corner5_base": 0,
+            "corner5_taxa": 0.0,
+            "corner10": 0,
+            "corner10_base": 0,
+            "corner10_taxa": 0.0,
+        }
+
+    base = df[
+        df["status"].astype(str) != "DEMO"
+    ].copy()
+
+    concluidos = base[
+        base["resultado_gol"].astype(str).isin(
+            ["TIME_DESTAQUE", "ADVERSARIO", "SEM_GOL"]
+        )
+    ].copy()
+
+    def calcular(coluna):
+        validos = base[
+            base[coluna].astype(str).isin(["SIM", "NÃO"])
+        ]
+        acertos = int(
+            (validos[coluna].astype(str) == "SIM").sum()
+        )
+        total = len(validos)
+        taxa = acertos / total * 100 if total > 0 else 0.0
+        return acertos, total, taxa
+
+    gol5, gol5_base, gol5_taxa = calcular(
+        "gol_time_destaque_5_min"
+    )
+    gol10, gol10_base, gol10_taxa = calcular(
+        "gol_time_destaque_10_min"
+    )
+    corner5, corner5_base, corner5_taxa = calcular(
+        "escanteio_time_destaque_5_min"
+    )
+    corner10, corner10_base, corner10_taxa = calcular(
+        "escanteio_time_destaque_10_min"
+    )
+
+    return {
+        "concluidos": len(concluidos),
+        "gol5": gol5,
+        "gol5_base": gol5_base,
+        "gol5_taxa": gol5_taxa,
+        "gol10": gol10,
+        "gol10_base": gol10_base,
+        "gol10_taxa": gol10_taxa,
+        "corner5": corner5,
+        "corner5_base": corner5_base,
+        "corner5_taxa": corner5_taxa,
+        "corner10": corner10,
+        "corner10_base": corner10_base,
+        "corner10_taxa": corner10_taxa,
     }
 
 
@@ -3215,10 +3290,10 @@ def calcular_pressao_api_football(times):
 
     diferenca = abs(final_a - final_b)
 
-    if dominante_indice >= 67 and diferenca >= 20:
+    if dominante_indice >= 63 and diferenca >= 24:
         nivel = "ALTA"
         icone = "🔥"
-    elif dominante_indice >= 58 and diferenca >= 10:
+    elif dominante_indice >= 58 and diferenca >= 12:
         nivel = "MODERADA"
         icone = "📈"
     else:
@@ -3231,6 +3306,8 @@ def calcular_pressao_api_football(times):
         "indice_a": round(final_a, 1),
         "indice_b": round(final_b, 1),
         "dominante": dominante,
+        "dominante_indice": round(dominante_indice, 1),
+        "diferenca": round(diferenca, 1),
         "nivel": nivel,
         "icone": icone,
         "sog_a": int(sog_a),
@@ -3411,7 +3488,7 @@ def calcular_momento_por_eventos(eventos, time_casa, time_fora, minuto_atual=Non
     diferenca = abs(pct_casa - pct_fora)
     if diferenca >= 22:
         nivel, icone = "FORTE", "🔥"
-    elif diferenca >= 10:
+    elif diferenca >= 12:
         nivel, icone = "ATENÇÃO", "🟡"
     else:
         nivel, icone = "EQUILIBRADO", "⚖️"
@@ -3432,6 +3509,11 @@ def calcular_momento_por_eventos(eventos, time_casa, time_fora, minuto_atual=Non
 
 
 def classificar_alerta_momento(leitura):
+    """
+    Classificação conservadora do momento por eventos.
+    Só sobe o nível quando a diferença é realmente relevante.
+    """
+
     diferenca = abs(
         leitura["pct_casa"]
         - leitura["pct_fora"]
@@ -3447,18 +3529,22 @@ def classificar_alerta_momento(leitura):
         destaque = "Equilíbrio"
         indice = 50.0
 
-    if diferenca >= 22:
+    # 🔴 PRESSÃO ALTA:
+    # exige diferença forte e índice alto.
+    if diferenca >= 24 and indice >= 62:
         return {
-            "nivel": "ALERTA",
-            "icone": "🔥",
+            "nivel": "PRESSÃO ALTA",
+            "icone": "🔴",
             "mensagem": (
-                f"Momento forte para {destaque}"
+                f"Pressão forte detectada para {destaque}"
             ),
             "destaque": destaque,
             "indice": indice
         }
 
-    if diferenca >= 10:
+    # 🟡 ATENÇÃO:
+    # exige vantagem moderada, mas ainda sem chamar de pressão alta.
+    if diferenca >= 12 and indice >= 56:
         return {
             "nivel": "ATENÇÃO",
             "icone": "🟡",
@@ -3469,11 +3555,13 @@ def classificar_alerta_momento(leitura):
             "indice": indice
         }
 
+    # 🟢 EQUILIBRADO:
+    # tudo abaixo dos limiares acima.
     return {
         "nivel": "EQUILIBRADO",
-        "icone": "⚖️",
+        "icone": "🟢",
         "mensagem": (
-            "Sem desequilíbrio relevante por eventos"
+            "Sem desequilíbrio forte por eventos"
         ),
         "destaque": destaque,
         "indice": indice
@@ -3502,7 +3590,7 @@ def renderizar_momento_eventos_api_football(eventos, time_casa, time_fora):
 
     st.markdown("#### 🚨 Alerta automático")
 
-    if alerta["nivel"] == "ALERTA":
+    if alerta["nivel"] == "PRESSÃO ALTA":
         st.error(
             f"{alerta['icone']} {alerta['mensagem']}"
         )
@@ -3630,6 +3718,7 @@ def renderizar_analise_api_football(fixture_id, time_casa=None, time_fora=None):
         )
 
         if teve_eventos:
+            st.info("🧭 Fonte: eventos oficiais — estatísticas completas indisponíveis.")
             st.caption(
                 "Como não há estatísticas completas, o painel mostra "
                 "os eventos oficiais disponíveis. Eles ajudam no acompanhamento, "
@@ -3639,6 +3728,7 @@ def renderizar_analise_api_football(fixture_id, time_casa=None, time_fora=None):
         return
 
     st.markdown("#### 📊 Análise ao vivo")
+    st.success("📊 Fonte: estatísticas completas — prioridade para posse, chutes e escanteios.")
 
     if restante is not None:
         st.caption(
@@ -3660,6 +3750,34 @@ def renderizar_analise_api_football(fixture_id, time_casa=None, time_fora=None):
     c3.metric(
         leitura["time_b"],
         f"{leitura['indice_b']:.1f}%"
+    )
+
+    d1, d2, d3 = st.columns(3)
+
+    d1.metric(
+        "Índice do destaque",
+        f"{leitura['dominante_indice']:.1f}%"
+    )
+
+    d2.metric(
+        "Diferença",
+        f"{leitura['diferenca']:.1f} pts"
+    )
+
+    criterio_alta = (
+        leitura["dominante_indice"] >= 67
+        and leitura["diferenca"] >= 20
+    )
+
+    d3.metric(
+        "Critério de ALTA",
+        "✅ ATINGIDO" if criterio_alta else "⏳ NÃO ATINGIDO"
+    )
+
+    st.caption(
+        "Regra atual da análise estatística: pressão ALTA exige "
+        "índice do time dominante ≥ 67% e diferença ≥ 20 pontos. "
+        "MODERADA exige índice ≥ 58% e diferença ≥ 10 pontos."
     )
 
     st.progress(
@@ -5722,6 +5840,52 @@ with aba_validacao:
             df_validacao["status"].astype(str)
             == "DEMO"
         ].copy()
+
+        resumo_janelas = resumo_janelas_validacao(
+            reais
+        )
+
+        st.write(
+            "### 🎯 Eficiência do alerta ALTA"
+        )
+
+        st.caption(
+            "Resumo dos alertas reais já validados. "
+            "Cada taxa usa apenas registros com resultado SIM/NÃO naquela janela."
+        )
+
+        e1, e2, e3, e4, e5 = st.columns(5)
+
+        e1.metric(
+            "Alertas concluídos",
+            resumo_janelas["concluidos"]
+        )
+
+        e2.metric(
+            "⚽ Gol destaque ≤5 min",
+            f"{resumo_janelas['gol5']} / {resumo_janelas['gol5_base']}",
+            f"{resumo_janelas['gol5_taxa']:.1f}%"
+        )
+
+        e3.metric(
+            "⚽ Gol destaque ≤10 min",
+            f"{resumo_janelas['gol10']} / {resumo_janelas['gol10_base']}",
+            f"{resumo_janelas['gol10_taxa']:.1f}%"
+        )
+
+        e4.metric(
+            "🚩 Corner destaque ≤5 min",
+            f"{resumo_janelas['corner5']} / {resumo_janelas['corner5_base']}",
+            f"{resumo_janelas['corner5_taxa']:.1f}%"
+        )
+
+        e5.metric(
+            "🚩 Corner destaque ≤10 min",
+            f"{resumo_janelas['corner10']} / {resumo_janelas['corner10_base']}",
+            f"{resumo_janelas['corner10_taxa']:.1f}%"
+        )
+
+        st.divider()
 
         resumo_reais = resumo_resultados_validacao(
             reais
