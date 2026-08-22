@@ -7804,6 +7804,165 @@ with aba_validacao:
 
     df_monitor = ler_monitoramento_oportunidades()
 
+    st.write(
+        "### 🧾 Auditoria do coletor"
+    )
+
+    if df_monitor.empty:
+        st.info(
+            "Ainda não há snapshots disponíveis para auditoria."
+        )
+    else:
+        auditoria = df_monitor.copy()
+
+        auditoria["data_hora"] = pd.to_datetime(
+            auditoria["data_hora"],
+            errors="coerce"
+        )
+
+        for coluna in [
+            "minuto",
+            "indice_destaque",
+            "diferenca",
+            "momento_destaque",
+            "posse_destaque",
+            "vantagem_corners",
+        ]:
+            auditoria[coluna] = pd.to_numeric(
+                auditoria[coluna],
+                errors="coerce"
+            )
+
+        auditoria = auditoria.sort_values(
+            "data_hora",
+            ascending=False
+        )
+
+        total_snapshots = len(auditoria)
+
+        ultimo_snapshot = auditoria.iloc[0]
+
+        jogos_unicos = (
+            auditoria["fixture_id"]
+            .astype(str)
+            .nunique()
+        )
+
+        minutos_validos = int(
+            auditoria["minuto"]
+            .notna()
+            .sum()
+        )
+
+        a1, a2, a3, a4 = st.columns(4)
+
+        a1.metric(
+            "Snapshots totais",
+            total_snapshots
+        )
+
+        a2.metric(
+            "Jogos únicos",
+            jogos_unicos
+        )
+
+        a3.metric(
+            "Minutos válidos",
+            minutos_validos
+        )
+
+        a4.metric(
+            "Último snapshot",
+            (
+                ultimo_snapshot["data_hora"]
+                .strftime("%H:%M:%S")
+                if pd.notna(
+                    ultimo_snapshot["data_hora"]
+                )
+                else "-"
+            )
+        )
+
+        st.caption(
+            "Este quadro mostra exatamente o que o coletor já armazenou. "
+            "Ele não faz chamadas adicionais às APIs."
+        )
+
+        filtro_jogo = st.selectbox(
+            "Filtrar auditoria por jogo",
+            ["Todos"]
+            + sorted(
+                auditoria["jogo"]
+                .dropna()
+                .astype(str)
+                .unique()
+                .tolist()
+            ),
+            key="filtro_auditoria_coletor"
+        )
+
+        auditoria_filtrada = auditoria.copy()
+
+        if filtro_jogo != "Todos":
+            auditoria_filtrada = (
+                auditoria_filtrada[
+                    auditoria_filtrada["jogo"]
+                    .astype(str)
+                    .eq(filtro_jogo)
+                ]
+            )
+
+        tabela_auditoria = (
+            auditoria_filtrada[
+                [
+                    "data_hora",
+                    "jogo",
+                    "minuto",
+                    "placar",
+                    "nivel",
+                    "time_destaque",
+                    "indice_destaque",
+                    "diferenca",
+                    "momento_destaque",
+                    "posse_destaque",
+                    "vantagem_corners",
+                    "status_monitoramento",
+                ]
+            ]
+            .rename(
+                columns={
+                    "data_hora": "Data/hora",
+                    "jogo": "Jogo",
+                    "minuto": "Minuto",
+                    "placar": "Placar",
+                    "nivel": "Nível",
+                    "time_destaque": "Destaque",
+                    "indice_destaque": "Índice",
+                    "diferenca": "Diferença",
+                    "momento_destaque": "Momento",
+                    "posse_destaque": "Posse",
+                    "vantagem_corners": "Vantagem corners",
+                    "status_monitoramento": "Status",
+                }
+            )
+        )
+
+        st.dataframe(
+            tabela_auditoria,
+            use_container_width=True,
+            hide_index=True
+        )
+
+        st.download_button(
+            "⬇️ Baixar auditoria do coletor em CSV",
+            data=auditoria_filtrada.to_csv(
+                index=False
+            ).encode("utf-8-sig"),
+            file_name="auditoria_coletor.csv",
+            mime="text/csv",
+            use_container_width=False
+        )
+
     if not df_monitor.empty:
         st.write(
             "### 📈 Evolução dos jogos monitorados"
