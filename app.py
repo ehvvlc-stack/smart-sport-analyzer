@@ -1431,6 +1431,8 @@ def ler_monitoramento_oportunidades():
         "vantagem_corners",
         "status_monitoramento",
         "data_hora_finalizacao",
+        "placar_final",
+        "placar_final_origem",
     ]
 
     if not ARQUIVO_MONITORAMENTO.exists():
@@ -1579,15 +1581,6 @@ def registrar_snapshot_monitoramento(
 
     df = ler_monitoramento_oportunidades()
 
-    if (
-        not df.empty
-        and (
-            df["id_snapshot"].astype(str)
-            == id_snapshot
-        ).any()
-    ):
-        return
-
     if combinado_h >= combinado_a:
         indice = combinado_h
         momento_destaque = momento_h
@@ -1610,6 +1603,102 @@ def registrar_snapshot_monitoramento(
             away.get("corners", 0)
             - home.get("corners", 0)
         )
+
+    mascara_snapshot = (
+        df["id_snapshot"].astype(str)
+        .eq(id_snapshot)
+        if not df.empty
+        else pd.Series(dtype=bool)
+    )
+
+    if (
+        not df.empty
+        and mascara_snapshot.any()
+    ):
+        idx_snapshot = df.index[
+            mascara_snapshot
+        ][-1]
+
+        df.at[
+            idx_snapshot,
+            "data_hora"
+        ] = datetime.now().strftime(
+            "%Y-%m-%d %H:%M:%S"
+        )
+
+        df.at[
+            idx_snapshot,
+            "minuto"
+        ] = minuto_int
+
+        df.at[
+            idx_snapshot,
+            "placar"
+        ] = f"{gols_h} x {gols_a}"
+
+        df.at[
+            idx_snapshot,
+            "nivel"
+        ] = nivel
+
+        df.at[
+            idx_snapshot,
+            "time_destaque"
+        ] = dominante
+
+        df.at[
+            idx_snapshot,
+            "indice_destaque"
+        ] = round(
+            float(indice),
+            1
+        )
+
+        df.at[
+            idx_snapshot,
+            "diferenca"
+        ] = round(
+            abs(
+                float(combinado_h)
+                - float(combinado_a)
+            ),
+            1
+        )
+
+        df.at[
+            idx_snapshot,
+            "momento_destaque"
+        ] = round(
+            float(momento_destaque),
+            1
+        )
+
+        df.at[
+            idx_snapshot,
+            "posse_destaque"
+        ] = round(
+            float(posse_destaque),
+            1
+        )
+
+        df.at[
+            idx_snapshot,
+            "vantagem_corners"
+        ] = round(
+            float(vantagem_corners),
+            1
+        )
+
+        df.at[
+            idx_snapshot,
+            "status_monitoramento"
+        ] = "AO_VIVO"
+
+        salvar_monitoramento_oportunidades(
+            df
+        )
+
+        return
 
     nova = pd.DataFrame(
         [
@@ -1650,6 +1739,8 @@ def registrar_snapshot_monitoramento(
                 ),
                 "status_monitoramento": "AO_VIVO",
                 "data_hora_finalizacao": "",
+                "placar_final": "",
+                "placar_final_origem": "",
             }
         ]
     )
@@ -1794,6 +1885,35 @@ def atualizar_status_monitoramento_jogos(
                     "%Y-%m-%d %H:%M:%S"
                 )
 
+                placar_ultimo = str(
+                    df.at[
+                        idx_ultimo,
+                        "placar"
+                    ]
+                )
+
+                placar_final_atual = str(
+                    df.at[
+                        idx_ultimo,
+                        "placar_final"
+                    ]
+                ).strip()
+
+                if (
+                    not placar_final_atual
+                    or placar_final_atual.lower()
+                    in {"nan", "none"}
+                ):
+                    df.loc[
+                        mascara,
+                        "placar_final"
+                    ] = placar_ultimo
+
+                    df.loc[
+                        mascara,
+                        "placar_final_origem"
+                    ] = "ULTIMO_OBSERVADO"
+
                 alterou = True
 
     if alterou:
@@ -1801,6 +1921,48 @@ def atualizar_status_monitoramento_jogos(
             df
         )
 
+
+
+
+def corrigir_placar_final_monitoramento(
+    fixture_id,
+    gols_casa,
+    gols_visitante
+):
+    df = ler_monitoramento_oportunidades()
+
+    if df.empty:
+        return False
+
+    mascara = (
+        df["fixture_id"]
+        .astype(str)
+        .eq(str(fixture_id))
+    )
+
+    if not mascara.any():
+        return False
+
+    placar = (
+        f"{int(gols_casa)} x "
+        f"{int(gols_visitante)}"
+    )
+
+    df.loc[
+        mascara,
+        "placar_final"
+    ] = placar
+
+    df.loc[
+        mascara,
+        "placar_final_origem"
+    ] = "MANUAL"
+
+    salvar_monitoramento_oportunidades(
+        df
+    )
+
+    return True
 
 
 def diagnostico_finalizados_sem_alta():
@@ -7919,6 +8081,8 @@ with aba_validacao:
                     "jogo",
                     "minuto",
                     "placar",
+                    "placar_final",
+                    "placar_final_origem",
                     "nivel",
                     "time_destaque",
                     "indice_destaque",
@@ -7934,7 +8098,9 @@ with aba_validacao:
                     "data_hora": "Data/hora",
                     "jogo": "Jogo",
                     "minuto": "Minuto",
-                    "placar": "Placar",
+                    "placar": "Placar snapshot",
+                    "placar_final": "Placar final",
+                    "placar_final_origem": "Origem placar final",
                     "nivel": "Nível",
                     "time_destaque": "Destaque",
                     "indice_destaque": "Índice",
@@ -7952,6 +8118,96 @@ with aba_validacao:
             use_container_width=True,
             hide_index=True
         )
+
+        finalizados_df = auditoria[
+            auditoria["status_monitoramento"]
+            .astype(str)
+            .eq("FINALIZADO")
+        ].copy()
+
+        if not finalizados_df.empty:
+            st.write(
+                "#### 🛠️ Corrigir placar final"
+            )
+
+            opcoes_finalizados = (
+                finalizados_df[
+                    [
+                        "fixture_id",
+                        "jogo",
+                    ]
+                ]
+                .drop_duplicates()
+            )
+
+            mapa_jogos = {
+                f"{row['jogo']} • fixture {row['fixture_id']}":
+                    row["fixture_id"]
+                for _, row in opcoes_finalizados.iterrows()
+            }
+
+            jogo_correcao = st.selectbox(
+                "Jogo finalizado",
+                list(
+                    mapa_jogos.keys()
+                ),
+                key="jogo_correcao_placar_final"
+            )
+
+            c1, c2 = st.columns(2)
+
+            with c1:
+                gols_casa_corrigir = st.number_input(
+                    "Gols do time da casa",
+                    min_value=0,
+                    max_value=30,
+                    value=0,
+                    step=1,
+                    key="gols_casa_corrigir"
+                )
+
+            with c2:
+                gols_visitante_corrigir = st.number_input(
+                    "Gols do visitante",
+                    min_value=0,
+                    max_value=30,
+                    value=0,
+                    step=1,
+                    key="gols_visitante_corrigir"
+                )
+
+            if st.button(
+                "💾 Salvar placar final corrigido",
+                key="salvar_placar_final_corrigido"
+            ):
+                fixture_corrigir = (
+                    mapa_jogos[
+                        jogo_correcao
+                    ]
+                )
+
+                sucesso_correcao = (
+                    corrigir_placar_final_monitoramento(
+                        fixture_corrigir,
+                        gols_casa_corrigir,
+                        gols_visitante_corrigir
+                    )
+                )
+
+                if sucesso_correcao:
+                    st.success(
+                        "✅ Placar final corrigido e sincronizado."
+                    )
+                    st.rerun()
+                else:
+                    st.error(
+                        "Não foi possível corrigir o placar."
+                    )
+
+            st.caption(
+                "A correção manual altera apenas o placar final do jogo. "
+                "Os placares históricos de cada snapshot permanecem preservados."
+            )
 
         st.download_button(
             "⬇️ Baixar auditoria do coletor em CSV",
