@@ -101,6 +101,14 @@ BASE_URL = "https://api.sportmonks.com/v3/football"
 ARQUIVO_HISTORICO = Path("historico_partidas.csv")
 ARQUIVO_ALERTAS = Path("historico_alertas.csv")
 ARQUIVO_VALIDACAO = Path("validacao_alertas.csv")
+ARQUIVO_MONITORAMENTO = Path("monitoramento_oportunidades.csv")
+try:
+    GITHUB_MONITORAMENTO_PATH = st.secrets.get(
+        "GITHUB_MONITORAMENTO_PATH",
+        "data/monitoramento_oportunidades.csv"
+    )
+except Exception:
+    GITHUB_MONITORAMENTO_PATH = "data/monitoramento_oportunidades.csv"
 
 # Persistência remota opcional via GitHub.
 # Configure no .streamlit/secrets.toml ou no Streamlit Cloud:
@@ -1206,6 +1214,353 @@ def registrar_transicao_alerta(
 
 
 
+
+
+def baixar_monitoramento_github():
+    """
+    Recupera o CSV remoto de monitoramento no GitHub.
+    Retorna DataFrame ou None.
+    """
+    if not persistencia_github_ativa():
+        return None
+
+    url = (
+        f"https://api.github.com/repos/{GITHUB_REPO}/contents/"
+        f"{GITHUB_MONITORAMENTO_PATH}"
+    )
+
+    headers = {
+        "Authorization": f"Bearer {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+    }
+
+    try:
+        resposta = requests.get(
+            url,
+            headers=headers,
+            params={"ref": GITHUB_BRANCH},
+            timeout=20
+        )
+
+        if resposta.status_code == 404:
+            return None
+
+        if resposta.status_code != 200:
+            return None
+
+        payload = resposta.json()
+        conteudo_b64 = payload.get("content", "")
+
+        if not conteudo_b64:
+            return None
+
+        import base64
+        from io import StringIO
+
+        texto_csv = base64.b64decode(
+            conteudo_b64
+        ).decode("utf-8-sig")
+
+        return pd.read_csv(
+            StringIO(texto_csv)
+        )
+
+    except Exception:
+        return None
+
+
+def ler_monitoramento_oportunidades():
+    colunas = [
+        "id_snapshot",
+        "data_hora",
+        "fixture_id",
+        "jogo",
+        "minuto",
+        "bucket_5min",
+        "placar",
+        "nivel",
+        "time_destaque",
+        "indice_destaque",
+        "diferenca",
+        "momento_destaque",
+        "posse_destaque",
+        "vantagem_corners",
+    ]
+
+    if not ARQUIVO_MONITORAMENTO.exists():
+        remoto = baixar_monitoramento_github()
+
+        if remoto is not None:
+            for coluna in colunas:
+                if coluna not in remoto.columns:
+                    remoto[coluna] = ""
+
+            remoto = remoto[colunas]
+
+            try:
+                remoto.to_csv(
+                    ARQUIVO_MONITORAMENTO,
+                    index=False
+                )
+            except Exception:
+                pass
+
+            return remoto
+
+        return pd.DataFrame(columns=colunas)
+
+    try:
+        df = pd.read_csv(
+            ARQUIVO_MONITORAMENTO
+        )
+    except Exception:
+        return pd.DataFrame(columns=colunas)
+
+    for coluna in colunas:
+        if coluna not in df.columns:
+            df[coluna] = ""
+
+    return df[colunas]
+
+
+def salvar_monitoramento_github(df):
+    if not persistencia_github_ativa():
+        return False
+
+    import base64
+
+    url = (
+        f"https://api.github.com/repos/{GITHUB_REPO}/contents/"
+        f"{GITHUB_MONITORAMENTO_PATH}"
+    )
+
+    headers = {
+        "Authorization": f"Bearer {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+    }
+
+    sha = None
+
+    try:
+        atual = requests.get(
+            url,
+            headers=headers,
+            params={"ref": GITHUB_BRANCH},
+            timeout=20
+        )
+
+        if atual.status_code == 200:
+            sha = atual.json().get("sha")
+
+        csv_bytes = df.to_csv(
+            index=False
+        ).encode("utf-8")
+
+        payload = {
+            "message": "Atualiza monitoramento de oportunidades",
+            "content": base64.b64encode(
+                csv_bytes
+            ).decode("ascii"),
+            "branch": GITHUB_BRANCH,
+        }
+
+        if sha:
+            payload["sha"] = sha
+
+        resposta = requests.put(
+            url,
+            headers=headers,
+            json=payload,
+            timeout=25
+        )
+
+        return resposta.status_code in (200, 201)
+
+    except Exception:
+        return False
+
+
+def salvar_monitoramento_oportunidades(df):
+    df.to_csv(
+        ARQUIVO_MONITORAMENTO,
+        index=False
+    )
+
+    sucesso_remoto = salvar_monitoramento_github(
+        df
+    )
+
+    st.session_state[
+        "monitoramento_github_ultimo_status"
+    ] = sucesso_remoto
+
+
+def registrar_snapshot_monitoramento(
+    fixture_id,
+    casa,
+    visitante,
+    minuto,
+    gols_h,
+    gols_a,
+    nivel,
+    dominante,
+    combinado_h,
+    combinado_a,
+    momento_h,
+    momento_a,
+    home,
+    away,
+):
+    """
+    Grava no máximo 1 snapshot por jogo a cada bloco de 5 minutos.
+    Não faz chamadas extras às APIs; usa apenas os dados já calculados
+    pelo monitor ao vivo.
+    """
+    try:
+        minuto_int = max(0, int(minuto))
+    except Exception:
+        minuto_int = 0
+
+    bucket = minuto_int // 5
+    id_snapshot = f"{fixture_id}-{bucket}"
+
+    df = ler_monitoramento_oportunidades()
+
+    if (
+        not df.empty
+        and (
+            df["id_snapshot"].astype(str)
+            == id_snapshot
+        ).any()
+    ):
+        return
+
+    if combinado_h >= combinado_a:
+        indice = combinado_h
+        momento_destaque = momento_h
+        posse_destaque = home.get(
+            "possession",
+            50
+        )
+        vantagem_corners = (
+            home.get("corners", 0)
+            - away.get("corners", 0)
+        )
+    else:
+        indice = combinado_a
+        momento_destaque = momento_a
+        posse_destaque = away.get(
+            "possession",
+            50
+        )
+        vantagem_corners = (
+            away.get("corners", 0)
+            - home.get("corners", 0)
+        )
+
+    nova = pd.DataFrame(
+        [
+            {
+                "id_snapshot": id_snapshot,
+                "data_hora": datetime.now().strftime(
+                    "%Y-%m-%d %H:%M:%S"
+                ),
+                "fixture_id": fixture_id,
+                "jogo": f"{casa} x {visitante}",
+                "minuto": minuto_int,
+                "bucket_5min": bucket,
+                "placar": f"{gols_h} x {gols_a}",
+                "nivel": nivel,
+                "time_destaque": dominante,
+                "indice_destaque": round(
+                    float(indice),
+                    1
+                ),
+                "diferenca": round(
+                    abs(
+                        float(combinado_h)
+                        - float(combinado_a)
+                    ),
+                    1
+                ),
+                "momento_destaque": round(
+                    float(momento_destaque),
+                    1
+                ),
+                "posse_destaque": round(
+                    float(posse_destaque),
+                    1
+                ),
+                "vantagem_corners": round(
+                    float(vantagem_corners),
+                    1
+                ),
+            }
+        ]
+    )
+
+    df = pd.concat(
+        [df, nova],
+        ignore_index=True
+    )
+
+    salvar_monitoramento_oportunidades(
+        df
+    )
+
+
+def resumo_cobertura_monitoramento():
+    df = ler_monitoramento_oportunidades()
+
+    if df.empty:
+        return {
+            "jogos": 0,
+            "com_alta": 0,
+            "sem_alta": 0,
+            "taxa_alta": 0.0,
+            "snapshots": 0,
+        }
+
+    fixture = df["fixture_id"].astype(str)
+    jogos = fixture.nunique()
+
+    por_jogo = (
+        df.assign(
+            eh_alta=df["nivel"]
+            .astype(str)
+            .eq("ALTA")
+        )
+        .groupby(
+            fixture
+        )["eh_alta"]
+        .max()
+    )
+
+    com_alta = int(
+        por_jogo.sum()
+    )
+    sem_alta = max(
+        0,
+        int(jogos) - com_alta
+    )
+
+    taxa_alta = (
+        com_alta / jogos * 100
+        if jogos > 0
+        else 0.0
+    )
+
+    return {
+        "jogos": int(jogos),
+        "com_alta": com_alta,
+        "sem_alta": sem_alta,
+        "taxa_alta": taxa_alta,
+        "snapshots": len(df),
+    }
+
+
 def persistencia_github_ativa():
     return bool(
         GITHUB_TOKEN
@@ -2019,6 +2374,140 @@ def resumo_resultados_validacao(df):
 
 
 
+
+
+
+def diagnostico_calibracao_alerta_alta(df):
+    """
+    Diagnóstico descritivo dos alertas ALTA reais já concluídos.
+    Não altera os limites automaticamente.
+
+    Importante:
+    - avalia qualidade/precisão dos alertas já emitidos;
+    - não consegue concluir se o modelo está 'rígido demais' sem um
+      denominador de partidas/oportunidades monitoradas.
+    """
+    vazio = {
+        "amostra": 0,
+        "gol10": 0,
+        "gol10_taxa": 0.0,
+        "corner10": 0,
+        "corner10_taxa": 0.0,
+        "util10": 0,
+        "util10_taxa": 0.0,
+        "gol_adv": 0,
+        "gol_adv_taxa": 0.0,
+        "nivel": "AMOSTRA INSUFICIENTE",
+        "icone": "🧪",
+        "mensagem": (
+            "Ainda não há alertas reais concluídos suficientes "
+            "para avaliar a calibração."
+        ),
+    }
+
+    if df.empty:
+        return vazio
+
+    base = df[
+        df["status"].astype(str) != "DEMO"
+    ].copy()
+
+    if base.empty:
+        return vazio
+
+    gol10 = base["gol_time_destaque_10_min"].astype(str)
+    corner10 = base["escanteio_time_destaque_10_min"].astype(str)
+
+    concluidos = base[
+        gol10.isin(["SIM", "NÃO"])
+        & corner10.isin(["SIM", "NÃO"])
+    ].copy()
+
+    n = len(concluidos)
+
+    if n == 0:
+        return vazio
+
+    gol10_s = concluidos[
+        "gol_time_destaque_10_min"
+    ].astype(str)
+
+    corner10_s = concluidos[
+        "escanteio_time_destaque_10_min"
+    ].astype(str)
+
+    resultado = concluidos[
+        "resultado_gol"
+    ].astype(str)
+
+    gols = int((gol10_s == "SIM").sum())
+    corners = int((corner10_s == "SIM").sum())
+
+    util = int(
+        (
+            (gol10_s == "SIM")
+            | (corner10_s == "SIM")
+        ).sum()
+    )
+
+    gols_adv = int(
+        (resultado == "ADVERSARIO").sum()
+    )
+
+    taxa_gol = gols / n * 100
+    taxa_corner = corners / n * 100
+    taxa_util = util / n * 100
+    taxa_adv = gols_adv / n * 100
+
+    if n < 10:
+        nivel = "AMOSTRA INSUFICIENTE"
+        icone = "🧪"
+        mensagem = (
+            f"Há {n} alerta(s) real(is) concluído(s). "
+            "Aguarde pelo menos 10 para uma primeira leitura "
+            "e, de preferência, 30+ antes de recalibrar limites."
+        )
+
+    elif taxa_util >= 65 and taxa_adv <= 20:
+        nivel = "SELETIVIDADE BOA"
+        icone = "✅"
+        mensagem = (
+            "Os alertas ALTA estão produzindo uma proporção forte de "
+            "gol ou escanteio do time em destaque em até 10 minutos. "
+            "Não há sinal imediato de que o corte esteja frouxo."
+        )
+
+    elif taxa_util >= 45 and taxa_adv <= 30:
+        nivel = "CALIBRAÇÃO INTERMEDIÁRIA"
+        icone = "⚖️"
+        mensagem = (
+            "A eficiência está em uma faixa intermediária. "
+            "Vale continuar coletando dados antes de alterar os limites."
+        )
+
+    else:
+        nivel = "POSSIVELMENTE FROUXO"
+        icone = "⚠️"
+        mensagem = (
+            "A taxa de resposta favorável em até 10 minutos está baixa "
+            "ou a incidência de gol adversário está elevada. "
+            "Com amostra suficiente, pode valer endurecer o corte de ALTA."
+        )
+
+    return {
+        "amostra": n,
+        "gol10": gols,
+        "gol10_taxa": taxa_gol,
+        "corner10": corners,
+        "corner10_taxa": taxa_corner,
+        "util10": util,
+        "util10_taxa": taxa_util,
+        "gol_adv": gols_adv,
+        "gol_adv_taxa": taxa_adv,
+        "nivel": nivel,
+        "icone": icone,
+        "mensagem": mensagem,
+    }
 
 
 def tabela_validacoes_em_andamento(df):
@@ -3014,6 +3503,127 @@ def registrar_alerta_simulador(
     return True
 
 
+
+def processar_partida_live_sem_interface(jogo):
+    """
+    Processa coleta, alertas e validação sem desenhar a partida na tela.
+    Usa exatamente a mesma lógica do monitor ao vivo.
+    """
+    fixture_id = jogo.get("id")
+
+    (
+        casa,
+        visitante,
+        ids,
+        nomes_por_id
+    ) = identificar_times(jogo)
+
+    gols_h, gols_a = placar_atual(jogo)
+
+    stats = ler_estatisticas(
+        jogo,
+        ids
+    )
+
+    home = stats["home"]
+    away = stats["away"]
+
+    dominio_h, dominio_a = calcular_indice(
+        home,
+        away
+    )
+
+    eventos = preparar_eventos(
+        jogo,
+        nomes_por_id
+    )
+
+    minuto = minuto_estimado(jogo)
+
+    momento = pressao_eventos(
+        eventos,
+        minuto,
+        casa,
+        visitante,
+        janela=10
+    )
+
+    combinado_h, combinado_a = combinar_indices(
+        dominio_h,
+        dominio_a,
+        momento["indice_casa"],
+        momento["indice_visitante"]
+    )
+
+    registrar_live(
+        fixture_id,
+        casa,
+        visitante,
+        gols_h,
+        gols_a,
+        combinado_h,
+        combinado_a,
+        home,
+        away
+    )
+
+    nivel, _, dominante = classificar_pressao_live(
+        combinado_h,
+        combinado_a,
+        momento["indice_casa"],
+        momento["indice_visitante"],
+        casa,
+        visitante
+    )
+
+    registrar_transicao_alerta(
+        fixture_id,
+        casa,
+        visitante,
+        minuto,
+        gols_h,
+        gols_a,
+        nivel,
+        dominante,
+        combinado_h,
+        combinado_a,
+        momento["indice_casa"],
+        momento["indice_visitante"],
+        home,
+        away
+    )
+
+    registrar_snapshot_monitoramento(
+        fixture_id,
+        casa,
+        visitante,
+        minuto,
+        gols_h,
+        gols_a,
+        nivel,
+        dominante,
+        combinado_h,
+        combinado_a,
+        momento["indice_casa"],
+        momento["indice_visitante"],
+        home,
+        away
+    )
+
+    atualizar_validacoes_jogo(
+        fixture_id,
+        minuto,
+        eventos
+    )
+
+    return {
+        "fixture_id": fixture_id,
+        "nivel": nivel,
+        "dominante": dominante,
+        "minuto": minuto,
+    }
+
+
 def mostrar_partida_hibrida(
     jogo,
     modo_live=False
@@ -3088,6 +3698,23 @@ def mostrar_partida_hibrida(
 
     if modo_live:
         registrar_transicao_alerta(
+            fixture_id,
+            casa,
+            visitante,
+            minuto,
+            gols_h,
+            gols_a,
+            nivel,
+            dominante,
+            combinado_h,
+            combinado_a,
+            momento["indice_casa"],
+            momento["indice_visitante"],
+            home,
+            away
+        )
+
+        registrar_snapshot_monitoramento(
             fixture_id,
             casa,
             visitante,
@@ -4293,6 +4920,7 @@ def nome_estado_jogo(jogo):
     return str(nome).strip()
 
 
+@st.cache_data(ttl=15, show_spinner=False)
 def buscar_jogos_live():
     url = (
         f"{BASE_URL}/livescores/inplay"
@@ -4619,7 +5247,45 @@ def criar_ranking_hibrido(
 )
 
 
+@st.fragment(
+    run_every="60s"
+)
+def coletor_automatico_global():
+    """
+    Coleta em uma sessão ativa do Streamlit, independentemente da aba aberta.
+    """
+    jogos_auto, status_auto = buscar_jogos_live()
+
+    if status_auto == 200:
+        processados = 0
+
+        for jogo_auto in jogos_auto:
+            try:
+                processar_partida_live_sem_interface(
+                    jogo_auto
+                )
+                processados += 1
+            except Exception:
+                continue
+
+        st.caption(
+            "🤖 Coletor automático ativo • "
+            f"última varredura {datetime.now().strftime('%H:%M:%S')} • "
+            f"{processados} jogo(s) processado(s)"
+        )
+    else:
+        st.caption(
+            "🤖 Coletor automático ativo • "
+            f"última tentativa {datetime.now().strftime('%H:%M:%S')} • "
+            f"API retornou status {status_auto}"
+        )
+
+
 with aba_live:
+    st.write("### 🤖 Coletor automático")
+
+    coletor_automatico_global()
+
 
     @st.fragment(
         run_every="20s"
@@ -6280,6 +6946,242 @@ with aba_validacao:
         "Um alerta só conta como concluído quando as janelas de gol e escanteio "
         "até 10 minutos já foram resolvidas."
     )
+
+    diagnostico = diagnostico_calibracao_alerta_alta(
+        df_validacao
+    )
+
+    st.write(
+        "### 🧠 Diagnóstico da calibração"
+    )
+
+    d1, d2, d3, d4 = st.columns(4)
+
+    d1.metric(
+        "Amostra concluída",
+        diagnostico["amostra"]
+    )
+
+    d2.metric(
+        "⚽ Gol destaque ≤10 min",
+        f"{diagnostico['gol10_taxa']:.1f}%"
+    )
+
+    d3.metric(
+        "🚩 Corner destaque ≤10 min",
+        f"{diagnostico['corner10_taxa']:.1f}%"
+    )
+
+    d4.metric(
+        "🎯 Gol ou corner ≤10 min",
+        f"{diagnostico['util10_taxa']:.1f}%"
+    )
+
+    st.info(
+        f"{diagnostico['icone']} **{diagnostico['nivel']}** — "
+        f"{diagnostico['mensagem']}"
+    )
+
+    st.caption(
+        "Este diagnóstico é descritivo e não muda a fórmula automaticamente."
+    )
+
+    cobertura = resumo_cobertura_monitoramento()
+
+    st.write(
+        "### 👀 Cobertura do monitoramento"
+    )
+
+    if persistencia_github_ativa():
+        st.success(
+            "☁️ Persistência do monitoramento no GitHub ATIVA"
+        )
+
+        if st.button(
+            "🔄 Sincronizar monitoramento com GitHub agora",
+            key="sincronizar_monitoramento_github"
+        ):
+            df_sync = ler_monitoramento_oportunidades()
+            ok_sync = salvar_monitoramento_github(
+                df_sync
+            )
+
+            if ok_sync:
+                st.success(
+                    "✅ monitoramento_oportunidades.csv sincronizado no GitHub."
+                )
+            else:
+                st.error(
+                    "❌ Não foi possível sincronizar o monitoramento com o GitHub."
+                )
+    else:
+        st.info(
+            "☁️ Persistência do monitoramento no GitHub INATIVA nesta execução. "
+            "No localhost, os mesmos Secrets do GitHub também precisam existir "
+            "em .streamlit/secrets.toml. No Streamlit Cloud, use os Secrets do app."
+        )
+
+    m1, m2, m3, m4 = st.columns(4)
+
+    m1.metric(
+        "Jogos monitorados",
+        cobertura["jogos"]
+    )
+
+    m2.metric(
+        "Chegaram a ALTA",
+        cobertura["com_alta"]
+    )
+
+    m3.metric(
+        "Nunca chegaram a ALTA",
+        cobertura["sem_alta"]
+    )
+
+    m4.metric(
+        "Taxa de chegada a ALTA",
+        f"{cobertura['taxa_alta']:.1f}%"
+    )
+
+    st.caption(
+        f"{cobertura['snapshots']} snapshot(s) armazenado(s), "
+        "no máximo um por jogo a cada bloco de 5 minutos. "
+        "Isso não consome chamadas extras de API. "
+        "Com essa base, passamos a medir também o denominador de jogos "
+        "monitorados, necessário para avaliar futuramente se o corte de ALTA "
+        "pode estar rígido demais."
+    )
+
+    df_monitor = ler_monitoramento_oportunidades()
+
+    if not df_monitor.empty:
+        st.write(
+            "### 📈 Evolução dos jogos monitorados"
+        )
+
+        jogos_disp = (
+            df_monitor["jogo"]
+            .dropna()
+            .astype(str)
+            .drop_duplicates()
+            .tolist()
+        )
+
+        if jogos_disp:
+            jogo_escolhido = st.selectbox(
+                "Escolha um jogo para ver a evolução",
+                jogos_disp,
+                key="jogo_evolucao_monitoramento"
+            )
+
+            evolucao = df_monitor[
+                df_monitor["jogo"].astype(str)
+                == jogo_escolhido
+            ].copy()
+
+            evolucao["minuto"] = pd.to_numeric(
+                evolucao["minuto"],
+                errors="coerce"
+            )
+
+            for coluna in [
+                "indice_destaque",
+                "diferenca",
+                "momento_destaque",
+                "posse_destaque",
+                "vantagem_corners",
+            ]:
+                evolucao[coluna] = pd.to_numeric(
+                    evolucao[coluna],
+                    errors="coerce"
+                )
+
+            evolucao = evolucao.sort_values(
+                ["minuto", "data_hora"]
+            )
+
+            if not evolucao.empty:
+                ultimo = evolucao.iloc[-1]
+
+                e1, e2, e3, e4 = st.columns(4)
+
+                e1.metric(
+                    "Último índice",
+                    f"{ultimo['indice_destaque']:.1f}%"
+                    if pd.notna(ultimo["indice_destaque"])
+                    else "-"
+                )
+
+                e2.metric(
+                    "Última diferença",
+                    f"{ultimo['diferenca']:.1f} pts"
+                    if pd.notna(ultimo["diferenca"])
+                    else "-"
+                )
+
+                e3.metric(
+                    "Último momento",
+                    f"{ultimo['momento_destaque']:.1f}%"
+                    if pd.notna(ultimo["momento_destaque"])
+                    else "-"
+                )
+
+                e4.metric(
+                    "Nível atual",
+                    str(ultimo.get("nivel", "-"))
+                )
+
+                grafico = (
+                    evolucao[
+                        [
+                            "minuto",
+                            "indice_destaque",
+                            "momento_destaque",
+                            "diferenca",
+                        ]
+                    ]
+                    .dropna(subset=["minuto"])
+                    .set_index("minuto")
+                    .rename(
+                        columns={
+                            "indice_destaque": "Índice destaque",
+                            "momento_destaque": "Momento recente",
+                            "diferenca": "Diferença",
+                        }
+                    )
+                )
+
+                if not grafico.empty:
+                    st.line_chart(
+                        grafico,
+                        use_container_width=True
+                    )
+
+                tabela_evolucao = evolucao[
+                    [
+                        "data_hora",
+                        "minuto",
+                        "placar",
+                        "nivel",
+                        "time_destaque",
+                        "indice_destaque",
+                        "diferenca",
+                        "momento_destaque",
+                        "posse_destaque",
+                        "vantagem_corners",
+                    ]
+                ].copy()
+
+                st.dataframe(
+                    tabela_evolucao,
+                    use_container_width=True,
+                    hide_index=True
+                )
+
+                st.caption(
+                    "Essa série usa apenas os snapshots já coletados pelo monitor. "
+                    "Não faz novas chamadas de API."
+                )
 
     fila_validacao = tabela_validacoes_em_andamento(
         df_validacao
