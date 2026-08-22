@@ -614,31 +614,174 @@ def pressao_eventos(
 
 
 def minuto_estimado(jogo):
+    """
+    Tenta obter o minuto real sem assumir 90 quando o clock não vem na API.
+
+    Ordem:
+    1) clock/minute do state;
+    2) campos de período, quando disponíveis;
+    3) maior minuto dos eventos;
+    4) estimativa pelo horário de início, apenas como fallback conservador.
+
+    Retorna None se não houver informação suficiente.
+    """
     estado = jogo.get(
         "state",
         {}
+    ) or {}
+
+    candidatos = []
+
+    clock = estado.get(
+        "clock"
     )
 
-    minuto = estado.get(
-        "clock",
-        None
+    if isinstance(clock, dict):
+        candidatos.extend(
+            [
+                clock.get("minute"),
+                clock.get("minutes"),
+            ]
+        )
+    else:
+        candidatos.append(clock)
+
+    candidatos.extend(
+        [
+            estado.get("minute"),
+            estado.get("minutes"),
+        ]
     )
 
-    if isinstance(minuto, dict):
-        minuto = minuto.get(
-            "minute"
+    periodos = jogo.get(
+        "periods",
+        []
+    ) or []
+
+    for periodo in periodos:
+        if not isinstance(periodo, dict):
+            continue
+
+        candidatos.extend(
+            [
+                periodo.get("minute"),
+                periodo.get("minutes"),
+                periodo.get("time"),
+            ]
         )
 
-    if minuto is None:
-        minuto = estado.get(
-            "minute"
+    for valor in candidatos:
+        try:
+            minuto = int(
+                float(valor)
+            )
+
+            if 0 <= minuto <= 130:
+                return minuto
+        except Exception:
+            pass
+
+    # Se o provedor não envia clock, os eventos ainda podem
+    # dar uma referência segura do andamento da partida.
+    minutos_eventos = []
+
+    for evento in jogo.get(
+        "events",
+        []
+    ) or []:
+        try:
+            minuto_evento = int(
+                float(
+                    evento.get(
+                        "minute",
+                        0
+                    ) or 0
+                )
+            )
+
+            if 0 <= minuto_evento <= 130:
+                minutos_eventos.append(
+                    minuto_evento
+                )
+        except Exception:
+            pass
+
+    if minutos_eventos:
+        return max(
+            minutos_eventos
         )
 
-    try:
-        return int(minuto)
-    except:
-        return 90
+    # Último fallback: aproximação pelo horário real desde o início.
+    # Serve principalmente para começar a acompanhar cedo quando
+    # ainda não ocorreu nenhum evento oficial.
+    inicio = jogo.get(
+        "starting_at"
+    )
 
+    if inicio:
+        try:
+            inicio_dt = pd.to_datetime(
+                inicio,
+                utc=True
+            )
+
+            agora_utc = pd.Timestamp.now(
+                tz="UTC"
+            )
+
+            corridos = (
+                agora_utc - inicio_dt
+            ).total_seconds() / 60
+
+            estado_txt = " ".join(
+                [
+                    str(
+                        estado.get(
+                            "name",
+                            ""
+                        )
+                    ),
+                    str(
+                        estado.get(
+                            "short_name",
+                            ""
+                        )
+                    ),
+                    str(
+                        estado.get(
+                            "developer_name",
+                            ""
+                        )
+                    ),
+                ]
+            ).lower()
+
+            # No segundo tempo, desconta aproximadamente o intervalo.
+            if (
+                "2nd" in estado_txt
+                or "second" in estado_txt
+                or "2º" in estado_txt
+                or "2nd_half" in estado_txt
+            ):
+                corridos -= 15
+
+            minuto_estimado_inicio = int(
+                max(
+                    0,
+                    min(
+                        90,
+                        corridos
+                    )
+                )
+            )
+
+            if 0 <= minuto_estimado_inicio <= 90:
+                return minuto_estimado_inicio
+
+        except Exception:
+            pass
+
+    return None
 
 def combinar_indices(
     dominio_h,
@@ -1286,6 +1429,8 @@ def ler_monitoramento_oportunidades():
         "momento_destaque",
         "posse_destaque",
         "vantagem_corners",
+        "status_monitoramento",
+        "data_hora_finalizacao",
     ]
 
     if not ARQUIVO_MONITORAMENTO.exists():
@@ -1418,10 +1563,16 @@ def registrar_snapshot_monitoramento(
     Não faz chamadas extras às APIs; usa apenas os dados já calculados
     pelo monitor ao vivo.
     """
+    if minuto is None:
+        return
+
     try:
-        minuto_int = max(0, int(minuto))
+        minuto_int = max(
+            0,
+            int(minuto)
+        )
     except Exception:
-        minuto_int = 0
+        return
 
     bucket = minuto_int // 5
     id_snapshot = f"{fixture_id}-{bucket}"
@@ -1497,6 +1648,8 @@ def registrar_snapshot_monitoramento(
                     float(vantagem_corners),
                     1
                 ),
+                "status_monitoramento": "AO_VIVO",
+                "data_hora_finalizacao": "",
             }
         ]
     )
@@ -1511,39 +1664,438 @@ def registrar_snapshot_monitoramento(
     )
 
 
-def resumo_cobertura_monitoramento():
+
+def atualizar_status_monitoramento_jogos(
+    fixture_ids_ativos
+):
+    """
+    Atualiza o estado dos jogos já monitorados sem fazer chamadas extras de API.
+
+    Regra conservadora:
+    - se o fixture está na lista ao vivo, fica AO_VIVO;
+    - se sumiu da lista, só é considerado FINALIZADO quando:
+      * o último snapshot foi no minuto 85+ e já se passaram 5 minutos; ou
+      * já se passaram 25 minutos desde o último snapshot.
+
+    Isso reduz o risco de confundir intervalo/instabilidade temporária com fim de jogo.
+    """
     df = ler_monitoramento_oportunidades()
 
     if df.empty:
-        return {
-            "jogos": 0,
-            "com_alta": 0,
-            "sem_alta": 0,
-            "taxa_alta": 0.0,
-            "snapshots": 0,
-        }
+        return
 
-    fixture = df["fixture_id"].astype(str)
-    jogos = fixture.nunique()
+    ativos = {
+        str(fid)
+        for fid in fixture_ids_ativos
+        if fid is not None
+    }
 
-    por_jogo = (
-        df.assign(
-            eh_alta=df["nivel"]
+    alterou = False
+    agora = datetime.now()
+
+    fixtures = (
+        df["fixture_id"]
+        .astype(str)
+        .dropna()
+        .unique()
+        .tolist()
+    )
+
+    for fixture in fixtures:
+        mascara = (
+            df["fixture_id"]
+            .astype(str)
+            .eq(str(fixture))
+        )
+
+        jogo_df = df[mascara].copy()
+
+        if jogo_df.empty:
+            continue
+
+        if str(fixture) in ativos:
+            status_atual = (
+                jogo_df["status_monitoramento"]
+                .astype(str)
+            )
+
+            if not status_atual.eq("AO_VIVO").all():
+                df.loc[
+                    mascara,
+                    "status_monitoramento"
+                ] = "AO_VIVO"
+
+                df.loc[
+                    mascara,
+                    "data_hora_finalizacao"
+                ] = ""
+
+                alterou = True
+
+            continue
+
+        tempos = pd.to_datetime(
+            jogo_df["data_hora"],
+            errors="coerce"
+        )
+
+        if tempos.notna().any():
+            idx_ultimo = tempos.idxmax()
+            ultimo_horario = tempos.loc[idx_ultimo]
+        else:
+            idx_ultimo = jogo_df.index[-1]
+            ultimo_horario = pd.NaT
+
+        minuto_ultimo = pd.to_numeric(
+            pd.Series(
+                [df.at[idx_ultimo, "minuto"]]
+            ),
+            errors="coerce"
+        ).iloc[0]
+
+        minutos_sem_ver = None
+
+        if pd.notna(ultimo_horario):
+            minutos_sem_ver = (
+                agora - ultimo_horario.to_pydatetime()
+            ).total_seconds() / 60
+
+        deve_finalizar = False
+
+        if minutos_sem_ver is not None:
+            if (
+                pd.notna(minuto_ultimo)
+                and float(minuto_ultimo) >= 85
+                and minutos_sem_ver >= 5
+            ):
+                deve_finalizar = True
+
+            elif minutos_sem_ver >= 25:
+                deve_finalizar = True
+
+        if deve_finalizar:
+            ja_finalizado = (
+                jogo_df["status_monitoramento"]
+                .astype(str)
+                .eq("FINALIZADO")
+                .all()
+            )
+
+            if not ja_finalizado:
+                df.loc[
+                    mascara,
+                    "status_monitoramento"
+                ] = "FINALIZADO"
+
+                df.loc[
+                    mascara,
+                    "data_hora_finalizacao"
+                ] = agora.strftime(
+                    "%Y-%m-%d %H:%M:%S"
+                )
+
+                alterou = True
+
+    if alterou:
+        salvar_monitoramento_oportunidades(
+            df
+        )
+
+
+
+def diagnostico_finalizados_sem_alta():
+    """
+    Resume quão perto os jogos FINALIZADOS sem ALTA chegaram
+    dos critérios atuais: diferença >= 25 e momento >= 60.
+    Usa somente snapshots já gravados.
+    """
+    df = ler_monitoramento_oportunidades()
+
+    if df.empty:
+        return pd.DataFrame()
+
+    linhas = []
+
+    for fixture, grupo in df.groupby(
+        df["fixture_id"].astype(str)
+    ):
+        grupo = grupo.copy()
+
+        tempos = pd.to_datetime(
+            grupo["data_hora"],
+            errors="coerce"
+        )
+
+        if tempos.notna().any():
+            idx_ultimo = tempos.idxmax()
+        else:
+            idx_ultimo = grupo.index[-1]
+
+        status = str(
+            df.at[
+                idx_ultimo,
+                "status_monitoramento"
+            ]
+        )
+
+        chegou_alta = bool(
+            grupo["nivel"]
             .astype(str)
             .eq("ALTA")
+            .any()
         )
-        .groupby(
-            fixture
-        )["eh_alta"]
-        .max()
+
+        if (
+            status != "FINALIZADO"
+            or chegou_alta
+        ):
+            continue
+
+        diferencas = pd.to_numeric(
+            grupo["diferenca"],
+            errors="coerce"
+        )
+
+        momentos = pd.to_numeric(
+            grupo["momento_destaque"],
+            errors="coerce"
+        )
+
+        indices = pd.to_numeric(
+            grupo["indice_destaque"],
+            errors="coerce"
+        )
+
+        minutos = pd.to_numeric(
+            grupo["minuto"],
+            errors="coerce"
+        )
+
+        pico_diferenca = (
+            float(diferencas.max())
+            if diferencas.notna().any()
+            else 0.0
+        )
+
+        pico_momento = (
+            float(momentos.max())
+            if momentos.notna().any()
+            else 0.0
+        )
+
+        pico_indice = (
+            float(indices.max())
+            if indices.notna().any()
+            else 0.0
+        )
+
+        # Distância normalizada até os dois critérios atuais.
+        falta_diferenca = max(
+            0.0,
+            25.0 - pico_diferenca
+        )
+
+        falta_momento = max(
+            0.0,
+            60.0 - pico_momento
+        )
+
+        # Quanto menor, mais perto de ALTA.
+        distancia_total = (
+            falta_diferenca
+            + falta_momento
+        )
+
+        if distancia_total <= 5:
+            faixa = "QUASE ALTA"
+        elif distancia_total <= 15:
+            faixa = "PRÓXIMO"
+        else:
+            faixa = "LONGE"
+
+        jogo = str(
+            grupo["jogo"].iloc[-1]
+        )
+
+        time_destaque = str(
+            grupo["time_destaque"].iloc[
+                diferencas.fillna(-1).idxmax()
+                if diferencas.notna().any()
+                else -1
+            ]
+        ) if False else str(
+            grupo["time_destaque"].iloc[-1]
+        )
+
+        ultimo_minuto = (
+            int(minutos.max())
+            if minutos.notna().any()
+            else None
+        )
+
+        linhas.append(
+            {
+                "fixture_id": fixture,
+                "jogo": jogo,
+                "minuto_final_monitorado": ultimo_minuto,
+                "nivel_maximo": (
+                    "MODERADA"
+                    if grupo["nivel"]
+                    .astype(str)
+                    .eq("MODERADA")
+                    .any()
+                    else "BAIXA"
+                ),
+                "pico_indice": round(
+                    pico_indice,
+                    1
+                ),
+                "pico_diferenca": round(
+                    pico_diferenca,
+                    1
+                ),
+                "pico_momento": round(
+                    pico_momento,
+                    1
+                ),
+                "faltou_diferenca": round(
+                    falta_diferenca,
+                    1
+                ),
+                "faltou_momento": round(
+                    falta_momento,
+                    1
+                ),
+                "distancia_total": round(
+                    distancia_total,
+                    1
+                ),
+                "faixa": faixa,
+            }
+        )
+
+    if not linhas:
+        return pd.DataFrame()
+
+    resultado = pd.DataFrame(
+        linhas
+    ).sort_values(
+        [
+            "distancia_total",
+            "pico_diferenca",
+            "pico_momento",
+        ],
+        ascending=[
+            True,
+            False,
+            False,
+        ]
     )
 
-    com_alta = int(
-        por_jogo.sum()
+    return resultado
+
+
+def resumo_cobertura_monitoramento():
+    df = ler_monitoramento_oportunidades()
+
+    vazio = {
+        "jogos": 0,
+        "com_alta": 0,
+        "sem_alta": 0,
+        "taxa_alta": 0.0,
+        "snapshots": 0,
+        "em_acompanhamento": 0,
+        "finalizados": 0,
+        "finalizados_sem_alta": 0,
+        "finalizados_com_alta": 0,
+        "taxa_alta_finalizados": 0.0,
+    }
+
+    if df.empty:
+        return vazio
+
+    fixture_txt = df["fixture_id"].astype(str)
+
+    resumo_jogos = []
+
+    for fixture, grupo in df.groupby(
+        fixture_txt
+    ):
+        grupo = grupo.copy()
+
+        tempos = pd.to_datetime(
+            grupo["data_hora"],
+            errors="coerce"
+        )
+
+        if tempos.notna().any():
+            idx_ultimo = tempos.idxmax()
+        else:
+            idx_ultimo = grupo.index[-1]
+
+        status = str(
+            df.at[
+                idx_ultimo,
+                "status_monitoramento"
+            ]
+        )
+
+        chegou_alta = bool(
+            grupo["nivel"]
+            .astype(str)
+            .eq("ALTA")
+            .any()
+        )
+
+        resumo_jogos.append(
+            {
+                "fixture_id": fixture,
+                "status": status,
+                "chegou_alta": chegou_alta,
+            }
+        )
+
+    jogos = len(resumo_jogos)
+
+    com_alta = sum(
+        1
+        for item in resumo_jogos
+        if item["chegou_alta"]
     )
+
     sem_alta = max(
         0,
-        int(jogos) - com_alta
+        jogos - com_alta
+    )
+
+    em_acompanhamento = sum(
+        1
+        for item in resumo_jogos
+        if item["status"] == "AO_VIVO"
+    )
+
+    finalizados = sum(
+        1
+        for item in resumo_jogos
+        if item["status"] == "FINALIZADO"
+    )
+
+    finalizados_sem_alta = sum(
+        1
+        for item in resumo_jogos
+        if (
+            item["status"] == "FINALIZADO"
+            and not item["chegou_alta"]
+        )
+    )
+
+    finalizados_com_alta = sum(
+        1
+        for item in resumo_jogos
+        if (
+            item["status"] == "FINALIZADO"
+            and item["chegou_alta"]
+        )
     )
 
     taxa_alta = (
@@ -1552,13 +2104,27 @@ def resumo_cobertura_monitoramento():
         else 0.0
     )
 
+    taxa_alta_finalizados = (
+        finalizados_com_alta
+        / finalizados
+        * 100
+        if finalizados > 0
+        else 0.0
+    )
+
     return {
-        "jogos": int(jogos),
+        "jogos": jogos,
         "com_alta": com_alta,
         "sem_alta": sem_alta,
         "taxa_alta": taxa_alta,
         "snapshots": len(df),
+        "em_acompanhamento": em_acompanhamento,
+        "finalizados": finalizados,
+        "finalizados_sem_alta": finalizados_sem_alta,
+        "finalizados_com_alta": finalizados_com_alta,
+        "taxa_alta_finalizados": taxa_alta_finalizados,
     }
+
 
 
 def persistencia_github_ativa():
@@ -3540,6 +4106,14 @@ def processar_partida_live_sem_interface(jogo):
 
     minuto = minuto_estimado(jogo)
 
+    if minuto is None:
+        return {
+            "fixture_id": fixture_id,
+            "nivel": "SEM_MINUTO",
+            "dominante": "-",
+            "minuto": None,
+        }
+
     momento = pressao_eventos(
         eventos,
         minuto,
@@ -5258,13 +5832,33 @@ def coletor_automatico_global():
 
     if status_auto == 200:
         processados = 0
+        sem_minuto = 0
+
+        fixture_ids_ativos = [
+            jogo_auto.get("id")
+            for jogo_auto in jogos_auto
+        ]
+
+        atualizar_status_monitoramento_jogos(
+            fixture_ids_ativos
+        )
 
         for jogo_auto in jogos_auto:
             try:
-                processar_partida_live_sem_interface(
-                    jogo_auto
+                resultado_auto = (
+                    processar_partida_live_sem_interface(
+                        jogo_auto
+                    )
                 )
-                processados += 1
+
+                if (
+                    resultado_auto
+                    and resultado_auto.get("minuto")
+                    is not None
+                ):
+                    processados += 1
+                else:
+                    sem_minuto += 1
             except Exception:
                 continue
 
@@ -5272,6 +5866,11 @@ def coletor_automatico_global():
             "🤖 Coletor automático ativo • "
             f"última varredura {datetime.now().strftime('%H:%M:%S')} • "
             f"{processados} jogo(s) processado(s)"
+            + (
+                f" • {sem_minuto} sem minuto confiável"
+                if sem_minuto
+                else ""
+            )
         )
     else:
         st.caption(
@@ -7043,6 +7642,157 @@ with aba_validacao:
         f"{cobertura['taxa_alta']:.1f}%"
     )
 
+    f1, f2, f3, f4 = st.columns(4)
+
+    f1.metric(
+        "🟢 Em acompanhamento",
+        cobertura["em_acompanhamento"]
+    )
+
+    f2.metric(
+        "🏁 Finalizados",
+        cobertura["finalizados"]
+    )
+
+    f3.metric(
+        "⚪ Finalizados sem ALTA",
+        cobertura["finalizados_sem_alta"]
+    )
+
+    f4.metric(
+        "🔥 Finalizados com ALTA",
+        cobertura["finalizados_com_alta"]
+    )
+
+    if cobertura["finalizados"] > 0:
+        st.caption(
+            "Entre os jogos já finalizados, "
+            f"{cobertura['taxa_alta_finalizados']:.1f}% "
+            "chegaram a ALTA em algum momento."
+        )
+
+    diagnostico_sem_alta = (
+        diagnostico_finalizados_sem_alta()
+    )
+
+    if not diagnostico_sem_alta.empty:
+        st.write(
+            "### 📊 Diagnóstico dos finalizados sem ALTA"
+        )
+
+        total_sem_alta = len(
+            diagnostico_sem_alta
+        )
+
+        quase_alta = int(
+            (
+                diagnostico_sem_alta["faixa"]
+                == "QUASE ALTA"
+            ).sum()
+        )
+
+        proximos = int(
+            (
+                diagnostico_sem_alta["faixa"]
+                == "PRÓXIMO"
+            ).sum()
+        )
+
+        longe = int(
+            (
+                diagnostico_sem_alta["faixa"]
+                == "LONGE"
+            ).sum()
+        )
+
+        s1, s2, s3, s4 = st.columns(4)
+
+        s1.metric(
+            "Finalizados sem ALTA",
+            total_sem_alta
+        )
+
+        s2.metric(
+            "🟠 Quase ALTA",
+            quase_alta
+        )
+
+        s3.metric(
+            "🟡 Próximos",
+            proximos
+        )
+
+        s4.metric(
+            "⚪ Longe",
+            longe
+        )
+
+        st.caption(
+            "Faixas experimentais: QUASE ALTA quando a soma do que faltou "
+            "para diferença 25 + momento 60 é ≤ 5; PRÓXIMO quando é ≤ 15; "
+            "acima disso, LONGE. Isso não altera os critérios atuais."
+        )
+
+        tabela_sem_alta = (
+            diagnostico_sem_alta[
+                [
+                    "jogo",
+                    "minuto_final_monitorado",
+                    "nivel_maximo",
+                    "pico_indice",
+                    "pico_diferenca",
+                    "pico_momento",
+                    "faltou_diferenca",
+                    "faltou_momento",
+                    "faixa",
+                ]
+            ]
+            .rename(
+                columns={
+                    "jogo": "Jogo",
+                    "minuto_final_monitorado": "Último minuto",
+                    "nivel_maximo": "Nível máximo",
+                    "pico_indice": "Pico índice",
+                    "pico_diferenca": "Pico diferença",
+                    "pico_momento": "Pico momento",
+                    "faltou_diferenca": "Faltou diferença",
+                    "faltou_momento": "Faltou momento",
+                    "faixa": "Faixa",
+                }
+            )
+        )
+
+        st.dataframe(
+            tabela_sem_alta,
+            use_container_width=True,
+            hide_index=True
+        )
+
+        if total_sem_alta < 10:
+            st.info(
+                "🧪 Amostra ainda pequena. Use este quadro apenas para observação "
+                "até acumular pelo menos 10 jogos finalizados sem ALTA."
+            )
+        else:
+            taxa_quase = (
+                quase_alta
+                / total_sem_alta
+                * 100
+            )
+
+            if taxa_quase >= 40:
+                st.warning(
+                    "⚠️ Muitos jogos estão terminando muito perto da ALTA. "
+                    "Isso pode ser um sinal de corte rígido, mas ainda deve ser "
+                    "comparado com a qualidade dos alertas ALTA reais antes de "
+                    "qualquer recalibração."
+                )
+            else:
+                st.success(
+                    "✅ A maioria dos jogos sem ALTA terminou longe do corte atual. "
+                    "Não há sinal forte, por este indicador isolado, de rigidez excessiva."
+                )
+
     st.caption(
         f"{cobertura['snapshots']} snapshot(s) armazenado(s), "
         "no máximo um por jogo a cada bloco de 5 minutos. "
@@ -7178,9 +7928,192 @@ with aba_validacao:
                     hide_index=True
                 )
 
+                # Diagnóstico da trajetória de pressão do jogo.
+                ordem_nivel = {
+                    "BAIXA": 0,
+                    "MODERADA": 1,
+                    "ALTA": 2,
+                }
+
+                evolucao["nivel_ordem"] = (
+                    evolucao["nivel"]
+                    .astype(str)
+                    .map(ordem_nivel)
+                    .fillna(-1)
+                )
+
+                maior_ordem = int(
+                    evolucao["nivel_ordem"].max()
+                )
+
+                nivel_maximo = {
+                    0: "BAIXA",
+                    1: "MODERADA",
+                    2: "ALTA",
+                }.get(
+                    maior_ordem,
+                    "-"
+                )
+
+                pico_diferenca = pd.to_numeric(
+                    evolucao["diferenca"],
+                    errors="coerce"
+                ).max()
+
+                pico_momento = pd.to_numeric(
+                    evolucao["momento_destaque"],
+                    errors="coerce"
+                ).max()
+
+                ultimo_diferenca = pd.to_numeric(
+                    pd.Series(
+                        [ultimo.get("diferenca")]
+                    ),
+                    errors="coerce"
+                ).iloc[0]
+
+                ultimo_momento = pd.to_numeric(
+                    pd.Series(
+                        [ultimo.get("momento_destaque")]
+                    ),
+                    errors="coerce"
+                ).iloc[0]
+
+                falta_diferenca = (
+                    max(
+                        0.0,
+                        25.0 - float(ultimo_diferenca)
+                    )
+                    if pd.notna(ultimo_diferenca)
+                    else None
+                )
+
+                falta_momento = (
+                    max(
+                        0.0,
+                        60.0 - float(ultimo_momento)
+                    )
+                    if pd.notna(ultimo_momento)
+                    else None
+                )
+
+                niveis_seq = (
+                    evolucao["nivel"]
+                    .astype(str)
+                    .tolist()
+                )
+
+                transicoes = 0
+
+                for i in range(
+                    1,
+                    len(niveis_seq)
+                ):
+                    if (
+                        niveis_seq[i]
+                        != niveis_seq[i - 1]
+                    ):
+                        transicoes += 1
+
+                st.write(
+                    "### 🚦 Trajetória da pressão"
+                )
+
+                t1, t2, t3, t4 = st.columns(4)
+
+                t1.metric(
+                    "Nível máximo alcançado",
+                    nivel_maximo
+                )
+
+                t2.metric(
+                    "Pico de diferença",
+                    (
+                        f"{pico_diferenca:.1f} pts"
+                        if pd.notna(pico_diferenca)
+                        else "-"
+                    )
+                )
+
+                t3.metric(
+                    "Pico de momento",
+                    (
+                        f"{pico_momento:.1f}%"
+                        if pd.notna(pico_momento)
+                        else "-"
+                    )
+                )
+
+                t4.metric(
+                    "Mudanças de nível",
+                    transicoes
+                )
+
+                nivel_atual = str(
+                    ultimo.get("nivel", "-")
+                )
+
+                if nivel_atual == "ALTA":
+                    st.success(
+                        "🔥 O jogo atingiu os critérios atuais de ALTA."
+                    )
+                elif (
+                    falta_diferenca is not None
+                    and falta_momento is not None
+                ):
+                    st.info(
+                        "📍 Distância para ALTA no último snapshot: "
+                        f"faltam {falta_diferenca:.1f} ponto(s) de diferença "
+                        f"e {falta_momento:.1f} ponto(s) de momento. "
+                        "Critério atual: diferença ≥ 25 e momento ≥ 60."
+                    )
+
+                # Marca visualmente onde ocorreram mudanças de nível.
+                evolucao_transicoes = evolucao[
+                    [
+                        "minuto",
+                        "nivel",
+                        "time_destaque",
+                        "indice_destaque",
+                        "diferenca",
+                        "momento_destaque",
+                    ]
+                ].copy()
+
+                evolucao_transicoes[
+                    "mudou_nivel"
+                ] = (
+                    evolucao_transicoes["nivel"]
+                    .astype(str)
+                    .ne(
+                        evolucao_transicoes["nivel"]
+                        .astype(str)
+                        .shift()
+                    )
+                )
+
+                mudancas = evolucao_transicoes[
+                    evolucao_transicoes[
+                        "mudou_nivel"
+                    ]
+                ].copy()
+
+                if not mudancas.empty:
+                    st.write(
+                        "#### 🧭 Pontos de mudança de nível"
+                    )
+
+                    st.dataframe(
+                        mudancas.drop(
+                            columns=["mudou_nivel"]
+                        ),
+                        use_container_width=True,
+                        hide_index=True
+                    )
+
                 st.caption(
                     "Essa série usa apenas os snapshots já coletados pelo monitor. "
-                    "Não faz novas chamadas de API."
+                    "Não faz novas chamadas de API e não altera os critérios de pressão."
                 )
 
     fila_validacao = tabela_validacoes_em_andamento(
