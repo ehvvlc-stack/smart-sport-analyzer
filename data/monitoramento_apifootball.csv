@@ -1,0 +1,2 @@
+data_hora,fixture_id,liga,pais,jogo,minuto,placar,status,posse_casa,posse_fora,corners_casa,corners_fora,chutes_gol_casa,chutes_gol_fora,chutes_total_casa,chutes_total_fora,amarelos_casa,amarelos_fora,vermelhos_casa,vermelhos_fora,qualidade_coleta,quota_restante
+2026-08-23 08:02:45,1520536,K3 League,South-Korea,Jeonbuk Motors II x Ulsan Citizen,3,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,82
