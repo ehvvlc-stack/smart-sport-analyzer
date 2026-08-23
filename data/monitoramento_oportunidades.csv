@@ -5,4 +5,5 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713986-6,2026-08-23 10:36:34,19713986,Sønderjyske Fodbold x Nordsjælland,33,6,0 x 0,BAIXA,Sønderjyske Fodbold,53.1,6.2,50.0,35.0,1.0,AO_VIVO,,,,,,,
 19713986-9,2026-08-23 11:06:40,19713986,Sønderjyske Fodbold x Nordsjælland,46,9,0 x 1,ALTA,Nordsjælland,64.3,28.6,100.0,67.0,-1.0,AO_VIVO,,,,,,,
 19713986-14,2026-08-23 11:35:08,19713986,Sønderjyske Fodbold x Nordsjælland,74,14,0 x 2,MODERADA,Sønderjyske Fodbold,61.6,23.2,100.0,36.0,-1.0,AO_VIVO,,,,,,,
-19713986-15,2026-08-23 11:36:25,19713986,Sønderjyske Fodbold x Nordsjælland,75,15,0 x 2,BAIXA,Nordsjælland,53.3,6.6,50.0,63.0,1.0,AO_VIVO,,,,ALTA,100.0,,14
+19713986-15,2026-08-23 11:36:25,19713986,Sønderjyske Fodbold x Nordsjælland,75,15,0 x 2,BAIXA,Nordsjælland,53.3,6.6,50.0,63.0,1.0,AO_VIVO,,,,ALTA,100.0,,14.0
+19713986-16,2026-08-23 11:43:24,19713986,Sønderjyske Fodbold x Nordsjælland,82,16,0 x 2,BAIXA,Nordsjælland,50.8,1.6,50.0,63.0,0.0,AO_VIVO,,,,ALTA,100.0,,15.0
