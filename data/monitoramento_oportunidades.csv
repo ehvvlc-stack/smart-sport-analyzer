@@ -24,3 +24,4 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713982-1,2026-08-23 14:05:04,19713982,Horsens x Lyngby Boldklub,5,1,0 x 0,BAIXA,Lyngby Boldklub,61.1,22.2,50.0,50.0,1.0,AO_VIVO,,,,ALTA,100.0,,0.0
 19713982-2,2026-08-23 14:10:58,19713982,Horsens x Lyngby Boldklub,10,2,1 x 0,BAIXA,Horsens,54.1,8.2,50.0,52.0,1.0,AO_VIVO,,,,ALTA,100.0,,2.0
 19713982-3,2026-08-23 14:16:00,19713982,Horsens x Lyngby Boldklub,15,3,1 x 0,ALTA,Horsens,71.1,42.2,100.0,61.0,1.0,AO_VIVO,,,,ALTA,100.0,,2.0
+19713982-6,2026-08-23 14:34:26,19713982,Horsens x Lyngby Boldklub,34,6,1 x 0,BAIXA,Horsens,52.4,4.8,50.0,54.0,-3.0,AO_VIVO,,,,ALTA,100.0,,3.0
