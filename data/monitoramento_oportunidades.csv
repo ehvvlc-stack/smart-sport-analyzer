@@ -17,4 +17,4 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713988-11,2026-08-23 13:24:34,19713988,AGF x Odense BK,55,11,1 x 2,ALTA,AGF,79.8,59.6,100.0,69.0,7.0,AO_VIVO,,,
 19713984-12,2026-08-23 13:24:35,19713984,FC Midtjylland x Randers FC,60,12,1 x 0,ALTA,FC Midtjylland,73.2,46.4,100.0,59.0,3.0,AO_VIVO,,,
 19713988-15,2026-08-23 13:39:25,19713988,AGF x Odense BK,76,15,2 x 2,ALTA,AGF,80.5,61.0,100.0,70.0,9.0,AO_VIVO,,,
-19713984-15,2026-08-23 13:39:23,19713984,FC Midtjylland x Randers FC,75,15,1 x 0,BAIXA,FC Midtjylland,58.3,16.6,50.0,59.0,5.0,AO_VIVO,,,
+19713984-15,2026-08-23 13:39:26,19713984,FC Midtjylland x Randers FC,75,15,1 x 0,BAIXA,FC Midtjylland,58.3,16.6,50.0,59.0,5.0,AO_VIVO,,,
