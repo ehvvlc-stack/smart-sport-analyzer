@@ -2,4 +2,4 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19722811-18,2026-08-22 14:17:17,19722811,Dundee United x Dundee,90,18,0 x 0,BAIXA,Dundee,50.2,0.4,50.0,23.0,1.0,FINALIZADO,2026-08-22 22:24:27,0 x 2,MANUAL,,,,
 19713986-0,2026-08-23 10:03:18,19713986,Sønderjyske Fodbold x Nordsjælland,3,0,0 x 0,BAIXA,Sønderjyske Fodbold,50.0,0.0,50.0,50.0,0.0,AO_VIVO,,,,,,,
 19713986-1,2026-08-23 10:09:52,19713986,Sønderjyske Fodbold x Nordsjælland,9,1,0 x 0,BAIXA,Sønderjyske Fodbold,55.2,10.4,50.0,45.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0.0
-19713986-2,2026-08-23 10:13:17,19713986,Sønderjyske Fodbold x Nordsjælland,13,2,0 x 0,BAIXA,Nordsjælland,61.9,23.8,50.0,63.0,1.0,AO_VIVO,,,,ALTA,100.0,,0.0
+19713986-2,2026-08-23 10:13:38,19713986,Sønderjyske Fodbold x Nordsjælland,13,2,0 x 0,BAIXA,Nordsjælland,61.9,23.8,50.0,63.0,1.0,AO_VIVO,,,,ALTA,100.0,,0.0
