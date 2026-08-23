@@ -32,4 +32,4 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713980-9,2026-08-23 17:06:08,19713980,Viborg FF x FC København,46,9,3 x 0,ALTA,FC København,79.6,59.2,100.0,56.0,4.0,AO_VIVO,,,,,,,
 19713980-12,2026-08-23 17:23:21,19713980,Viborg FF x FC København,63,12,3 x 0,BAIXA,FC København,60.4,20.8,50.0,58.0,3.0,AO_VIVO,,,,,,,
 19713980-16,2026-08-23 17:42:47,19713980,Viborg FF x FC København,81,16,4 x 0,MODERADA,Viborg FF,56.5,13.0,100.0,42.0,-3.0,AO_VIVO,,,,,,,
-19713980-17,2026-08-23 17:45:26,19713980,Viborg FF x FC København,85,17,4 x 0,MODERADA,Viborg FF,56.5,13.0,100.0,42.0,-3.0,AO_VIVO,,,,ALTA,100.0,,17
+19713980-17,2026-08-23 17:45:27,19713980,Viborg FF x FC København,85,17,4 x 0,MODERADA,Viborg FF,56.5,13.0,100.0,42.0,-3.0,AO_VIVO,,,,ALTA,100.0,,17
