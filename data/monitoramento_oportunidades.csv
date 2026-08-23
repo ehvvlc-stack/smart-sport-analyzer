@@ -1,6 +1,7 @@
-id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_destaque,indice_destaque,diferenca,momento_destaque,posse_destaque,vantagem_corners,status_monitoramento,data_hora_finalizacao,placar_final,placar_final_origem
-19722811-18,2026-08-22 14:17:17,19722811,Dundee United x Dundee,90,18,0 x 0,BAIXA,Dundee,50.2,0.4,50.0,23.0,1.0,FINALIZADO,2026-08-22 22:24:27,0 x 2,MANUAL
-19713986-0,2026-08-23 10:03:18,19713986,Sønderjyske Fodbold x Nordsjælland,3,0,0 x 0,BAIXA,Sønderjyske Fodbold,50.0,0.0,50.0,50.0,0.0,AO_VIVO,,,
-19713986-3,2026-08-23 10:18:28,19713986,Sønderjyske Fodbold x Nordsjælland,18,3,0 x 0,BAIXA,Nordsjælland,63.7,27.4,50.0,67.0,1.0,AO_VIVO,,,
-19713986-6,2026-08-23 10:36:34,19713986,Sønderjyske Fodbold x Nordsjælland,33,6,0 x 0,BAIXA,Sønderjyske Fodbold,53.1,6.2,50.0,35.0,1.0,AO_VIVO,,,
-19713986-9,2026-08-23 11:06:40,19713986,Sønderjyske Fodbold x Nordsjælland,46,9,0 x 1,ALTA,Nordsjælland,64.3,28.6,100.0,67.0,-1.0,AO_VIVO,,,
+id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_destaque,indice_destaque,diferenca,momento_destaque,posse_destaque,vantagem_corners,status_monitoramento,data_hora_finalizacao,placar_final,placar_final_origem,qualidade_dados,cobertura_dados,campos_faltantes,eventos_disponiveis
+19722811-18,2026-08-22 14:17:17,19722811,Dundee United x Dundee,90,18,0 x 0,BAIXA,Dundee,50.2,0.4,50.0,23.0,1.0,FINALIZADO,2026-08-22 22:24:27,0 x 2,MANUAL,,,,
+19713986-0,2026-08-23 10:03:18,19713986,Sønderjyske Fodbold x Nordsjælland,3,0,0 x 0,BAIXA,Sønderjyske Fodbold,50.0,0.0,50.0,50.0,0.0,AO_VIVO,,,,,,,
+19713986-3,2026-08-23 10:18:28,19713986,Sønderjyske Fodbold x Nordsjælland,18,3,0 x 0,BAIXA,Nordsjælland,63.7,27.4,50.0,67.0,1.0,AO_VIVO,,,,,,,
+19713986-6,2026-08-23 10:36:34,19713986,Sønderjyske Fodbold x Nordsjælland,33,6,0 x 0,BAIXA,Sønderjyske Fodbold,53.1,6.2,50.0,35.0,1.0,AO_VIVO,,,,,,,
+19713986-9,2026-08-23 11:06:40,19713986,Sønderjyske Fodbold x Nordsjælland,46,9,0 x 1,ALTA,Nordsjælland,64.3,28.6,100.0,67.0,-1.0,AO_VIVO,,,,,,,
+19713986-12,2026-08-23 11:20:19,19713986,Sønderjyske Fodbold x Nordsjælland,60,12,0 x 2,ALTA,Nordsjælland,67.5,35.0,100.0,68.0,0.0,AO_VIVO,,,,ALTA,100.0,,8
