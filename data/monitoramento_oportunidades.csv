@@ -28,4 +28,4 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713980-0,2026-08-23 16:04:02,19713980,Viborg FF x FC København,1,0,1 x 0,ALTA,Viborg FF,65.0,30.0,100.0,50.0,0.0,AO_VIVO,,,
 19713982-18,2026-08-23 16:04:03,19713982,Horsens x Lyngby Boldklub,90,18,2 x 1,BAIXA,Horsens,51.8,3.6,100.0,41.0,-7.0,FINALIZADO,2026-08-23 16:19:01,2 x 1,ULTIMO_OBSERVADO
 19713980-3,2026-08-23 16:19:12,19713980,Viborg FF x FC København,16,3,3 x 0,ALTA,Viborg FF,72.3,44.6,100.0,54.0,0.0,AO_VIVO,,,
-19713980-6,2026-08-23 16:34:03,19713980,Viborg FF x FC København,31,6,3 x 0,BAIXA,Viborg FF,56.2,12.4,50.0,49.0,0.0,AO_VIVO,,,
+19713980-6,2026-08-23 16:34:11,19713980,Viborg FF x FC København,31,6,3 x 0,BAIXA,Viborg FF,56.2,12.4,50.0,49.0,0.0,AO_VIVO,,,
