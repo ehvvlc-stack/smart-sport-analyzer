@@ -8,6 +8,17 @@ import pandas as pd
 import requests
 
 SPORTMONKS_TOKEN = os.getenv("SPORTMONKS_TOKEN", "").strip()
+APIFOOTBALL_KEY = os.getenv("APIFOOTBALL_KEY", "").strip()
+APIFOOTBALL_INTERVALO_SEGUNDOS = int(
+    os.getenv("APIFOOTBALL_INTERVALO_SEGUNDOS", "2400")
+)
+APIFOOTBALL_RESERVA_DIA = int(
+    os.getenv("APIFOOTBALL_RESERVA_DIA", "10")
+)
+APIFOOTBALL_PATH = os.getenv(
+    "APIFOOTBALL_PATH",
+    "data/monitoramento_apifootball.csv"
+).strip()
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "").strip()
 GITHUB_REPO = os.getenv("GITHUB_REPO", "ehvvlc-stack/smart-sport-analyzer").strip()
 GITHUB_BRANCH = os.getenv("GITHUB_BRANCH", "main").strip()
@@ -84,6 +95,592 @@ def buscar_jogos_live():
 
     return completos, 200
 
+
+def apifootball_headers():
+    return {
+        "x-apisports-key": APIFOOTBALL_KEY
+    }
+
+
+def apifootball_get(endpoint, params=None):
+    if not APIFOOTBALL_KEY:
+        return None, 0
+
+    url = (
+        "https://v3.football.api-sports.io/"
+        + endpoint.lstrip("/")
+    )
+
+    try:
+        r = requests.get(
+            url,
+            headers=apifootball_headers(),
+            params=params or {},
+            timeout=25
+        )
+
+        restante = r.headers.get(
+            "x-ratelimit-requests-remaining"
+        )
+
+        try:
+            restante = int(restante)
+        except Exception:
+            restante = -1
+
+        if r.status_code != 200:
+            log(
+                f"API-Football status {r.status_code}"
+            )
+            return None, restante
+
+        return r.json(), restante
+
+    except requests.RequestException as exc:
+        log(
+            f"API-Football erro de rede: {exc}"
+        )
+        return None, -1
+
+
+def ler_csv_github_generico(caminho, colunas):
+    url = (
+        f"https://api.github.com/repos/"
+        f"{GITHUB_REPO}/contents/{caminho}"
+    )
+
+    try:
+        r = requests.get(
+            url,
+            headers=gh_headers(),
+            params={"ref": GITHUB_BRANCH},
+            timeout=20
+        )
+
+        if r.status_code == 404:
+            return pd.DataFrame(
+                columns=colunas
+            )
+
+        if r.status_code != 200:
+            log(
+                f"Falha ao ler {caminho}: "
+                f"{r.status_code}"
+            )
+            return pd.DataFrame(
+                columns=colunas
+            )
+
+        texto = base64.b64decode(
+            r.json().get("content", "")
+        ).decode(
+            "utf-8-sig"
+        )
+
+        df = pd.read_csv(
+            StringIO(texto)
+        )
+
+    except Exception as exc:
+        log(
+            f"Erro ao ler {caminho}: {exc}"
+        )
+        return pd.DataFrame(
+            columns=colunas
+        )
+
+    for coluna in colunas:
+        if coluna not in df.columns:
+            df[coluna] = ""
+
+    return df[colunas]
+
+
+def salvar_csv_github_generico(
+    caminho,
+    df,
+    mensagem
+):
+    url = (
+        f"https://api.github.com/repos/"
+        f"{GITHUB_REPO}/contents/{caminho}"
+    )
+
+    sha = None
+
+    try:
+        atual = requests.get(
+            url,
+            headers=gh_headers(),
+            params={"ref": GITHUB_BRANCH},
+            timeout=20
+        )
+
+        if atual.status_code == 200:
+            sha = atual.json().get("sha")
+
+        payload = {
+            "message": mensagem,
+            "content": base64.b64encode(
+                df.to_csv(
+                    index=False
+                ).encode("utf-8")
+            ).decode("ascii"),
+            "branch": GITHUB_BRANCH,
+        }
+
+        if sha:
+            payload["sha"] = sha
+
+        r = requests.put(
+            url,
+            headers=gh_headers(),
+            json=payload,
+            timeout=25
+        )
+
+        if r.status_code not in (
+            200,
+            201
+        ):
+            log(
+                f"Falha ao salvar {caminho}: "
+                f"{r.status_code}"
+            )
+            return False
+
+        return True
+
+    except Exception as exc:
+        log(
+            f"Erro ao salvar {caminho}: {exc}"
+        )
+        return False
+
+
+COLUNAS_APIFOOTBALL = [
+    "data_hora",
+    "fixture_id",
+    "liga",
+    "pais",
+    "jogo",
+    "minuto",
+    "placar",
+    "status",
+    "posse_casa",
+    "posse_fora",
+    "corners_casa",
+    "corners_fora",
+    "chutes_gol_casa",
+    "chutes_gol_fora",
+    "chutes_total_casa",
+    "chutes_total_fora",
+    "amarelos_casa",
+    "amarelos_fora",
+    "vermelhos_casa",
+    "vermelhos_fora",
+    "qualidade_coleta",
+    "quota_restante",
+]
+
+
+def normalizar_numero_apifootball(valor):
+    if valor is None:
+        return None
+
+    if isinstance(valor, str):
+        valor = valor.replace(
+            "%",
+            ""
+        ).strip()
+
+    try:
+        return float(valor)
+    except Exception:
+        return None
+
+
+def extrair_stats_apifootball(resposta):
+    saida = {
+        "home": {},
+        "away": {},
+    }
+
+    times = (
+        resposta.get(
+            "response",
+            []
+        )
+        if resposta
+        else []
+    )
+
+    for idx, bloco in enumerate(times[:2]):
+        lado = (
+            "home"
+            if idx == 0
+            else "away"
+        )
+
+        for item in bloco.get(
+            "statistics",
+            []
+        ) or []:
+            tipo = str(
+                item.get(
+                    "type",
+                    ""
+                )
+            ).strip().lower()
+
+            valor = normalizar_numero_apifootball(
+                item.get(
+                    "value"
+                )
+            )
+
+            saida[lado][tipo] = valor
+
+    return saida
+
+
+def stat_af(stats, lado, nomes):
+    mapa = stats.get(
+        lado,
+        {}
+    )
+
+    for nome in nomes:
+        chave = nome.lower()
+        if chave in mapa:
+            return mapa.get(chave)
+
+    return None
+
+
+def ciclo_apifootball():
+    """
+    Coleta experimental e separada da API-Football.
+
+    Conservador por causa do plano gratuito de 100 req/dia:
+    - roda, por padrão, a cada 40 min;
+    - 1 chamada para descobrir jogos ao vivo;
+    - no máximo 1 chamada adicional de estatísticas por ciclo;
+    - para quando a quota restante chega à reserva configurada.
+
+    Não mistura estes dados com os sinais SportMonks.
+    Salva em data/monitoramento_apifootball.csv.
+    """
+    if not APIFOOTBALL_KEY:
+        log(
+            "API-Football: chave ausente, "
+            "coleta complementar desativada"
+        )
+        return
+
+    dados, restante = apifootball_get(
+        "fixtures",
+        {"live": "all"}
+    )
+
+    if dados is None:
+        return
+
+    if (
+        restante >= 0
+        and restante <= APIFOOTBALL_RESERVA_DIA
+    ):
+        log(
+            "API-Football: reserva diária atingida "
+            f"({restante} restantes)"
+        )
+        return
+
+    jogos = dados.get(
+        "response",
+        []
+    ) or []
+
+    if not jogos:
+        log(
+            "API-Football: 0 jogos ao vivo • "
+            f"quota restante {restante}"
+        )
+        return
+
+    # Por segurança de quota, detalhamos apenas 1 jogo por ciclo.
+    jogo = jogos[0]
+
+    fixture = jogo.get(
+        "fixture",
+        {}
+    ) or {}
+
+    fixture_id = fixture.get(
+        "id"
+    )
+
+    if fixture_id is None:
+        return
+
+    stats_resp, restante_stats = apifootball_get(
+        "fixtures/statistics",
+        {"fixture": fixture_id}
+    )
+
+    if stats_resp is None:
+        return
+
+    restante_final = (
+        restante_stats
+        if restante_stats >= 0
+        else restante
+    )
+
+    times = jogo.get(
+        "teams",
+        {}
+    ) or {}
+
+    home_name = (
+        times.get(
+            "home",
+            {}
+        ) or {}
+    ).get(
+        "name",
+        "Casa"
+    )
+
+    away_name = (
+        times.get(
+            "away",
+            {}
+        ) or {}
+    ).get(
+        "name",
+        "Visitante"
+    )
+
+    goals = jogo.get(
+        "goals",
+        {}
+    ) or {}
+
+    status = fixture.get(
+        "status",
+        {}
+    ) or {}
+
+    minuto = status.get(
+        "elapsed"
+    )
+
+    stats = extrair_stats_apifootball(
+        stats_resp
+    )
+
+    posse_h = stat_af(
+        stats,
+        "home",
+        ["Ball Possession"]
+    )
+    posse_a = stat_af(
+        stats,
+        "away",
+        ["Ball Possession"]
+    )
+
+    corners_h = stat_af(
+        stats,
+        "home",
+        ["Corner Kicks"]
+    )
+    corners_a = stat_af(
+        stats,
+        "away",
+        ["Corner Kicks"]
+    )
+
+    sog_h = stat_af(
+        stats,
+        "home",
+        ["Shots on Goal"]
+    )
+    sog_a = stat_af(
+        stats,
+        "away",
+        ["Shots on Goal"]
+    )
+
+    shots_h = stat_af(
+        stats,
+        "home",
+        ["Total Shots"]
+    )
+    shots_a = stat_af(
+        stats,
+        "away",
+        ["Total Shots"]
+    )
+
+    yellow_h = stat_af(
+        stats,
+        "home",
+        ["Yellow Cards"]
+    )
+    yellow_a = stat_af(
+        stats,
+        "away",
+        ["Yellow Cards"]
+    )
+
+    red_h = stat_af(
+        stats,
+        "home",
+        ["Red Cards"]
+    )
+    red_a = stat_af(
+        stats,
+        "away",
+        ["Red Cards"]
+    )
+
+    essenciais = [
+        posse_h,
+        posse_a,
+        corners_h,
+        corners_a,
+        sog_h,
+        sog_a,
+    ]
+
+    presentes = sum(
+        1
+        for valor in essenciais
+        if valor is not None
+    )
+
+    cobertura = (
+        presentes
+        / len(essenciais)
+        * 100
+    )
+
+    if cobertura >= 83:
+        qualidade = "ALTA"
+    elif cobertura >= 50:
+        qualidade = "MEDIA"
+    else:
+        qualidade = "INSUFICIENTE"
+
+    league = jogo.get(
+        "league",
+        {}
+    ) or {}
+
+    linha = {
+        "data_hora": datetime.now().strftime(
+            "%Y-%m-%d %H:%M:%S"
+        ),
+        "fixture_id": fixture_id,
+        "liga": league.get(
+            "name",
+            ""
+        ),
+        "pais": league.get(
+            "country",
+            ""
+        ),
+        "jogo": (
+            f"{home_name} x {away_name}"
+        ),
+        "minuto": minuto,
+        "placar": (
+            f"{goals.get('home', 0)} x "
+            f"{goals.get('away', 0)}"
+        ),
+        "status": status.get(
+            "short",
+            ""
+        ),
+        "posse_casa": posse_h,
+        "posse_fora": posse_a,
+        "corners_casa": corners_h,
+        "corners_fora": corners_a,
+        "chutes_gol_casa": sog_h,
+        "chutes_gol_fora": sog_a,
+        "chutes_total_casa": shots_h,
+        "chutes_total_fora": shots_a,
+        "amarelos_casa": yellow_h,
+        "amarelos_fora": yellow_a,
+        "vermelhos_casa": red_h,
+        "vermelhos_fora": red_a,
+        "qualidade_coleta": qualidade,
+        "quota_restante": restante_final,
+    }
+
+    df = ler_csv_github_generico(
+        APIFOOTBALL_PATH,
+        COLUNAS_APIFOOTBALL
+    )
+
+    # Evita duplicar exatamente o mesmo jogo/minuto.
+    if not df.empty:
+        mascara = (
+            df["fixture_id"]
+            .astype(str)
+            .eq(str(fixture_id))
+            &
+            df["minuto"]
+            .astype(str)
+            .eq(str(minuto))
+        )
+    else:
+        mascara = pd.Series(
+            dtype=bool
+        )
+
+    if (
+        not df.empty
+        and mascara.any()
+    ):
+        idx = df.index[
+            mascara
+        ][-1]
+
+        for chave, valor in linha.items():
+            df.at[
+                idx,
+                chave
+            ] = valor
+    else:
+        df = pd.concat(
+            [
+                df,
+                pd.DataFrame(
+                    [linha]
+                )
+            ],
+            ignore_index=True
+        )
+
+    ok = salvar_csv_github_generico(
+        APIFOOTBALL_PATH,
+        df,
+        "Atualiza coleta experimental API-Football"
+    )
+
+    log(
+        "API-Football: "
+        f"{len(jogos)} ao vivo • "
+        f"capturado {home_name} x {away_name} "
+        f"min {minuto} • dados {qualidade} • "
+        f"quota {restante_final} • "
+        f"GitHub {'OK' if ok else 'FALHOU'}"
+    )
+
+
 def identificar_times(jogo):
     casa, visitante = "Casa", "Visitante"
     ids = {"home": None, "away": None}
@@ -155,13 +752,13 @@ def ler_estatisticas(jogo, ids):
         elif (
             "yellowred" in tipo or "yellow-red" in tipo
             or "redcard" in tipo or "red card" in tipo
-            or "cartão vermelho" in tipo
+            or "cartÃ£o vermelho" in tipo
         ):
             dados[lado]["red"] += valor
             dados["_presentes"][lado]["red"] = True
         elif (
             "yellowcard" in tipo or "yellow card" in tipo
-            or "cartão amarelo" in tipo
+            or "cartÃ£o amarelo" in tipo
         ):
             dados[lado]["yellow"] = valor
             dados["_presentes"][lado]["yellow"] = True
@@ -192,7 +789,7 @@ def avaliar_qualidade_dados(jogo, stats, minuto):
     elif cobertura >= 83:
         nivel = "ALTA"
     elif cobertura >= 50:
-        nivel = "MÉDIA"
+        nivel = "MÃ‰DIA"
     else:
         nivel = "INSUFICIENTE"
 
@@ -379,7 +976,7 @@ def salvar_monitoramento_github(df):
             sha = atual.json().get("sha")
 
         payload = {
-            "message": "Atualiza monitoramento autônomo",
+            "message": "Atualiza monitoramento autÃ´nomo",
             "content": base64.b64encode(df.to_csv(index=False).encode("utf-8")).decode("ascii"),
             "branch": GITHUB_BRANCH,
         }
@@ -528,7 +1125,7 @@ def validar_ambiente():
     if not GITHUB_REPO:
         faltantes.append("GITHUB_REPO")
     if faltantes:
-        raise RuntimeError("Variáveis ausentes: " + ", ".join(faltantes))
+        raise RuntimeError("VariÃ¡veis ausentes: " + ", ".join(faltantes))
 
 def ciclo():
     df = ler_monitoramento_github()
@@ -559,24 +1156,62 @@ def ciclo():
 
     if alterou:
         ok = salvar_monitoramento_github(df)
-        log("Persistência GitHub: " + ("OK" if ok else "FALHOU"))
+        log("PersistÃªncia GitHub: " + ("OK" if ok else "FALHOU"))
 
     log(
-        f"Varredura: {len(jogos)} ao vivo • "
-        f"{processados} processados • {bloqueados} bloqueados"
+        f"Varredura: {len(jogos)} ao vivo â€¢ "
+        f"{processados} processados â€¢ {bloqueados} bloqueados"
     )
 
 def main():
     validar_ambiente()
-    log("Coletor autônomo iniciado")
+
+    log(
+        "Coletor híbrido iniciado: "
+        "SportMonks + API-Football experimental"
+    )
+
+    proxima_api_football = 0.0
+
     while True:
         inicio = time.time()
+
         try:
             ciclo()
         except Exception as exc:
-            log(f"Erro geral: {exc}")
-        gasto = time.time() - inicio
-        time.sleep(max(10, INTERVALO_SEGUNDOS - gasto))
+            log(
+                f"Erro geral SportMonks: {exc}"
+            )
+
+        agora = time.time()
+
+        if (
+            APIFOOTBALL_KEY
+            and agora >= proxima_api_football
+        ):
+            try:
+                ciclo_apifootball()
+            except Exception as exc:
+                log(
+                    f"Erro geral API-Football: {exc}"
+                )
+
+            proxima_api_football = (
+                time.time()
+                + APIFOOTBALL_INTERVALO_SEGUNDOS
+            )
+
+        gasto = (
+            time.time()
+            - inicio
+        )
+
+        time.sleep(
+            max(
+                10,
+                INTERVALO_SEGUNDOS - gasto
+            )
+        )
 
 if __name__ == "__main__":
     main()
