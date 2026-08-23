@@ -23,4 +23,4 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713984-16,2026-08-23 14:03:19,19713984,FC Midtjylland x Randers FC,84,16,1 x 0,BAIXA,FC Midtjylland,57.6,15.2,50.0,58.0,5.0,FINALIZADO,2026-08-23 14:34:31,1 x 0,ULTIMO_OBSERVADO
 19713982-6,2026-08-23 14:34:40,19713982,Horsens x Lyngby Boldklub,34,6,1 x 0,BAIXA,Horsens,52.4,4.8,50.0,54.0,-3.0,AO_VIVO,,,
 19713982-9,2026-08-23 15:07:48,19713982,Horsens x Lyngby Boldklub,46,9,1 x 0,ALTA,Lyngby Boldklub,71.7,43.4,100.0,45.0,4.0,AO_VIVO,,,
-19713982-13,2026-08-23 15:28:22,19713982,Horsens x Lyngby Boldklub,66,13,1 x 1,ALTA,Lyngby Boldklub,77.4,54.8,100.0,54.0,6.0,AO_VIVO,,,
+19713982-13,2026-08-23 15:28:31,19713982,Horsens x Lyngby Boldklub,66,13,1 x 1,ALTA,Lyngby Boldklub,77.4,54.8,100.0,54.0,6.0,AO_VIVO,,,
