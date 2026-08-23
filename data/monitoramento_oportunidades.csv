@@ -1,18 +1,10 @@
-id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_destaque,indice_destaque,diferenca,momento_destaque,posse_destaque,vantagem_corners,status_monitoramento,data_hora_finalizacao,placar_final,placar_final_origem,qualidade_dados,cobertura_dados,campos_faltantes,eventos_disponiveis
-19722811-18,2026-08-22 14:17:17,19722811,Dundee United x Dundee,90,18,0 x 0,BAIXA,Dundee,50.2,0.4,50.0,23.0,1.0,FINALIZADO,2026-08-22 22:24:27,0 x 2,MANUAL,,,,
-19713986-0,2026-08-23 10:03:18,19713986,Sønderjyske Fodbold x Nordsjælland,3,0,0 x 0,BAIXA,Sønderjyske Fodbold,50.0,0.0,50.0,50.0,0.0,FINALIZADO,2026-08-23 12:14:04,0 x 3,ULTIMO_OBSERVADO,,,,
-19713986-3,2026-08-23 10:18:28,19713986,Sønderjyske Fodbold x Nordsjælland,18,3,0 x 0,BAIXA,Nordsjælland,63.7,27.4,50.0,67.0,1.0,FINALIZADO,2026-08-23 12:14:04,0 x 3,ULTIMO_OBSERVADO,,,,
-19713986-6,2026-08-23 10:36:34,19713986,Sønderjyske Fodbold x Nordsjælland,33,6,0 x 0,BAIXA,Sønderjyske Fodbold,53.1,6.2,50.0,35.0,1.0,FINALIZADO,2026-08-23 12:14:04,0 x 3,ULTIMO_OBSERVADO,,,,
-19713986-9,2026-08-23 11:06:40,19713986,Sønderjyske Fodbold x Nordsjælland,46,9,0 x 1,ALTA,Nordsjælland,64.3,28.6,100.0,67.0,-1.0,FINALIZADO,2026-08-23 12:14:04,0 x 3,ULTIMO_OBSERVADO,,,,
-19713986-14,2026-08-23 11:35:08,19713986,Sønderjyske Fodbold x Nordsjælland,74,14,0 x 2,MODERADA,Sønderjyske Fodbold,61.6,23.2,100.0,36.0,-1.0,FINALIZADO,2026-08-23 12:14:04,0 x 3,ULTIMO_OBSERVADO,,,,
-19713986-17,2026-08-23 12:08:56,19713986,Sønderjyske Fodbold x Nordsjælland,87,17,0 x 3,MODERADA,Nordsjælland,60.3,20.6,90.0,62.0,-2.0,FINALIZADO,2026-08-23 12:14:04,0 x 3,ULTIMO_OBSERVADO,ALTA,100.0,,17.0
-19713984-0,2026-08-23 12:02:49,19713984,FC Midtjylland x Randers FC,2,0,0 x 0,BAIXA,FC Midtjylland,50.0,0.0,50.0,50.0,0.0,AO_VIVO,,,,,,,
-19713988-0,2026-08-23 12:02:50,19713988,AGF x Odense BK,2,0,0 x 0,BAIXA,Odense BK,56.2,12.4,50.0,78.0,0.0,AO_VIVO,,,,,,,
-19713988-1,2026-08-23 12:08:56,19713988,AGF x Odense BK,8,1,0 x 0,BAIXA,AGF,60.6,21.2,50.0,52.0,2.0,AO_VIVO,,,,ALTA,100.0,,0.0
-19713984-1,2026-08-23 12:08:56,19713984,FC Midtjylland x Randers FC,8,1,0 x 0,BAIXA,Randers FC,54.1,8.2,50.0,47.0,1.0,AO_VIVO,,,,ALTA,100.0,,0.0
-19713988-2,2026-08-23 12:14:04,19713988,AGF x Odense BK,14,2,0 x 0,BAIXA,AGF,60.4,20.8,50.0,53.0,2.0,AO_VIVO,,,,ALTA,100.0,,0.0
-19713984-2,2026-08-23 12:14:04,19713984,FC Midtjylland x Randers FC,14,2,0 x 0,BAIXA,Randers FC,56.3,12.6,50.0,57.0,2.0,AO_VIVO,,,,ALTA,100.0,,0.0
-19713984-3,2026-08-23 12:15:35,19713984,FC Midtjylland x Randers FC,15,3,0 x 0,BAIXA,FC Midtjylland,51.1,2.2,50.0,43.0,-1.0,AO_VIVO,,,,ALTA,100.0,,0.0
-19713988-3,2026-08-23 12:15:35,19713988,AGF x Odense BK,15,3,0 x 0,BAIXA,AGF,61.7,23.4,50.0,59.0,3.0,AO_VIVO,,,,ALTA,100.0,,0.0
-19713984-4,2026-08-23 12:20:02,19713984,FC Midtjylland x Randers FC,20,4,0 x 0,BAIXA,FC Midtjylland,56.6,13.2,50.0,51.0,0.0,AO_VIVO,,,,ALTA,100.0,,0.0
-19713988-4,2026-08-23 12:20:02,19713988,AGF x Odense BK,20,4,0 x 0,BAIXA,AGF,62.7,25.4,50.0,63.0,3.0,AO_VIVO,,,,ALTA,100.0,,0.0
+id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_destaque,indice_destaque,diferenca,momento_destaque,posse_destaque,vantagem_corners,status_monitoramento,data_hora_finalizacao,placar_final,placar_final_origem
+19722811-18,2026-08-22 14:17:17,19722811,Dundee United x Dundee,90,18,0 x 0,BAIXA,Dundee,50.2,0.4,50.0,23.0,1.0,FINALIZADO,2026-08-22 22:24:27,0 x 2,MANUAL
+19713986-0,2026-08-23 10:03:18,19713986,Sønderjyske Fodbold x Nordsjælland,3,0,0 x 0,BAIXA,Sønderjyske Fodbold,50.0,0.0,50.0,50.0,0.0,FINALIZADO,2026-08-23 12:20:29,0 x 3,ULTIMO_OBSERVADO
+19713986-3,2026-08-23 10:18:28,19713986,Sønderjyske Fodbold x Nordsjælland,18,3,0 x 0,BAIXA,Nordsjælland,63.7,27.4,50.0,67.0,1.0,FINALIZADO,2026-08-23 12:20:29,0 x 3,ULTIMO_OBSERVADO
+19713986-6,2026-08-23 10:36:34,19713986,Sønderjyske Fodbold x Nordsjælland,33,6,0 x 0,BAIXA,Sønderjyske Fodbold,53.1,6.2,50.0,35.0,1.0,FINALIZADO,2026-08-23 12:20:29,0 x 3,ULTIMO_OBSERVADO
+19713986-9,2026-08-23 11:06:40,19713986,Sønderjyske Fodbold x Nordsjælland,46,9,0 x 1,ALTA,Nordsjælland,64.3,28.6,100.0,67.0,-1.0,FINALIZADO,2026-08-23 12:20:29,0 x 3,ULTIMO_OBSERVADO
+19713986-14,2026-08-23 11:35:08,19713986,Sønderjyske Fodbold x Nordsjælland,74,14,0 x 2,MODERADA,Sønderjyske Fodbold,61.6,23.2,100.0,36.0,-1.0,FINALIZADO,2026-08-23 12:20:29,0 x 3,ULTIMO_OBSERVADO
+19713986-17,2026-08-23 12:02:48,19713986,Sønderjyske Fodbold x Nordsjælland,87,17,0 x 3,MODERADA,Nordsjælland,60.3,20.6,90.0,62.0,-2.0,FINALIZADO,2026-08-23 12:20:29,0 x 3,ULTIMO_OBSERVADO
+19713984-0,2026-08-23 12:02:49,19713984,FC Midtjylland x Randers FC,2,0,0 x 0,BAIXA,FC Midtjylland,50.0,0.0,50.0,50.0,0.0,AO_VIVO,,,
+19713988-0,2026-08-23 12:02:50,19713988,AGF x Odense BK,2,0,0 x 0,BAIXA,Odense BK,56.2,12.4,50.0,78.0,0.0,AO_VIVO,,,
