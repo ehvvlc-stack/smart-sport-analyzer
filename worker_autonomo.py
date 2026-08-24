@@ -158,7 +158,7 @@ def apifootball_get(endpoint, params=None):
         except Exception:
             restante = -1
 
-        if r.status_code != 200:
+     if r.status_code != 200:
     log(
         f"API-Football status {r.status_code}: {r.text[:500]}"
     )
