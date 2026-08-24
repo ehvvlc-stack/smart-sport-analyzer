@@ -141,7 +141,7 @@ def apifootball_get(endpoint, params=None):
         + endpoint.lstrip("/")
     )
 
-       try:
+    try:
         r = requests.get(
             url,
             headers=apifootball_headers(),
@@ -166,7 +166,7 @@ def apifootball_get(endpoint, params=None):
 
         return r.json(), restante
 
-        except requests.RequestException as exc:
+    except requests.RequestException as exc:
         log(
             f"API-Football erro de rede: {exc}"
         )
