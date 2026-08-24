@@ -26,7 +26,37 @@ GITHUB_MONITORAMENTO_PATH = os.getenv(
     "GITHUB_MONITORAMENTO_PATH",
     "data/monitoramento_oportunidades.csv"
 ).strip()
+ARQUIVO_VALIDACAO = "data/validacao_alertas.csv"
 
+COLUNAS_VALIDACAO = [
+    "id_alerta",
+    "data_hora_alerta",
+    "fixture_id",
+    "jogo",
+    "minuto_alerta",
+    "placar_alerta",
+    "time_destaque",
+    "indice_alerta",
+    "momento_10_min",
+    "qualidade_score",
+    "qualidade_nivel",
+    "gol_ate_5_min",
+    "gol_ate_10_min",
+    "time_gol",
+    "minuto_gol",
+    "minutos_apos_alerta",
+    "resultado_gol",
+    "gol_time_destaque_5_min",
+    "gol_time_destaque_10_min",
+    "escanteio_ate_5_min",
+    "escanteio_ate_10_min",
+    "escanteio_time_destaque_5_min",
+    "escanteio_time_destaque_10_min",
+    "primeiro_escanteio_time",
+    "primeiro_escanteio_minuto",
+    "minutos_ate_escanteio",
+    "status",
+]
 INTERVALO_SEGUNDOS = int(os.getenv("INTERVALO_SEGUNDOS", "60"))
 BASE_URL = "https://api.sportmonks.com/v3/football"
 
@@ -841,6 +871,195 @@ def preparar_eventos(jogo, nomes_por_id):
         linhas.append({"minuto_num": minuto, "Time": time_nome, "Evento": tipo})
     linhas.sort(key=lambda x: x["minuto_num"])
     return linhas
+def revisar_validacoes_pendentes_worker():
+    df = ler_validacoes_github()
+
+    if df.empty:
+        return False
+
+    colunas_texto = [
+        "gol_ate_5_min",
+        "gol_ate_10_min",
+        "time_gol",
+        "resultado_gol",
+        "gol_time_destaque_5_min",
+        "gol_time_destaque_10_min",
+        "status",
+    ]
+
+    for coluna in colunas_texto:
+        if coluna in df.columns:
+            df[coluna] = df[coluna].astype("object")
+
+    pendentes = df.index[
+        df["status"].astype(str) == "ACOMPANHANDO"
+    ].tolist()
+
+    if not pendentes:
+        return False
+
+    alterou = False
+    cache_jogos = {}
+
+    for idx in pendentes:
+        try:
+            fixture_id = int(
+                float(df.at[idx, "fixture_id"])
+            )
+
+            minuto_alerta = int(
+                float(df.at[idx, "minuto_alerta"])
+            )
+
+            time_destaque = str(
+                df.at[idx, "time_destaque"]
+            )
+
+            if fixture_id not in cache_jogos:
+                cache_jogos[fixture_id] = buscar_fixture(
+                    fixture_id
+                )
+
+            jogo = cache_jogos[fixture_id]
+
+            if not jogo:
+                continue
+
+            casa, visitante, ids, nomes = identificar_times(jogo)
+
+            eventos = preparar_eventos(
+                jogo,
+                nomes
+            )
+
+            minuto_atual = minuto_estimado(jogo)
+
+            gols_depois = []
+
+            for evento in eventos:
+                nome = str(
+                    evento.get("Evento", "")
+                ).lower()
+
+                if "goal" not in nome:
+                    continue
+
+                try:
+                    minuto_evento = int(
+                        evento.get(
+                            "minuto_num",
+                            0
+                        ) or 0
+                    )
+                except Exception:
+                    continue
+
+                if (
+                    minuto_alerta
+                    < minuto_evento
+                    <= minuto_alerta + 10
+                ):
+                    gols_depois.append(evento)
+
+            gols_depois.sort(
+                key=lambda e: int(
+                    e.get(
+                        "minuto_num",
+                        999
+                    ) or 999
+                )
+            )
+
+            if gols_depois:
+                primeiro_gol = gols_depois[0]
+
+                minuto_gol = int(
+                    primeiro_gol.get(
+                        "minuto_num",
+                        0
+                    )
+                )
+
+                time_gol = str(
+                    primeiro_gol.get(
+                        "Time",
+                        ""
+                    )
+                )
+
+                delta = (
+                    minuto_gol
+                    - minuto_alerta
+                )
+
+                marcou_destaque = (
+                    time_gol
+                    == time_destaque
+                )
+
+                df.at[idx, "time_gol"] = time_gol
+                df.at[idx, "minuto_gol"] = minuto_gol
+                df.at[idx, "minutos_apos_alerta"] = delta
+
+                df.at[idx, "resultado_gol"] = (
+                    "TIME_DESTAQUE"
+                    if marcou_destaque
+                    else "ADVERSARIO"
+                )
+
+                if delta <= 5:
+                    df.at[idx, "gol_ate_5_min"] = "SIM"
+                    df.at[idx, "gol_time_destaque_5_min"] = (
+                        "SIM"
+                        if marcou_destaque
+                        else "NÃO"
+                    )
+                else:
+                    df.at[idx, "gol_ate_5_min"] = "NÃO"
+                    df.at[idx, "gol_time_destaque_5_min"] = "NÃO"
+
+                df.at[idx, "gol_ate_10_min"] = "SIM"
+
+                df.at[idx, "gol_time_destaque_10_min"] = (
+                    "SIM"
+                    if marcou_destaque
+                    else "NÃO"
+                )
+
+                df.at[idx, "status"] = "ENCERRADO_COM_GOL"
+
+                alterou = True
+
+            elif (
+                minuto_atual is not None
+                and minuto_atual >= minuto_alerta + 10
+            ):
+                df.at[idx, "gol_ate_5_min"] = "NÃO"
+                df.at[idx, "gol_ate_10_min"] = "NÃO"
+                df.at[idx, "gol_time_destaque_5_min"] = "NÃO"
+                df.at[idx, "gol_time_destaque_10_min"] = "NÃO"
+                df.at[idx, "resultado_gol"] = "SEM_GOL"
+                df.at[idx, "status"] = "ENCERRADO_SEM_GOL"
+
+                alterou = True
+
+        except Exception as erro:
+            log(
+                f"Erro ao revisar validação pendente "
+                f"{idx}: {erro}"
+            )
+
+    if alterou:
+        ok = salvar_validacoes_github(df)
+
+        log(
+            "Validações pendentes: "
+            + ("atualizadas" if ok else "falha ao salvar")
+        )
+
+        return ok
+
+    return False
 
 def pontuar_evento(evento):
     nome = str(evento["Evento"]).lower()
@@ -966,6 +1185,20 @@ def ler_monitoramento_github():
         if c not in df.columns:
             df[c] = ""
     return df[COLUNAS_MONITORAMENTO]
+
+def ler_validacoes_github():
+    return ler_csv_github_generico(
+        ARQUIVO_VALIDACAO,
+        COLUNAS_VALIDACAO
+    )
+
+
+def salvar_validacoes_github(df):
+    return salvar_csv_github_generico(
+        ARQUIVO_VALIDACAO,
+        df,
+        "Atualiza validação automática"
+    )
 
 def salvar_monitoramento_github(df):
     url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{GITHUB_MONITORAMENTO_PATH}"
@@ -1157,7 +1390,7 @@ def ciclo():
     if alterou:
         ok = salvar_monitoramento_github(df)
         log("PersistÃªncia GitHub: " + ("OK" if ok else "FALHOU"))
-
+    revisar_validacoes_pendentes_worker()
     log(
         f"Varredura: {len(jogos)} ao vivo â€¢ "
         f"{processados} processados â€¢ {bloqueados} bloqueados"
