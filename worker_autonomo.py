@@ -109,10 +109,17 @@ def buscar_jogos_live():
     if status != 200:
         return [], status
 
-    lives = [
-        jogo for jogo in dados.get("data", [])
-        if jogo.get("league_id") in LIGAS
-    ]
+   todos_live = dados.get("data", []) or []
+
+lives = [
+    jogo for jogo in todos_live
+    if jogo.get("league_id") in LIGAS
+]
+
+log(
+    f"SportMonks inplay: {len(todos_live)} recebidos • "
+    f"{len(lives)} nas ligas monitoradas"
+)
 
     completos = []
     for live in lives:
