@@ -427,7 +427,7 @@ def ciclo_apifootball():
         "fixtures",
         {"live": "all"}
     )
-log(
+    log(
     "API-Football resposta: "
     f"results={dados.get('results') if isinstance(dados, dict) else 'n/a'} • "
     f"errors={dados.get('errors') if isinstance(dados, dict) else 'n/a'}"
