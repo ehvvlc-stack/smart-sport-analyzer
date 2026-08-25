@@ -100,37 +100,45 @@ def buscar_fixture(fixture_id):
     if status != 200:
         return None
     return dados.get("data", {})
-
 def buscar_jogos_live():
     dados, status = requisicao(
         f"{BASE_URL}/livescores/inplay",
-        {"api_token": SPORTMONKS_TOKEN, "include": "participants;state"},
+        {
+            "api_token": SPORTMONKS_TOKEN,
+            "include": "participants;state",
+        },
     )
+
     if status != 200:
         return [], status
 
-   todos_live = dados.get("data", []) or []
+    todos_live = dados.get("data", []) or []
 
-lives = [
-    jogo for jogo in todos_live
-    if jogo.get("league_id") in LIGAS
-]
+    lives = [
+        jogo for jogo in todos_live
+        if jogo.get("league_id") in LIGAS
+    ]
 
-log(
-    f"SportMonks inplay: {len(todos_live)} recebidos • "
-    f"{len(lives)} nas ligas monitoradas"
-)
+    log(
+        f"SportMonks inplay: {len(todos_live)} recebidos • "
+        f"{len(lives)} nas ligas monitoradas"
+    )
 
     completos = []
+
     for live in lives:
         fixture_id = live.get("id")
+
         if fixture_id is None:
             continue
+
         jogo = buscar_fixture(fixture_id)
+
         if jogo:
             completos.append(jogo)
 
     return completos, 200
+
 
 
 def apifootball_headers():
