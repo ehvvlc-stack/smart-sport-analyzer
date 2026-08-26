@@ -1433,7 +1433,29 @@ def ciclo():
     if status != 200:
         log(f"SportMonks status {status}")
         return
+    if not jogos:
+        jogos_fd, status_fd = buscar_jogos_football_data()
 
+        if status_fd == 200:
+            log(
+                f"football-data.org fallback: "
+                f"{len(jogos_fd)} jogos encontrados"
+            )
+
+            for partida in jogos_fd[:5]:
+                casa = partida.get("homeTeam", {}).get("name", "?")
+                fora = partida.get("awayTeam", {}).get("name", "?")
+                data = partida.get("utcDate", "?")
+                estado = partida.get("status", "?")
+
+                log(
+                    f"football-data.org: {casa} x {fora} "
+                    f"• {data} • {estado}"
+                )
+        else:
+            log(
+                f"football-data.org fallback status {status_fd}"
+            )
     ativos = [jogo.get("id") for jogo in jogos]
     alterou = False
     processados = 0
