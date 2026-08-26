@@ -101,13 +101,13 @@ def buscar_fixture(fixture_id):
     if status != 200:
         return None
     return dados.get("data", {})
-    def buscar_jogos_football_data():
+def buscar_jogos_football_data():
     if not FOOTBALL_DATA_TOKEN:
         log("football-data.org: token ausente")
         return [], 0
 
     hoje = datetime.utcnow().date()
-    fim = hoje + pd.Timedelta(days=14)
+    fim = (pd.Timestamp(hoje) + pd.Timedelta(days=14)).date()
 
     url = "https://api.football-data.org/v4/competitions/BSA/matches"
 
@@ -117,7 +117,7 @@ def buscar_fixture(fixture_id):
 
     params = {
         "dateFrom": hoje.isoformat(),
-        "dateTo": fim.date().isoformat(),
+        "dateTo": fim.isoformat(),
     }
 
     try:
