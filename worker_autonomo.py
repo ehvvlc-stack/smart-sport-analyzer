@@ -9,6 +9,7 @@ import requests
 
 SPORTMONKS_TOKEN = os.getenv("SPORTMONKS_TOKEN", "").strip()
 APIFOOTBALL_KEY = os.getenv("APIFOOTBALL_KEY", "").strip()
+FOOTBALL_DATA_TOKEN = os.getenv("FOOTBALL_DATA_TOKEN", "").strip()
 APIFOOTBALL_INTERVALO_SEGUNDOS = int(
     os.getenv("APIFOOTBALL_INTERVALO_SEGUNDOS", "2400")
 )
@@ -100,6 +101,53 @@ def buscar_fixture(fixture_id):
     if status != 200:
         return None
     return dados.get("data", {})
+    def buscar_jogos_football_data():
+    if not FOOTBALL_DATA_TOKEN:
+        log("football-data.org: token ausente")
+        return [], 0
+
+    hoje = datetime.utcnow().date()
+    fim = hoje + pd.Timedelta(days=14)
+
+    url = "https://api.football-data.org/v4/competitions/BSA/matches"
+
+    headers = {
+        "X-Auth-Token": FOOTBALL_DATA_TOKEN
+    }
+
+    params = {
+        "dateFrom": hoje.isoformat(),
+        "dateTo": fim.date().isoformat(),
+    }
+
+    try:
+        r = requests.get(
+            url,
+            headers=headers,
+            params=params,
+            timeout=25,
+        )
+
+        if r.status_code != 200:
+            log(
+                f"football-data.org: status {r.status_code} "
+                f"{r.text[:300]}"
+            )
+            return [], r.status_code
+
+        dados = r.json()
+        jogos = dados.get("matches", []) or []
+
+        log(
+            f"football-data.org: {len(jogos)} jogos "
+            f"nos próximos 14 dias"
+        )
+
+        return jogos, 200
+
+    except requests.RequestException as exc:
+        log(f"football-data.org erro de rede: {exc}")
+        return [], -1
 def buscar_jogos_live():
     dados, status = requisicao(
         f"{BASE_URL}/livescores/inplay",
