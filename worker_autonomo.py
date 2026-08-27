@@ -349,7 +349,29 @@ def salvar_csv_github_generico(
             f"Erro ao salvar {caminho}: {exc}"
         )
         return False
+def salvar_agenda_football_data(jogos):
+    linhas = []
 
+    for partida in jogos:
+        linhas.append({
+            "fixture_id": partida.get("id"),
+            "data_hora": partida.get("utcDate"),
+            "status": partida.get("status"),
+            "casa_id": (partida.get("homeTeam") or {}).get("id"),
+            "casa": (partida.get("homeTeam") or {}).get("name"),
+            "fora_id": (partida.get("awayTeam") or {}).get("id"),
+            "fora": (partida.get("awayTeam") or {}).get("name"),
+            "competicao": (partida.get("competition") or {}).get("name"),
+            "rodada": partida.get("matchday"),
+        })
+
+    df_agenda = pd.DataFrame(linhas)
+
+    return salvar_csv_github_generico(
+        "data/agenda_football_data.csv",
+        df_agenda,
+        "Atualiza agenda football-data.org"
+    )
 
 COLUNAS_APIFOOTBALL = [
     "data_hora",
@@ -1436,17 +1458,19 @@ def ciclo():
     if not jogos:
         jogos_fd, status_fd = buscar_jogos_football_data()
 
-        if status_fd == 200:
-            log(
-                f"football-data.org fallback: "
-                f"{len(jogos_fd)} jogos encontrados"
-            )
+       if status_fd == 200:
+    log(
+        f"football-data.org fallback: "
+        f"{len(jogos_fd)} jogos encontrados"
+    )
 
-            for partida in jogos_fd[:5]:
-                casa = partida.get("homeTeam", {}).get("name", "?")
-                fora = partida.get("awayTeam", {}).get("name", "?")
-                data = partida.get("utcDate", "?")
-                estado = partida.get("status", "?")
+    salvar_agenda_football_data(jogos_fd)
+
+    for partida in jogos_fd[:5]:
+        casa = partida.get("homeTeam", {}).get("name", "?")
+        fora = partida.get("awayTeam", {}).get("name", "?")
+        data = partida.get("utcDate", "?")
+        estado = partida.get("status", "?")
 
                 log(
                     f"football-data.org: {casa} x {fora} "
