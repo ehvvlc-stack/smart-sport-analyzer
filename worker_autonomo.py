@@ -1452,25 +1452,27 @@ def validar_ambiente():
 def ciclo():
     df = ler_monitoramento_github()
     jogos, status = buscar_jogos_live()
+
     if status != 200:
         log(f"SportMonks status {status}")
         return
-           if not jogos:
-            jogos_fd, status_fd = buscar_jogos_football_data()
-    
-            if status_fd == 200:
-                log(
-                    f"football-data.org fallback: "
-                    f"{len(jogos_fd)} jogos encontrados"
-                )
-    
-                salvar_agenda_football_data(jogos_fd)
-    
-                for partida in jogos_fd[:5]:
-                    casa = partida.get("homeTeam", {}).get("name", "?")
-                    fora = partida.get("awayTeam", {}).get("name", "?")
-                    data = partida.get("utcDate", "?")
-                    estado = partida.get("status", "?")
+
+    if not jogos:
+        jogos_fd, status_fd = buscar_jogos_football_data()
+
+        if status_fd == 200:
+            log(
+                f"football-data.org fallback: "
+                f"{len(jogos_fd)} jogos encontrados"
+            )
+
+            salvar_agenda_football_data(jogos_fd)
+
+            for partida in jogos_fd[:5]:
+                casa = partida.get("homeTeam", {}).get("name", "?")
+                fora = partida.get("awayTeam", {}).get("name", "?")
+                data = partida.get("utcDate", "?")
+                estado = partida.get("status", "?")
 
                 log(
                     f"football-data.org: {casa} x {fora} "
@@ -1480,6 +1482,7 @@ def ciclo():
             log(
                 f"football-data.org fallback status {status_fd}"
             )
+
     ativos = [jogo.get("id") for jogo in jogos]
     alterou = False
     processados = 0
