@@ -7232,72 +7232,104 @@ with aba_hoje:
 
 with aba_futuros:
 
-    st.subheader(
-        "📅 Próximas partidas"
-    )
+    st.subheader("📅 Próximas partidas")
 
-    inicio = date.today()
-    fim = inicio + timedelta(
-        days=14
-    )
+    caminho_agenda = Path("data/agenda_football_data.csv")
 
-    url = (
-        f"{BASE_URL}/fixtures/"
-        f"between/"
-        f"{inicio.isoformat()}/"
-        f"{fim.isoformat()}"
-    )
+    if caminho_agenda.exists():
 
-    params = {
-        "api_token": TOKEN,
-        "include": "participants;state",
-        "per_page": 100
-    }
+        agenda = pd.read_csv(caminho_agenda)
 
-    dados, status = requisicao(
-        url,
-        params
-    )
+        if not agenda.empty:
 
-    if status == 200:
-        jogos = dados.get(
-            "data",
-            []
-        )
-
-        jogos = [
-            jogo
-            for jogo in jogos
-            if jogo.get("league_id") in LIGAS
-        ]
-
-        st.write(
-            "Partidas encontradas:",
-            len(jogos)
-        )
-
-        for jogo in jogos[:30]:
-            (
-                casa,
-                visitante,
-                _,
-                _
-            ) = identificar_times(
-                jogo
+            agenda["data_hora"] = pd.to_datetime(
+                agenda["data_hora"],
+                utc=True,
+                errors="coerce"
             )
 
-            liga = LIGAS.get(
-                jogo.get("league_id"),
-                "Liga"
+            agenda = agenda.dropna(
+                subset=["data_hora"]
+            )
+
+            agora_utc = pd.Timestamp.now(tz="UTC")
+
+            agenda = agenda[
+                agenda["data_hora"] >= agora_utc
+            ].copy()
+
+            agenda = agenda.sort_values(
+                "data_hora"
+            )
+
+            agenda["data_hora_brasilia"] = (
+                agenda["data_hora"]
+                .dt.tz_convert("America/Sao_Paulo")
+            )
+
+            st.caption(
+                "Agenda carregada via football-data.org"
             )
 
             st.write(
-                f"⚽ **{casa} × {visitante}** "
-                f"— {liga} — "
-                f"{jogo.get('starting_at', '-')}"
+                f"Partidas futuras encontradas: "
+                f"{len(agenda)}"
             )
 
+            for _, jogo in agenda.head(30).iterrows():
 
+                data_local = jogo[
+                    "data_hora_brasilia"
+                ]
+
+                data_formatada = data_local.strftime(
+                    "%d/%m/%Y às %H:%M"
+                )
+
+                casa = jogo.get(
+                    "casa",
+                    "Casa"
+                )
+
+                fora = jogo.get(
+                    "fora",
+                    "Visitante"
+                )
+
+                competicao = jogo.get(
+                    "competicao",
+                    "Competição"
+                )
+
+                rodada = jogo.get(
+                    "rodada",
+                    "-"
+                )
+
+                status = jogo.get(
+                    "status",
+                    "-"
+                )
+
+                st.write(
+                    f"⚽ **{casa} x {fora}**  \n"
+                    f"📅 {data_formatada}  \n"
+                    f"🏆 {competicao} • Rodada {rodada}  \n"
+                    f"📌 Status: {status}"
+                )
+
+                st.divider()
+
+        else:
+            st.info(
+                "A agenda está vazia no momento."
+            )
+
+    else:
+        st.warning(
+            "Arquivo data/agenda_football_data.csv "
+            "ainda não encontrado."
+        )
 with aba_historico:
 
     st.subheader(
