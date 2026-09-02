@@ -55,3 +55,4 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19722795-8,2026-09-02 19:31:42,19722795,Kilmarnock x St. Mirren,42,8,0 x 1,BAIXA,St. Mirren,50.2,0.4,50.0,61.0,-1.0,AO_VIVO,,,
 19722798-9,2026-09-02 19:31:41,19722798,Dundee x St. Johnstone,46,9,0 x 0,BAIXA,St. Johnstone,65.5,31.0,50.0,61.0,3.0,AO_VIVO,,,
 19722799-8,2026-09-02 19:31:37,19722799,Celtic x Aberdeen,42,8,2 x 0,ALTA,Celtic,79.6,59.2,100.0,69.0,7.0,AO_VIVO,,,
+19722797-13,2026-09-02 20:27:32,19722797,Falkirk x Rangers,67,13,1 x 1,ALTA,Rangers,62.6,25.2,100.0,52.0,-3.0,AO_VIVO,,,
