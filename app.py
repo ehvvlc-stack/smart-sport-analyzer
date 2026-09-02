@@ -6122,10 +6122,11 @@ with aba_central:
         jogos, status = buscar_jogos_live()
 
         if status != 200:
-            st.error(
-                f"Erro na API: {status}"
-            )
-            return
+    st.warning(
+        f"SportMonks temporariamente indisponível (status {status}). "
+        "A Central voltará a atualizar automaticamente quando o acesso normalizar."
+    )
+    return
 
         if not jogos:
             st.info(
