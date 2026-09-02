@@ -271,8 +271,9 @@ def ler_csv_github_generico(caminho, colunas):
         )
 
         df = pd.read_csv(
-            StringIO(texto)
-        )
+    StringIO(texto),
+    dtype=object
+)
 
     except Exception as exc:
         log(
