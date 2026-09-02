@@ -58,7 +58,7 @@ COLUNAS_VALIDACAO = [
     "minutos_ate_escanteio",
     "status",
 ]
-INTERVALO_SEGUNDOS = int(os.getenv("INTERVALO_SEGUNDOS", "60"))
+INTERVALO_SEGUNDOS = int(os.getenv("INTERVALO_SEGUNDOS", "300"))
 BASE_URL = "https://api.sportmonks.com/v3/football"
 
 LIGAS = {
