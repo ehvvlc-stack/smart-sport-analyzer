@@ -153,7 +153,7 @@ def buscar_jogos_live():
         f"{BASE_URL}/livescores/inplay",
         {
             "api_token": SPORTMONKS_TOKEN,
-            "include": "participants;state",
+            "include": "participants;scores;statistics.type;state;events.type",
         },
     )
 
@@ -172,21 +172,7 @@ def buscar_jogos_live():
         f"{len(lives)} nas ligas monitoradas"
     )
 
-    completos = []
-
-    for live in lives:
-        fixture_id = live.get("id")
-
-        if fixture_id is None:
-            continue
-
-        jogo = buscar_fixture(fixture_id)
-
-        if jogo:
-            completos.append(jogo)
-
-    return completos, 200
-
+    return lives, 200
 
 
 def apifootball_headers():
