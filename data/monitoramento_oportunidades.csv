@@ -56,7 +56,7 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19722798-9,2026-09-02 19:31:41,19722798,Dundee x St. Johnstone,46,9,0 x 0,BAIXA,St. Johnstone,65.5,31.0,50.0,61.0,3.0,AO_VIVO,,,
 19722799-8,2026-09-02 19:31:37,19722799,Celtic x Aberdeen,42,8,2 x 0,ALTA,Celtic,79.6,59.2,100.0,69.0,7.0,AO_VIVO,,,
 19722797-13,2026-09-02 20:28:35,19722797,Falkirk x Rangers,67,13,1 x 1,MODERADA,Rangers,62.4,24.8,100.0,53.0,-3.0,AO_VIVO,,,
-19722795-16,2026-09-02 20:29:37,19722795,Kilmarnock x St. Mirren,82,16,0 x 1,BAIXA,Kilmarnock,54.3,8.6,50.0,46.0,3.0,AO_VIVO,,,
+19722795-16,2026-09-02 20:30:31,19722795,Kilmarnock x St. Mirren,82,16,0 x 1,BAIXA,Kilmarnock,54.3,8.6,50.0,46.0,3.0,AO_VIVO,,,
 19722798-15,2026-09-02 20:27:44,19722798,Dundee x St. Johnstone,77,15,0 x 0,BAIXA,St. Johnstone,61.2,22.4,50.0,60.0,3.0,AO_VIVO,,,
 19722799-15,2026-09-02 20:27:45,19722799,Celtic x Aberdeen,76,15,3 x 0,ALTA,Celtic,71.8,43.6,100.0,63.0,5.0,AO_VIVO,,,
 19722794-13,2026-09-02 20:29:39,19722794,Motherwell x Dundee United,68,13,3 x 0,ALTA,Motherwell,76.0,52.0,95.2,70.0,6.0,AO_VIVO,,,
