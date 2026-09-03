@@ -2481,6 +2481,11 @@ def ler_validacoes():
         "primeiro_escanteio_time",
         "primeiro_escanteio_minuto",
         "minutos_ate_escanteio",
+        "mercado_simulado",
+        "odd_simulada",
+        "stake_simulada",
+        "resultado_financeiro",
+        "lucro_prejuizo",
         "status"
     ]
 
@@ -2533,6 +2538,49 @@ def salvar_validacoes(df):
     salvar_validacao_github(
         df
     )
+
+
+def atualizar_resultados_financeiros(df):
+    """Calcula o resultado das entradas simuladas já registradas."""
+    if df.empty:
+        return df, False
+
+    alterou = False
+
+    for idx in df.index:
+        odd = pd.to_numeric(
+            pd.Series([df.at[idx, "odd_simulada"]]),
+            errors="coerce"
+        ).iloc[0]
+        stake = pd.to_numeric(
+            pd.Series([df.at[idx, "stake_simulada"]]),
+            errors="coerce"
+        ).iloc[0]
+
+        if pd.isna(odd) or pd.isna(stake) or odd <= 1 or stake <= 0:
+            continue
+
+        desfecho = str(df.at[idx, "gol_ate_10_min"]).strip().upper()
+
+        if desfecho == "SIM":
+            resultado = "GREEN"
+            lucro = round(float(stake) * (float(odd) - 1), 2)
+        elif desfecho in {"NÃO", "NAO"}:
+            resultado = "RED"
+            lucro = round(-float(stake), 2)
+        else:
+            resultado = "ACOMPANHANDO"
+            lucro = ""
+
+        if (
+            str(df.at[idx, "resultado_financeiro"]) != resultado
+            or str(df.at[idx, "lucro_prejuizo"]) != str(lucro)
+        ):
+            df.at[idx, "resultado_financeiro"] = resultado
+            df.at[idx, "lucro_prejuizo"] = lucro
+            alterou = True
+
+    return df, alterou
 
 
 def criar_validacao_alerta_alta(
@@ -2615,6 +2663,11 @@ def criar_validacao_alerta_alta(
                 "primeiro_escanteio_time": "",
                 "primeiro_escanteio_minuto": "",
                 "minutos_ate_escanteio": "",
+                "mercado_simulado": "",
+                "odd_simulada": "",
+                "stake_simulada": "",
+                "resultado_financeiro": "NÃO REGISTRADA",
+                "lucro_prejuizo": "",
                 "status": "ACOMPANHANDO"
             }
         ]
@@ -7586,6 +7639,142 @@ with aba_validacao:
     st.divider()
 
     df_validacao = ler_validacoes()
+
+    df_validacao, financeiro_alterou = (
+        atualizar_resultados_financeiros(df_validacao)
+    )
+
+    if financeiro_alterou:
+        salvar_validacoes(df_validacao)
+
+    st.write(
+        "### 💰 Banca simulada — R$ 50"
+    )
+
+    st.caption(
+        "Mercado experimental: gol nos próximos 10 minutos após o alerta ALTA. "
+        "A odd é informada manualmente e nenhuma aposta real é realizada."
+    )
+
+    alertas_reais = df_validacao[
+        df_validacao["status"].astype(str) != "DEMO"
+    ].copy()
+
+    if alertas_reais.empty:
+        st.info(
+            "Quando surgir um alerta ALTA real, ele aparecerá aqui para registrar a odd."
+        )
+    else:
+        opcoes_alerta = alertas_reais["id_alerta"].astype(str).tolist()
+
+        def rotulo_alerta(id_alerta):
+            linha = alertas_reais[
+                alertas_reais["id_alerta"].astype(str) == str(id_alerta)
+            ].iloc[0]
+            return (
+                f"{linha['jogo']} • {linha['minuto_alerta']}' • "
+                f"{linha['placar_alerta']} • {linha['time_destaque']}"
+            )
+
+        with st.form("registrar_entrada_simulada"):
+            id_escolhido = st.selectbox(
+                "Alerta",
+                opcoes_alerta,
+                format_func=rotulo_alerta
+            )
+
+            e1, e2 = st.columns(2)
+
+            with e1:
+                odd_informada = st.number_input(
+                    "Odd no momento do alerta",
+                    min_value=1.01,
+                    max_value=100.0,
+                    value=1.50,
+                    step=0.01
+                )
+
+            with e2:
+                stake_informada = st.number_input(
+                    "Stake simulada (R$)",
+                    min_value=0.50,
+                    max_value=5.00,
+                    value=1.00,
+                    step=0.50
+                )
+
+            registrar_entrada = st.form_submit_button(
+                "Registrar entrada simulada",
+                use_container_width=True
+            )
+
+        if registrar_entrada:
+            mascara = (
+                df_validacao["id_alerta"].astype(str)
+                == str(id_escolhido)
+            )
+            idx = df_validacao.index[mascara][0]
+            df_validacao.at[idx, "mercado_simulado"] = (
+                "Gol nos próximos 10 minutos"
+            )
+            df_validacao.at[idx, "odd_simulada"] = round(
+                float(odd_informada), 2
+            )
+            df_validacao.at[idx, "stake_simulada"] = round(
+                float(stake_informada), 2
+            )
+            df_validacao.at[idx, "resultado_financeiro"] = "ACOMPANHANDO"
+            df_validacao.at[idx, "lucro_prejuizo"] = ""
+            df_validacao, _ = atualizar_resultados_financeiros(
+                df_validacao
+            )
+            salvar_validacoes(df_validacao)
+            st.success("Entrada simulada registrada.")
+            st.rerun()
+
+        entradas = df_validacao[
+            df_validacao["mercado_simulado"].astype(str).str.len() > 0
+        ].copy()
+
+        if not entradas.empty:
+            lucro_total = pd.to_numeric(
+                entradas["lucro_prejuizo"],
+                errors="coerce"
+            ).fillna(0).sum()
+            saldo_simulado = 50.0 + float(lucro_total)
+            green = int(
+                (entradas["resultado_financeiro"].astype(str) == "GREEN").sum()
+            )
+            red = int(
+                (entradas["resultado_financeiro"].astype(str) == "RED").sum()
+            )
+
+            f1, f2, f3, f4 = st.columns(4)
+            f1.metric("Entradas", len(entradas))
+            f2.metric("GREEN", green)
+            f3.metric("RED", red)
+            f4.metric(
+                "Saldo simulado",
+                f"R$ {saldo_simulado:.2f}".replace(".", ","),
+                f"R$ {lucro_total:.2f}".replace(".", ",")
+            )
+
+            st.dataframe(
+                entradas[[
+                    "data_hora_alerta",
+                    "jogo",
+                    "minuto_alerta",
+                    "placar_alerta",
+                    "odd_simulada",
+                    "stake_simulada",
+                    "resultado_financeiro",
+                    "lucro_prejuizo"
+                ]].sort_values("data_hora_alerta", ascending=False),
+                width="stretch",
+                hide_index=True
+            )
+
+    st.divider()
 
     status_validacao = resumo_status_validacao(
         df_validacao
