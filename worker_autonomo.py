@@ -23,6 +23,8 @@ APIFOOTBALL_PATH = os.getenv(
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "").strip()
 GITHUB_REPO = os.getenv("GITHUB_REPO", "ehvvlc-stack/smart-sport-analyzer").strip()
 GITHUB_BRANCH = os.getenv("GITHUB_BRANCH", "main").strip()
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "").strip()
 GITHUB_MONITORAMENTO_PATH = os.getenv(
     "GITHUB_MONITORAMENTO_PATH",
     "data/monitoramento_oportunidades.csv"
@@ -85,6 +87,30 @@ COLUNAS_MONITORAMENTO = [
 
 def log(msg):
     print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] {msg}", flush=True)
+
+
+def enviar_alerta_telegram(mensagem):
+    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
+        log("Telegram não configurado; alerta não enviado")
+        return False
+
+    try:
+        resposta = requests.post(
+            f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
+            data={
+                "chat_id": TELEGRAM_CHAT_ID,
+                "text": mensagem,
+            },
+            timeout=20,
+        )
+        if resposta.status_code != 200:
+            log(f"Falha Telegram: {resposta.status_code}")
+            return False
+        log("Alerta Telegram enviado")
+        return True
+    except requests.RequestException as exc:
+        log(f"Erro Telegram: {exc}")
+        return False
 
 def requisicao(url, params):
     try:
@@ -1329,6 +1355,111 @@ def salvar_validacoes_github(df):
         "Atualiza validação automática"
     )
 
+
+def calcular_qualidade_alerta_worker(
+    indice,
+    momento,
+    posse,
+    vantagem_escanteios,
+):
+    pontos_indice = max(0, min(40, (float(indice) - 50) * 2))
+    pontos_momento = max(0, min(35, (float(momento) - 50) * 1.75))
+    pontos_posse = max(0, min(15, (float(posse) - 50)))
+    pontos_corners = max(0, min(10, float(vantagem_escanteios) * 2.5))
+    score = round(
+        max(0, min(100, pontos_indice + pontos_momento + pontos_posse + pontos_corners)),
+        1,
+    )
+
+    if score >= 80:
+        nivel = "EXCEPCIONAL"
+    elif score >= 65:
+        nivel = "MUITO FORTE"
+    elif score >= 50:
+        nivel = "FORTE"
+    elif score >= 35:
+        nivel = "MODERADO"
+    else:
+        nivel = "FRACO"
+
+    return score, nivel
+
+
+def registrar_alerta_alta_worker(
+    fixture_id,
+    casa,
+    visitante,
+    minuto,
+    gols_casa,
+    gols_visitante,
+    dominante,
+    indice,
+    momento,
+    posse,
+    vantagem_escanteios,
+):
+    df = ler_validacoes_github()
+
+    if not df.empty:
+        fixture_igual = df["fixture_id"].astype(str).eq(str(fixture_id))
+        minuto_igual = pd.to_numeric(
+            df["minuto_alerta"], errors="coerce"
+        ).eq(int(minuto))
+        if (fixture_igual & minuto_igual).any():
+            return False
+
+    agora = datetime.now()
+    score, qualidade_nivel = calcular_qualidade_alerta_worker(
+        indice,
+        momento,
+        posse,
+        vantagem_escanteios,
+    )
+    linha = {coluna: "" for coluna in COLUNAS_VALIDACAO}
+    linha.update({
+        "id_alerta": f"{fixture_id}-{agora.strftime('%Y%m%d%H%M%S')}",
+        "data_hora_alerta": agora.strftime("%Y-%m-%d %H:%M:%S"),
+        "fixture_id": fixture_id,
+        "jogo": f"{casa} x {visitante}",
+        "minuto_alerta": int(minuto),
+        "placar_alerta": f"{gols_casa} x {gols_visitante}",
+        "time_destaque": dominante,
+        "indice_alerta": round(float(indice), 1),
+        "momento_10_min": round(float(momento), 1),
+        "qualidade_score": score,
+        "qualidade_nivel": qualidade_nivel,
+        "gol_ate_5_min": "PENDENTE",
+        "gol_ate_10_min": "PENDENTE",
+        "resultado_gol": "PENDENTE",
+        "gol_time_destaque_5_min": "PENDENTE",
+        "gol_time_destaque_10_min": "PENDENTE",
+        "escanteio_ate_5_min": "PENDENTE",
+        "escanteio_ate_10_min": "PENDENTE",
+        "escanteio_time_destaque_5_min": "PENDENTE",
+        "escanteio_time_destaque_10_min": "PENDENTE",
+        "resultado_financeiro": "NÃO REGISTRADA",
+        "status": "ACOMPANHANDO",
+    })
+
+    df = pd.concat([df, pd.DataFrame([linha])], ignore_index=True)
+    if not salvar_validacoes_github(df):
+        log("Falha ao registrar validação do alerta ALTA")
+        return False
+
+    mensagem = (
+        "🚨 PRESSÃO ALTA\n\n"
+        f"⚽ {casa} x {visitante}\n"
+        f"⏱ Minuto: {int(minuto)}'\n"
+        f"📍 Placar: {gols_casa} x {gols_visitante}\n"
+        f"🔥 Destaque: {dominante}\n"
+        f"📊 Índice: {float(indice):.1f}%\n"
+        f"⚡ Momento 10 min: {float(momento):.1f}%\n\n"
+        "🧪 Simulação: verificar a odd para gol nos próximos 10 minutos.\n"
+        "💵 Stake sugerida para o teste: R$ 1,00."
+    )
+    enviar_alerta_telegram(mensagem)
+    return True
+
 def salvar_monitoramento_github(df):
     url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{GITHUB_MONITORAMENTO_PATH}"
     sha = None
@@ -1427,6 +1558,25 @@ def atualizar_snapshot(df, jogo):
         "eventos_disponiveis": qualidade["quantidade_eventos"],
     }
 
+    nivel_anterior = ""
+    if not df.empty:
+        anteriores = df[
+            df["fixture_id"].astype(str).eq(str(fixture_id))
+        ].copy()
+        if not anteriores.empty:
+            ordem = pd.to_datetime(
+                anteriores["data_hora"], errors="coerce"
+            )
+            if ordem.notna().any():
+                nivel_anterior = str(
+                    anteriores.loc[ordem.idxmax(), "nivel"]
+                ).strip().upper()
+
+    entrou_em_alta = (
+        str(nivel).strip().upper() == "ALTA"
+        and nivel_anterior != "ALTA"
+    )
+
     mascara = (
         df["id_snapshot"].astype(str).eq(id_snapshot)
         if not df.empty else pd.Series(dtype=bool)
@@ -1437,6 +1587,24 @@ def atualizar_snapshot(df, jogo):
             df.at[idx, k] = v
     else:
         df = pd.concat([df, pd.DataFrame([linha])], ignore_index=True)
+
+    if entrou_em_alta:
+        try:
+            registrar_alerta_alta_worker(
+                fixture_id=fixture_id,
+                casa=casa,
+                visitante=visitante,
+                minuto=minuto_int,
+                gols_casa=gh,
+                gols_visitante=ga,
+                dominante=dominante,
+                indice=indice,
+                momento=momento_destaque,
+                posse=posse,
+                vantagem_escanteios=vantagem_corners,
+            )
+        except Exception as exc:
+            log(f"Erro ao registrar alerta ALTA: {exc}")
 
     return df, True, nivel
 
