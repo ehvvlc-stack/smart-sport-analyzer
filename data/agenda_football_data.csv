@@ -9,13 +9,13 @@ fixture_id,data_hora,status,casa_id,casa,fora_id,fora,competicao,rodada
 554990,2026-09-06T21:30:00Z,TIMED,1770,Botafogo FR,1769,SE Palmeiras,Campeonato Brasileiro Série A,26
 554992,2026-09-06T22:30:00Z,TIMED,1779,SC Corinthians Paulista,1772,Chapecoense AF,Campeonato Brasileiro Série A,26
 554999,2026-09-07T23:00:00Z,TIMED,1782,EC Vitória,1767,Grêmio FBPA,Campeonato Brasileiro Série A,26
-555001,2026-09-12T00:00:00Z,SCHEDULED,1777,EC Bahia,4287,Clube do Remo,Campeonato Brasileiro Série A,27
-555004,2026-09-12T00:00:00Z,TIMED,4241,Coritiba FBC,1768,CA Paranaense,Campeonato Brasileiro Série A,27
-555005,2026-09-12T00:00:00Z,SCHEDULED,1783,CR Flamengo,1779,SC Corinthians Paulista,Campeonato Brasileiro Série A,27
-555007,2026-09-12T00:00:00Z,SCHEDULED,4364,Mirassol FC,1782,EC Vitória,Campeonato Brasileiro Série A,27
-555000,2026-09-12T19:00:00Z,TIMED,1766,CA Mineiro,1765,Fluminense FC,Campeonato Brasileiro Série A,27
-555006,2026-09-12T19:00:00Z,TIMED,1767,Grêmio FBPA,1780,CR Vasco da Gama,Campeonato Brasileiro Série A,27
-555003,2026-09-12T20:00:00Z,TIMED,1772,Chapecoense AF,6684,SC Internacional,Campeonato Brasileiro Série A,27
-555008,2026-09-12T21:30:00Z,TIMED,1769,SE Palmeiras,1776,São Paulo FC,Campeonato Brasileiro Série A,27
-555002,2026-09-12T23:30:00Z,TIMED,1770,Botafogo FR,4286,RB Bragantino,Campeonato Brasileiro Série A,27
-555009,2026-09-13T00:00:00Z,TIMED,6685,Santos FC,1771,Cruzeiro EC,Campeonato Brasileiro Série A,27
+555001,2026-09-12T00:00:00Z,2026-09-13 19:00:00Z,1777,EC Bahia,4287,Clube do Remo,Campeonato Brasileiro Série A,27
+555004,2026-09-12T00:00:00Z,2026-09-13 19:00:00Z,4241,Coritiba FBC,1768,CA Paranaense,Campeonato Brasileiro Série A,27
+555005,2026-09-12T00:00:00Z,2026-09-13 19:00:00Z,1783,CR Flamengo,1779,SC Corinthians Paulista,Campeonato Brasileiro Série A,27
+555007,2026-09-12T00:00:00Z,2026-09-13 19:00:00Z,4364,Mirassol FC,1782,EC Vitória,Campeonato Brasileiro Série A,27
+555000,2026-09-12T19:00:00Z,2026-09-13 19:00:00Z,1766,CA Mineiro,1765,Fluminense FC,Campeonato Brasileiro Série A,27
+555006,2026-09-12T19:00:00Z,2026-09-13 19:00:00Z,1767,Grêmio FBPA,1780,CR Vasco da Gama,Campeonato Brasileiro Série A,27
+555003,2026-09-12T20:00:00Z,2026-09-13 19:00:00Z,1772,Chapecoense AF,6684,SC Internacional,Campeonato Brasileiro Série A,27
+555008,2026-09-12T21:30:00Z,2026-09-13 19:00:00Z,1769,SE Palmeiras,1776,São Paulo FC,Campeonato Brasileiro Série A,27
+555002,2026-09-12T23:30:00Z,2026-09-13 19:00:00Z,1770,Botafogo FR,4286,RB Bragantino,Campeonato Brasileiro Série A,27
+555009,2026-09-13T00:00:00Z,2026-09-13 19:00:00Z,6685,Santos FC,1771,Cruzeiro EC,Campeonato Brasileiro Série A,27
