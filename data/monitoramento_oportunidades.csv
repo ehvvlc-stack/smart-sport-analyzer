@@ -67,4 +67,4 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713954-3,2026-09-03 18:25:50,19713954,FC København x Nordsjælland,19,3,1 x 0,BAIXA,Nordsjælland,53.9,7.8,50.0,70.0,0.0,AO_VIVO,,,
 19722796-0,2026-09-03 18:43:14,19722796,Hibernian x Hearts,0,0,0 x 0,BAIXA,Hibernian,50.0,0.0,50.0,50.0,0.0,AO_VIVO,,,
 19713954-7,2026-09-03 18:55:54,19713954,FC København x Nordsjælland,35,7,2 x 0,ALTA,FC København,72.4,44.8,100.0,36.0,1.0,AO_VIVO,,,
-19722796-2,2026-09-03 18:55:53,19722796,Hibernian x Hearts,10,2,0 x 0,BAIXA,Hearts,65.7,31.4,50.0,61.0,2.0,AO_VIVO,,,
+19722796-2,2026-09-03 18:55:55,19722796,Hibernian x Hearts,10,2,0 x 0,BAIXA,Hearts,65.7,31.4,50.0,61.0,2.0,AO_VIVO,,,
