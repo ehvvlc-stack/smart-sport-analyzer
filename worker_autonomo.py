@@ -1265,7 +1265,10 @@ def ler_monitoramento_github():
             log(f"Falha ao ler GitHub: {r.status_code}")
             return pd.DataFrame(columns=COLUNAS_MONITORAMENTO)
         texto = base64.b64decode(r.json().get("content", "")).decode("utf-8-sig")
-        df = pd.read_csv(StringIO(texto))
+        df = pd.read_csv(
+            StringIO(texto),
+            dtype=object
+        )
     except Exception as exc:
         log(f"Erro ao ler GitHub: {exc}")
         return pd.DataFrame(columns=COLUNAS_MONITORAMENTO)
