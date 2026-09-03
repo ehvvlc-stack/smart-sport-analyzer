@@ -106,7 +106,7 @@ def buscar_jogos_football_data():
         log("football-data.org: token ausente")
         return [], 0
 
-    hoje = datetime.utcnow().date()
+    hoje = datetime.now(timezone.utc).date()
     fim = (pd.Timestamp(hoje) + pd.Timedelta(days=14)).date()
 
     url = "https://api.football-data.org/v4/competitions/BSA/matches"
