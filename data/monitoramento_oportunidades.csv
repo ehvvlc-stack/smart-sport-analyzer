@@ -65,5 +65,5 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19722797-14,2026-09-02 20:33:36,19722797,Falkirk x Rangers,70,14,1 x 1,BAIXA,Rangers,51.3,2.6,50.0,53.0,-1.0,FINALIZADO,2026-09-02 21:28:28,1 x 1,ULTIMO_OBSERVADO
 19713954-1,2026-09-03 18:05:52,19713954,FC København x Nordsjælland,5,1,0 x 0,BAIXA,Nordsjælland,54.3,8.6,50.0,41.0,0.0,AO_VIVO,,,
 19713954-3,2026-09-03 18:25:50,19713954,FC København x Nordsjælland,19,3,1 x 0,BAIXA,Nordsjælland,53.9,7.8,50.0,70.0,0.0,AO_VIVO,,,
-19722796-0,2026-09-03 18:43:12,19722796,Hibernian x Hearts,0,0,0 x 0,BAIXA,Hibernian,50.0,0.0,50.0,50.0,0.0,AO_VIVO,,,
-19713954-7,2026-09-03 18:42:55,19713954,FC København x Nordsjælland,35,7,2 x 0,ALTA,FC København,72.4,44.8,100.0,35.0,1.0,AO_VIVO,,,
+19722796-0,2026-09-03 18:43:14,19722796,Hibernian x Hearts,0,0,0 x 0,BAIXA,Hibernian,50.0,0.0,50.0,50.0,0.0,AO_VIVO,,,
+19713954-7,2026-09-03 18:43:15,19713954,FC København x Nordsjælland,35,7,2 x 0,ALTA,FC København,72.4,44.8,100.0,35.0,1.0,AO_VIVO,,,
