@@ -5664,7 +5664,10 @@ def buscar_jogos_live():
 
     params = {
         "api_token": TOKEN,
-        "include": "participants;state"
+        "include": (
+            "participants;scores;statistics.type;"
+            "state;events.type"
+        )
     }
 
     dados, status = requisicao(
@@ -5686,22 +5689,7 @@ def buscar_jogos_live():
         if jogo.get("league_id") in LIGAS
     ]
 
-    completos = []
-
-    for live in lives:
-        fixture_id = live.get("id")
-
-        jogo = buscar_fixture(
-            fixture_id,
-            incluir_eventos=True
-        )
-
-        if jogo:
-            completos.append(
-                jogo
-            )
-
-    return completos, 200
+    return lives, 200
 
 
 
