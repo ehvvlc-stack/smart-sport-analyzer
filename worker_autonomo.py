@@ -56,6 +56,11 @@ COLUNAS_VALIDACAO = [
     "primeiro_escanteio_time",
     "primeiro_escanteio_minuto",
     "minutos_ate_escanteio",
+    "mercado_simulado",
+    "odd_simulada",
+    "stake_simulada",
+    "resultado_financeiro",
+    "lucro_prejuizo",
     "status",
 ]
 INTERVALO_SEGUNDOS = int(os.getenv("INTERVALO_SEGUNDOS", "300"))
@@ -1285,7 +1290,39 @@ def ler_validacoes_github():
     )
 
 
+def atualizar_resultados_financeiros(df):
+    if df.empty:
+        return df
+
+    for idx in df.index:
+        try:
+            odd = float(df.at[idx, "odd_simulada"])
+            stake = float(df.at[idx, "stake_simulada"])
+        except (TypeError, ValueError):
+            continue
+
+        if odd <= 1 or stake <= 0:
+            continue
+
+        desfecho = str(df.at[idx, "gol_ate_10_min"]).strip().upper()
+
+        if desfecho == "SIM":
+            df.at[idx, "resultado_financeiro"] = "GREEN"
+            df.at[idx, "lucro_prejuizo"] = round(
+                stake * (odd - 1), 2
+            )
+        elif desfecho in {"NÃO", "NAO"}:
+            df.at[idx, "resultado_financeiro"] = "RED"
+            df.at[idx, "lucro_prejuizo"] = round(-stake, 2)
+        else:
+            df.at[idx, "resultado_financeiro"] = "ACOMPANHANDO"
+            df.at[idx, "lucro_prejuizo"] = ""
+
+    return df
+
+
 def salvar_validacoes_github(df):
+    df = atualizar_resultados_financeiros(df)
     return salvar_csv_github_generico(
         ARQUIVO_VALIDACAO,
         df,
