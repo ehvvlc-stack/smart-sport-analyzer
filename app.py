@@ -1131,7 +1131,10 @@ def ler_alertas_historico():
         return pd.DataFrame(columns=colunas)
 
     try:
-        df = pd.read_csv(ARQUIVO_ALERTAS)
+        df = pd.read_csv(
+            ARQUIVO_ALERTAS,
+            dtype=object
+        )
     except Exception:
         return pd.DataFrame(columns=colunas)
 
@@ -1139,7 +1142,7 @@ def ler_alertas_historico():
         if coluna not in df.columns:
             df[coluna] = ""
 
-    return df[colunas]
+    return df[colunas].astype("object")
 
 
 def salvar_alerta_csv(
@@ -1406,7 +1409,8 @@ def baixar_monitoramento_github():
         ).decode("utf-8-sig")
 
         return pd.read_csv(
-            StringIO(texto_csv)
+            StringIO(texto_csv),
+            dtype=object
         )
 
     except Exception:
@@ -1443,7 +1447,7 @@ def ler_monitoramento_oportunidades():
                 if coluna not in remoto.columns:
                     remoto[coluna] = ""
 
-            remoto = remoto[colunas]
+            remoto = remoto[colunas].astype("object")
 
             try:
                 remoto.to_csv(
@@ -1459,7 +1463,8 @@ def ler_monitoramento_oportunidades():
 
     try:
         df = pd.read_csv(
-            ARQUIVO_MONITORAMENTO
+            ARQUIVO_MONITORAMENTO,
+            dtype=object
         )
     except Exception:
         return pd.DataFrame(columns=colunas)
@@ -1468,7 +1473,7 @@ def ler_monitoramento_oportunidades():
         if coluna not in df.columns:
             df[coluna] = ""
 
-    return df[colunas]
+    return df[colunas].astype("object")
 
 
 def salvar_monitoramento_github(df):
@@ -2347,7 +2352,8 @@ def baixar_validacao_github():
         ).decode("utf-8-sig")
 
         return pd.read_csv(
-            StringIO(texto_csv)
+            StringIO(texto_csv),
+            dtype=object
         )
 
     except Exception:
@@ -2486,7 +2492,7 @@ def ler_validacoes():
                 if coluna not in remoto.columns:
                     remoto[coluna] = ""
 
-            remoto = remoto[colunas]
+            remoto = remoto[colunas].astype("object")
 
             # Recria também o cache local.
             try:
@@ -2502,7 +2508,10 @@ def ler_validacoes():
         return pd.DataFrame(columns=colunas)
 
     try:
-        df = pd.read_csv(ARQUIVO_VALIDACAO)
+        df = pd.read_csv(
+            ARQUIVO_VALIDACAO,
+            dtype=object
+        )
     except Exception:
         return pd.DataFrame(columns=colunas)
 
@@ -2510,7 +2519,7 @@ def ler_validacoes():
         if coluna not in df.columns:
             df[coluna] = ""
 
-    return df[colunas]
+    return df[colunas].astype("object")
 
 
 def salvar_validacoes(df):
