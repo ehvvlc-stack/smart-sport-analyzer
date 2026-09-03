@@ -287,6 +287,9 @@ def salvar_csv_github_generico(
     )
 
     sha = None
+    conteudo_novo = df.to_csv(
+        index=False
+    ).encode("utf-8")
 
     try:
         atual = requests.get(
@@ -297,14 +300,24 @@ def salvar_csv_github_generico(
         )
 
         if atual.status_code == 200:
-            sha = atual.json().get("sha")
+            dados_atuais = atual.json()
+            sha = dados_atuais.get("sha")
+
+            conteudo_atual = base64.b64decode(
+                dados_atuais.get("content", "")
+            )
+
+            if conteudo_atual == conteudo_novo:
+                log(
+                    f"Sem alterações em {caminho}; "
+                    "commit ignorado"
+                )
+                return True
 
         payload = {
             "message": mensagem,
             "content": base64.b64encode(
-                df.to_csv(
-                    index=False
-                ).encode("utf-8")
+                conteudo_novo
             ).decode("ascii"),
             "branch": GITHUB_BRANCH,
         }
@@ -1279,14 +1292,25 @@ def salvar_validacoes_github(df):
 def salvar_monitoramento_github(df):
     url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{GITHUB_MONITORAMENTO_PATH}"
     sha = None
+    conteudo_novo = df.to_csv(index=False).encode("utf-8")
     try:
         atual = requests.get(url, headers=gh_headers(), params={"ref": GITHUB_BRANCH}, timeout=20)
         if atual.status_code == 200:
-            sha = atual.json().get("sha")
+            dados_atuais = atual.json()
+            sha = dados_atuais.get("sha")
+            conteudo_atual = base64.b64decode(
+                dados_atuais.get("content", "")
+            )
+            if conteudo_atual == conteudo_novo:
+                log(
+                    f"Sem alterações em {GITHUB_MONITORAMENTO_PATH}; "
+                    "commit ignorado"
+                )
+                return True
 
         payload = {
             "message": "Atualiza monitoramento autÃ´nomo",
-            "content": base64.b64encode(df.to_csv(index=False).encode("utf-8")).decode("ascii"),
+            "content": base64.b64encode(conteudo_novo).decode("ascii"),
             "branch": GITHUB_BRANCH,
         }
         if sha:
