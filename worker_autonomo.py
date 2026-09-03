@@ -273,7 +273,7 @@ def ler_csv_github_generico(caminho, colunas):
         if coluna not in df.columns:
             df[coluna] = ""
 
-    return df[colunas]
+    return df[colunas].astype("object")
 
 
 def salvar_csv_github_generico(
@@ -1276,7 +1276,7 @@ def ler_monitoramento_github():
     for c in COLUNAS_MONITORAMENTO:
         if c not in df.columns:
             df[c] = ""
-    return df[COLUNAS_MONITORAMENTO]
+    return df[COLUNAS_MONITORAMENTO].astype("object")
 
 def ler_validacoes_github():
     return ler_csv_github_generico(
