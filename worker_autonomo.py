@@ -2,7 +2,7 @@ import os
 import time
 import base64
 from io import StringIO
-from datetime import datetime
+from datetime import datetime, timezone
 
 import pandas as pd
 import requests
