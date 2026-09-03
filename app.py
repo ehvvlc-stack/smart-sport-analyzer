@@ -6122,11 +6122,11 @@ with aba_central:
         jogos, status = buscar_jogos_live()
 
         if status != 200:
-    st.warning(
-        f"SportMonks temporariamente indisponível (status {status}). "
-        "A Central voltará a atualizar automaticamente quando o acesso normalizar."
-    )
-    return
+            st.warning(
+                f"SportMonks temporariamente indisponível (status {status}). "
+                "A Central voltará a atualizar automaticamente quando o acesso normalizar."
+            )
+            return
 
         if not jogos:
             st.info(
@@ -6963,271 +6963,156 @@ with aba_hoje:
             st.divider()
 
     st.write(
-        "### 🏆 Libertadores — API-Football"
+        "### 🌎 Agenda complementar — football-data.org"
     )
 
-    jogos_api, status_api, restante_api = (
-        buscar_jogos_hoje_apifootball()
+    caminho_agenda_hoje = Path(
+        "data/agenda_football_data.csv"
     )
 
-    if status_api == "SEM_CHAVE":
+    if not caminho_agenda_hoje.exists():
         st.warning(
-            "A chave APIFOOTBALL_KEY ainda não está disponível neste ambiente."
+            "Agenda do football-data.org ainda não está disponível."
         )
 
-    elif status_api != 200:
-        st.warning(
-            f"API-Football não respondeu corretamente: {status_api}"
+    elif caminho_agenda_hoje.stat().st_size == 0:
+        st.info(
+            "A agenda do football-data.org está vazia no momento."
         )
 
     else:
-        libertadores = separar_libertadores_api_football(jogos_api)
-
-        if restante_api is not None:
-            st.caption(
-                f"Requisições restantes hoje na API-Football: {restante_api}"
+        try:
+            agenda_hoje = pd.read_csv(
+                caminho_agenda_hoje
             )
 
-        if not libertadores:
-            st.info(
-                "Nenhum jogo da Libertadores foi retornado para hoje."
-            )
-        else:
-            st.success(
-                f"✅ {len(libertadores)} jogo(s) da Libertadores hoje"
-            )
-
-            for item in libertadores:
-                jogo = formatar_fixture_api_football(item)
-
-                st.markdown(
-                    f"⚽ **{jogo['casa']} × {jogo['visitante']}**"
+            if "data_hora" not in agenda_hoje.columns:
+                st.warning(
+                    "A agenda complementar está sem a coluna data_hora."
+                )
+            else:
+                agenda_hoje["data_hora"] = pd.to_datetime(
+                    agenda_hoje["data_hora"],
+                    utc=True,
+                    errors="coerce"
                 )
 
-                detalhes = (
-                    f"🕒 {jogo['horario']} • "
-                    f"🏆 {jogo['liga']}"
+                agenda_hoje = agenda_hoje.dropna(
+                    subset=["data_hora"]
                 )
 
-                if jogo["status_longo"]:
-                    detalhes += f" • {jogo['status_longo']}"
-
-                if (
-                    jogo["gols_h"] is not None
-                    and jogo["gols_a"] is not None
-                ):
-                    detalhes += (
-                        f" • Placar: {jogo['gols_h']} × {jogo['gols_a']}"
-                    )
-
-                if jogo["elapsed"] is not None:
-                    detalhes += f" • {jogo['elapsed']}'"
-
-                st.caption(detalhes)
-
-                status_jogo = str(
-                    jogo.get("status_longo", "")
-                ).lower()
-
-                esta_ao_vivo = (
-                    jogo.get("elapsed") is not None
-                    or "first half" in status_jogo
-                    or "second half" in status_jogo
-                    or "primeiro tempo" in status_jogo
-                    or "segundo tempo" in status_jogo
-                    or "in progress" in status_jogo
+                agenda_hoje["data_hora_brasilia"] = (
+                    agenda_hoje["data_hora"]
+                    .dt.tz_convert("America/Sao_Paulo")
                 )
 
-                if esta_ao_vivo:
-                    renderizar_analise_api_football(
-                        jogo["id"]
+                agenda_hoje = agenda_hoje[
+                    agenda_hoje["data_hora_brasilia"].dt.date
+                    == hoje_br
+                ].copy()
+
+                agenda_hoje = agenda_hoje.sort_values(
+                    "data_hora_brasilia"
+                )
+
+                if agenda_hoje.empty:
+                    st.info(
+                        "Nenhuma partida foi encontrada na agenda "
+                        "complementar para hoje."
                     )
                 else:
-                    st.caption(
-                        "📌 A análise detalhada será liberada quando "
-                        "a partida estiver ao vivo e a API enviar estatísticas."
+                    filtro_agenda = st.text_input(
+                        "Filtrar competição ou time",
+                        "",
+                        placeholder="Ex.: Premier League, Arsenal...",
+                        key="filtro_football_data_hoje"
                     )
 
-                st.divider()
+                    if filtro_agenda.strip():
+                        termo = filtro_agenda.strip().lower()
 
-        st.write(
-            "### 🌎 Todos os jogos de hoje — API-Football"
-        )
-
-        if not jogos_api:
-            st.info(
-                "A API-Football não retornou jogos para esta data."
-            )
-        else:
-            filtro_competicao = st.text_input(
-                "Filtrar competição ou time",
-                "",
-                placeholder="Ex.: Brasil, Premier League, Corinthians...",
-                key="filtro_api_football_hoje"
-            )
-
-            jogos_formatados = [
-                formatar_fixture_api_football(item)
-                for item in jogos_api
-            ]
-
-            if filtro_competicao.strip():
-                termo = filtro_competicao.strip().lower()
-
-                jogos_formatados = [
-                    jogo
-                    for jogo in jogos_formatados
-                    if (
-                        termo in jogo["casa"].lower()
-                        or termo in jogo["visitante"].lower()
-                        or termo in jogo["liga"].lower()
-                        or termo in jogo["pais"].lower()
-                    )
-                ]
-
-            jogos_ao_vivo = [
-                jogo
-                for jogo in jogos_formatados
-                if jogo_api_football_ao_vivo(jogo)
-            ]
-
-            c1, c2, c3 = st.columns(3)
-
-            c1.metric(
-                "Jogos encontrados",
-                len(jogos_formatados)
-            )
-
-            c2.metric(
-                "🔴 Ao vivo agora",
-                len(jogos_ao_vivo)
-            )
-
-            competicoes = sorted(
-                {
-                    chave_competicao_api_football(jogo)
-                    for jogo in jogos_formatados
-                }
-            )
-
-            c3.metric(
-                "Competições",
-                len(competicoes)
-            )
-
-            if jogos_ao_vivo:
-                st.success(
-                    f"🔴 {len(jogos_ao_vivo)} jogo(s) ao vivo. "
-                    "Abra uma competição e clique em 'Analisar este jogo agora' "
-                    "somente no jogo que quiser acompanhar."
-                )
-
-            grupos = {}
-
-            for jogo in jogos_formatados:
-                chave = chave_competicao_api_football(
-                    jogo
-                )
-
-                grupos.setdefault(
-                    chave,
-                    []
-                ).append(
-                    jogo
-                )
-
-            for competicao in sorted(grupos):
-                jogos_comp = grupos[competicao]
-
-                ao_vivo_comp = sum(
-                    1
-                    for jogo in jogos_comp
-                    if jogo_api_football_ao_vivo(jogo)
-                )
-
-                titulo_comp = (
-                    f"🏆 {competicao} — "
-                    f"{len(jogos_comp)} jogo(s)"
-                )
-
-                if ao_vivo_comp:
-                    titulo_comp += (
-                        f" • 🔴 {ao_vivo_comp} ao vivo"
-                    )
-
-                with st.expander(
-                    titulo_comp,
-                    expanded=bool(ao_vivo_comp)
-                ):
-                    for jogo in jogos_comp:
-                        ao_vivo = (
-                            jogo_api_football_ao_vivo(
-                                jogo
+                        mascara = (
+                            agenda_hoje["casa"].fillna("")
+                            .astype(str).str.lower().str.contains(
+                                termo,
+                                regex=False
+                            )
+                            | agenda_hoje["fora"].fillna("")
+                            .astype(str).str.lower().str.contains(
+                                termo,
+                                regex=False
+                            )
+                            | agenda_hoje["competicao"].fillna("")
+                            .astype(str).str.lower().str.contains(
+                                termo,
+                                regex=False
                             )
                         )
 
-                        prefixo = (
-                            "🔴"
-                            if ao_vivo
-                            else "⚽"
+                        agenda_hoje = agenda_hoje[
+                            mascara
+                        ].copy()
+
+                    st.success(
+                        f"✅ {len(agenda_hoje)} partida(s) encontrada(s) "
+                        "na agenda complementar"
+                    )
+
+                    for _, jogo in agenda_hoje.iterrows():
+                        data_local = jogo[
+                            "data_hora_brasilia"
+                        ]
+
+                        horario = data_local.strftime(
+                            "%H:%M"
+                        )
+
+                        casa = jogo.get(
+                            "casa",
+                            "Casa"
+                        )
+
+                        fora = jogo.get(
+                            "fora",
+                            "Visitante"
+                        )
+
+                        competicao = jogo.get(
+                            "competicao",
+                            "Competição"
+                        )
+
+                        rodada = jogo.get(
+                            "rodada",
+                            "-"
+                        )
+
+                        status = jogo.get(
+                            "status",
+                            "-"
                         )
 
                         st.markdown(
-                            f"{prefixo} **{jogo['casa']} × "
-                            f"{jogo['visitante']}**"
+                            f"⚽ **{casa} × {fora}**"
                         )
-
-                        detalhes = (
-                            f"🕒 {jogo['horario']} • "
-                            f"{jogo['status_longo'] or 'Status indisponível'}"
-                        )
-
-                        if (
-                            jogo["gols_h"] is not None
-                            and jogo["gols_a"] is not None
-                        ):
-                            detalhes += (
-                                f" • Placar: "
-                                f"{jogo['gols_h']} × {jogo['gols_a']}"
-                            )
-
-                        if jogo["elapsed"] is not None:
-                            detalhes += (
-                                f" • {jogo['elapsed']}'"
-                            )
 
                         st.caption(
-                            detalhes
+                            f"🕒 {horario} • 🏆 {competicao} • "
+                            f"Rodada {rodada} • 📌 {status}"
                         )
-
-                        if ao_vivo:
-                            st.caption(
-                                "🔎 Jogo ao vivo. A análise detalhada só será "
-                                "consultada quando você pedir, para economizar "
-                                "a cota diária da API-Football."
-                            )
-
-                            if st.button(
-                                "📊 Analisar este jogo agora",
-                                key=f"analisar_api_{jogo['id']}"
-                            ):
-                                renderizar_analise_api_football(
-                                    jogo["id"],
-                                    jogo.get("casa"),
-                                    jogo.get("visitante")
-                                )
-                        else:
-                            st.caption(
-                                "📌 A análise ficará disponível quando "
-                                "a partida entrar ao vivo."
-                            )
 
                         st.divider()
 
+        except Exception as erro_agenda_hoje:
+            st.warning(
+                "Não foi possível carregar a agenda complementar "
+                f"agora: {erro_agenda_hoje}"
+            )
+
     st.info(
-        "ℹ️ A aba 'Jogos de hoje' reúne SportMonks + API-Football. "
-        "A API-Football amplia a agenda, incluindo Libertadores quando disponível. "
-        "Por enquanto, pressão, score e validação automática continuam na estrutura SportMonks."
+        "ℹ️ A aba 'Jogos de hoje' reúne SportMonks + "
+        "football-data.org. Pressão, score e validação automática "
+        "continuam exclusivos das partidas cobertas pela SportMonks."
     )
 
 
