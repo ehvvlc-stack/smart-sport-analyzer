@@ -76,3 +76,4 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19722796-10,2026-09-03 20:10:02,19722796,Hibernian x Hearts,51,10,1 x 2,BAIXA,Hearts,53.3,6.6,50.0,50.0,3.0,AO_VIVO,,,
 19722796-12,2026-09-03 20:14:02,19722796,Hibernian x Hearts,62,12,1 x 3,BAIXA,Hearts,50.8,1.6,50.0,48.0,2.0,AO_VIVO,,,
 19722796-13,2026-09-03 20:18:25,19722796,Hibernian x Hearts,66,13,1 x 3,ALTA,Hearts,67.9,35.8,100.0,48.0,2.0,AO_VIVO,,,
+19722796-14,2026-09-03 20:19:24,19722796,Hibernian x Hearts,71,14,1 x 3,ALTA,Hearts,67.9,35.8,100.0,48.0,2.0,AO_VIVO,,,
