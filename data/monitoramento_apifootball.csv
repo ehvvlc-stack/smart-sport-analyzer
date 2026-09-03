@@ -27,3 +27,4 @@ data_hora,fixture_id,liga,pais,jogo,minuto,placar,status,posse_casa,posse_fora,c
 2026-09-01 20:38:19,1549469,Primera División,Peru,Atletico Grau x FBC Melgar,36,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,38
 2026-09-01 20:39:14,1549469,Primera División,Peru,Atletico Grau x FBC Melgar,37,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,36
 2026-09-01 20:40:05,1549469,Primera División,Peru,Atletico Grau x FBC Melgar,38,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,36
+2026-09-03 22:49:32,1519476,Liga Pro,Ecuador,Leones del Norte x Orense SC,55,0 x 0,2H,58.0,42.0,3.0,2.0,5.0,0.0,12.0,3.0,2.0,0.0,0.0,0.0,ALTA,98
