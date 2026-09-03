@@ -1,4 +1,4 @@
 id_alerta,data_hora_alerta,fixture_id,jogo,minuto_alerta,placar_alerta,time_destaque,indice_alerta,momento_10_min,qualidade_score,qualidade_nivel,gol_ate_5_min,gol_ate_10_min,time_gol,minuto_gol,minutos_apos_alerta,resultado_gol,gol_time_destaque_5_min,gol_time_destaque_10_min,escanteio_ate_5_min,escanteio_ate_10_min,escanteio_time_destaque_5_min,escanteio_time_destaque_10_min,primeiro_escanteio_time,primeiro_escanteio_minuto,minutos_ate_escanteio,status
-DEMO-ALTA,2026-08-20 12:34:10,0,Time A x Time B,60,0 x 0,Time A,68.1,70.0,,,SIM,SIM,Time A,64,4,TIME_DESTAQUE,SIM,SIM,SIM,SIM,SIM,SIM,Time A,62,2,DEMO
-DEMO-ADVERSARIO,2026-08-20 12:34:37,0,Time A x Time B,70,1 x 0,Time A,66.0,68.0,,,SIM,SIM,Time B,73,3,ADVERSARIO,NÃO,NÃO,SIM,SIM,NÃO,NÃO,Time B,72,2,DEMO
-19722796-20260903161228,2026-09-03 16:12:28,19722796,Hibernian x Hearts,13,0 x 1,Hearts,77.9,100.0,82.5,EXCEPCIONAL,PENDENTE,PENDENTE,,,,PENDENTE,PENDENTE,PENDENTE,PENDENTE,PENDENTE,PENDENTE,PENDENTE,,,,ACOMPANHANDO
+DEMO-ALTA,2026-08-20 12:34:10,0,Time A x Time B,60,0 x 0,Time A,68.1,70.0,,,SIM,SIM,Time A,64.0,4.0,TIME_DESTAQUE,SIM,SIM,SIM,SIM,SIM,SIM,Time A,62.0,2.0,DEMO
+DEMO-ADVERSARIO,2026-08-20 12:34:37,0,Time A x Time B,70,1 x 0,Time A,66.0,68.0,,,SIM,SIM,Time B,73.0,3.0,ADVERSARIO,NÃO,NÃO,SIM,SIM,NÃO,NÃO,Time B,72.0,2.0,DEMO
+19722796-20260903161228,2026-09-03 16:12:28,19722796,Hibernian x Hearts,13,0 x 1,Hearts,77.9,100.0,82.5,EXCEPCIONAL,NÃO,NÃO,,,,SEM_GOL,NÃO,NÃO,NÃO,NÃO,NÃO,NÃO,,,,ENCERRADO_SEM_GOL
