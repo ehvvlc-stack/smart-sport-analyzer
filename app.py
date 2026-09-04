@@ -2360,6 +2360,39 @@ def baixar_validacao_github():
         return None
 
 
+def baixar_csv_github_caminho(caminho):
+    """Lê um CSV arbitrário do mesmo repositório usado pelo worker."""
+    if not persistencia_github_ativa():
+        return None
+    url = (
+        f"https://api.github.com/repos/{GITHUB_REPO}/contents/"
+        f"{str(caminho).lstrip('/')}"
+    )
+    headers = {
+        "Authorization": f"Bearer {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+    }
+    try:
+        resposta = requests.get(
+            url,
+            headers=headers,
+            params={"ref": GITHUB_BRANCH},
+            timeout=20,
+        )
+        if resposta.status_code != 200:
+            return None
+        conteudo = resposta.json().get("content", "")
+        if not conteudo:
+            return None
+        import base64
+        from io import StringIO
+        texto = base64.b64decode(conteudo).decode("utf-8-sig")
+        return pd.read_csv(StringIO(texto), dtype=object)
+    except Exception:
+        return None
+
+
 def salvar_validacao_github(df):
     """
     Salva o CSV no GitHub. Retorna True/False.
@@ -9045,3 +9078,93 @@ with aba_validacao:
                 "✅ DEMOs removidos."
             )
             st.rerun()
+
+    st.divider()
+    st.write("## 🧬 Laboratório do DNA da Pressão")
+    st.caption(
+        "Leitura experimental da API-Football. Mostra como cada padrão foi "
+        "classificado e por que o sistema tomou essa decisão."
+    )
+
+    df_dna = baixar_csv_github_caminho(
+        "data/monitoramento_apifootball.csv"
+    )
+
+    if df_dna is None or df_dna.empty:
+        st.info(
+            "Ainda não existem snapshots da API-Football disponíveis. "
+            "O laboratório será preenchido automaticamente."
+        )
+    else:
+        colunas_dna = [
+            "data_hora", "fixture_id", "liga", "pais", "jogo", "minuto",
+            "placar", "qualidade_coleta", "nivel_pressao", "time_destaque",
+            "indice_destaque", "diferenca", "dna_pressao", "dna_score",
+            "dna_motivos", "acoes_recentes_destaque", "situacao_placar",
+            "quota_restante",
+        ]
+        for coluna in colunas_dna:
+            if coluna not in df_dna.columns:
+                df_dna[coluna] = ""
+
+        df_dna["minuto_num"] = pd.to_numeric(
+            df_dna["minuto"], errors="coerce"
+        )
+        df_dna["data_ordem"] = pd.to_datetime(
+            df_dna["data_hora"], errors="coerce"
+        )
+
+        jogos_unicos = df_dna["fixture_id"].astype(str).nunique()
+        perigosos = df_dna["dna_pressao"].astype(str).isin(
+            ["PERIGOSA", "DESESPERADA"]
+        ).sum()
+        estereis = df_dna["dna_pressao"].astype(str).eq("ESTÉRIL").sum()
+        altas = df_dna["nivel_pressao"].astype(str).eq("ALTA").sum()
+
+        m1, m2, m3, m4 = st.columns(4)
+        m1.metric("Jogos observados", jogos_unicos)
+        m2.metric("Snapshots", len(df_dna))
+        m3.metric("DNA perigoso", int(perigosos))
+        m4.metric("Pressões ALTA", int(altas))
+
+        if estereis:
+            st.info(
+                f"🧊 {int(estereis)} snapshot(s) de pressão ESTÉRIL foram "
+                "identificados e permanecem registrados para comparação."
+            )
+
+        opcoes_dna = ["TODOS"] + sorted(
+            valor for valor in df_dna["dna_pressao"].dropna().astype(str).unique()
+            if valor and valor.lower() not in {"nan", "none"}
+        )
+        filtro_dna = st.selectbox(
+            "Filtrar pelo DNA",
+            opcoes_dna,
+            key="filtro_laboratorio_dna",
+        )
+        tabela_dna = df_dna.copy()
+        if filtro_dna != "TODOS":
+            tabela_dna = tabela_dna[
+                tabela_dna["dna_pressao"].astype(str).eq(filtro_dna)
+            ]
+
+        exibir_dna = [
+            "data_hora", "jogo", "minuto", "placar", "liga",
+            "nivel_pressao", "time_destaque", "indice_destaque",
+            "dna_pressao", "dna_score", "dna_motivos",
+            "situacao_placar", "qualidade_coleta",
+        ]
+        tabela_dna = tabela_dna.sort_values(
+            ["data_ordem", "minuto_num"], ascending=False
+        )
+        st.dataframe(
+            tabela_dna[exibir_dna],
+            width="stretch",
+            hide_index=True,
+        )
+        st.download_button(
+            "⬇️ Baixar laboratório DNA em CSV",
+            data=df_dna[colunas_dna].to_csv(index=False).encode("utf-8-sig"),
+            file_name="laboratorio_dna_pressao.csv",
+            mime="text/csv",
+        )
