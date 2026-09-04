@@ -82,3 +82,4 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19722796-17,2026-09-03 20:39:04,19722796,Hibernian x Hearts,88,17,1 x 3,ALTA,Hearts,65.0,30.0,100.0,48.0,0.0,FINALIZADO,2026-09-03 21:02:24,1 x 3,ULTIMO_OBSERVADO,,,,
 19713952-0,2026-09-04 17:04:49,19713952,Viborg FF x Lyngby Boldklub,4,0,0 x 0,BAIXA,Lyngby Boldklub,52.7,5.4,50.0,62.0,0.0,AO_VIVO,,,,,,,
 19713952-1,2026-09-04 17:09:31,19713952,Viborg FF x Lyngby Boldklub,9,1,0 x 0,BAIXA,Lyngby Boldklub,66.1,32.2,50.0,55.0,1.0,AO_VIVO,,,,ALTA,100.0,,0
+19713952-2,2026-09-04 17:14:31,19713952,Viborg FF x Lyngby Boldklub,14,2,0 x 0,BAIXA,Lyngby Boldklub,58.5,17.0,50.0,56.0,1.0,AO_VIVO,,,,ALTA,100.0,,0
