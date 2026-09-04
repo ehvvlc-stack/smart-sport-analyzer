@@ -16,9 +16,21 @@ APIFOOTBALL_INTERVALO_SEGUNDOS = int(
 APIFOOTBALL_RESERVA_DIA = int(
     os.getenv("APIFOOTBALL_RESERVA_DIA", "10")
 )
+APIFOOTBALL_MAX_JOGOS = int(
+    os.getenv("APIFOOTBALL_MAX_JOGOS", "1")
+)
+APIFOOTBALL_LIGAS = {
+    item.strip()
+    for item in os.getenv("APIFOOTBALL_LIGAS", "").split(",")
+    if item.strip()
+}
 APIFOOTBALL_PATH = os.getenv(
     "APIFOOTBALL_PATH",
     "data/monitoramento_apifootball.csv"
+).strip()
+APIFOOTBALL_VALIDACAO_PATH = os.getenv(
+    "APIFOOTBALL_VALIDACAO_PATH",
+    "data/validacao_apifootball.csv"
 ).strip()
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "").strip()
 GITHUB_REPO = os.getenv("GITHUB_REPO", "ehvvlc-stack/smart-sport-analyzer").strip()
@@ -427,6 +439,22 @@ COLUNAS_APIFOOTBALL = [
     "vermelhos_fora",
     "qualidade_coleta",
     "quota_restante",
+    "indice_casa",
+    "indice_fora",
+    "momento_casa",
+    "momento_fora",
+    "nivel_pressao",
+    "time_destaque",
+    "indice_destaque",
+    "diferenca",
+]
+
+COLUNAS_VALIDACAO_APIFOOTBALL = [
+    "id_alerta", "data_hora_alerta", "fixture_id", "jogo",
+    "minuto_alerta", "placar_alerta", "time_destaque",
+    "indice_alerta", "momento_10_min", "corners_alerta",
+    "gol_ate_5_min", "gol_ate_10_min", "escanteio_ate_5_min",
+    "escanteio_ate_10_min", "status",
 ]
 
 
@@ -504,7 +532,7 @@ def stat_af(stats, lado, nomes):
     return None
 
 
-def ciclo_apifootball():
+def ciclo_apifootball_legado():
     """
     Coleta experimental e separada da API-Football.
 
@@ -827,6 +855,271 @@ def ciclo_apifootball():
         f"capturado {home_name} x {away_name} "
         f"min {minuto} • dados {qualidade} • "
         f"quota {restante_final} • "
+        f"GitHub {'OK' if ok else 'FALHOU'}"
+    )
+
+
+def numero_af(valor, padrao=0.0):
+    try:
+        if pd.isna(valor):
+            return float(padrao)
+        return float(valor)
+    except (TypeError, ValueError):
+        return float(padrao)
+
+
+def indices_apifootball(valores):
+    ph = participacao(valores["posse_casa"], valores["posse_fora"])
+    ch = participacao(valores["corners_casa"], valores["corners_fora"])
+    gh = participacao(valores["chutes_gol_casa"], valores["chutes_gol_fora"])
+    th = participacao(valores["chutes_total_casa"], valores["chutes_total_fora"])
+    bruto_h = ph * 0.25 + ch * 0.25 + gh * 0.30 + th * 0.20
+    bruto_a = (100 - ph) * 0.25 + (100 - ch) * 0.25 + (100 - gh) * 0.30 + (100 - th) * 0.20
+    total = bruto_h + bruto_a
+    if total <= 0:
+        return 50.0, 50.0
+    casa = bruto_h / total * 100
+    return round(casa, 1), round(100 - casa, 1)
+
+
+def momento_apifootball(atual, anterior):
+    if anterior is None:
+        return 50.0, 50.0, False
+    minuto_atual = int(numero_af(atual.get("minuto"), -1))
+    minuto_anterior = int(numero_af(anterior.get("minuto"), -1))
+    intervalo = minuto_atual - minuto_anterior
+    if intervalo < 2 or intervalo > 15:
+        return 50.0, 50.0, False
+
+    def delta(campo):
+        return max(0.0, numero_af(atual.get(campo)) - numero_af(anterior.get(campo)))
+
+    pontos_h = (
+        delta("corners_casa") * 3
+        + delta("chutes_gol_casa") * 4
+        + delta("chutes_total_casa")
+    )
+    pontos_a = (
+        delta("corners_fora") * 3
+        + delta("chutes_gol_fora") * 4
+        + delta("chutes_total_fora")
+    )
+    total = pontos_h + pontos_a
+    if total <= 0:
+        return 50.0, 50.0, True
+    casa = pontos_h / total * 100
+    return round(casa, 1), round(100 - casa, 1), True
+
+
+def ultimo_snapshot_af(df, fixture_id, minuto):
+    if df.empty:
+        return None
+    candidatos = df[df["fixture_id"].astype(str).eq(str(fixture_id))].copy()
+    candidatos["_minuto"] = pd.to_numeric(candidatos["minuto"], errors="coerce")
+    candidatos = candidatos[candidatos["_minuto"] < int(minuto)]
+    if candidatos.empty:
+        return None
+    return candidatos.sort_values("_minuto").iloc[-1].to_dict()
+
+
+def atualizar_validacao_af(linha):
+    df = ler_csv_github_generico(
+        APIFOOTBALL_VALIDACAO_PATH, COLUNAS_VALIDACAO_APIFOOTBALL
+    )
+    if df.empty:
+        return
+    mascara = (
+        df["fixture_id"].astype(str).eq(str(linha["fixture_id"]))
+        & df["status"].astype(str).eq("ACOMPANHANDO")
+    )
+    mudou = False
+    gols_atuais = sum(int(numero_af(x)) for x in str(linha["placar"]).split(" x "))
+    corners_atuais = numero_af(linha["corners_casa"]) + numero_af(linha["corners_fora"])
+    for idx in df.index[mascara]:
+        minuto_alerta = int(numero_af(df.at[idx, "minuto_alerta"]))
+        delta_min = int(numero_af(linha["minuto"])) - minuto_alerta
+        gols_alerta = sum(int(numero_af(x)) for x in str(df.at[idx, "placar_alerta"]).split(" x "))
+        corners_alerta = numero_af(df.at[idx, "corners_alerta"])
+        houve_gol = gols_atuais > gols_alerta
+        houve_corner = corners_atuais > corners_alerta
+        if 5 <= delta_min <= 10:
+            df.at[idx, "gol_ate_5_min"] = "SIM" if houve_gol else "NÃO"
+            df.at[idx, "escanteio_ate_5_min"] = "SIM" if houve_corner else "NÃO"
+            mudou = True
+        if delta_min >= 10:
+            df.at[idx, "gol_ate_10_min"] = "SIM" if houve_gol else "NÃO"
+            df.at[idx, "escanteio_ate_10_min"] = "SIM" if houve_corner else "NÃO"
+            df.at[idx, "status"] = "CONCLUÍDO"
+            mudou = True
+    if mudou:
+        salvar_csv_github_generico(
+            APIFOOTBALL_VALIDACAO_PATH, df,
+            "Atualiza validação API-Football"
+        )
+
+
+def registrar_alerta_af(linha):
+    df = ler_csv_github_generico(
+        APIFOOTBALL_VALIDACAO_PATH, COLUNAS_VALIDACAO_APIFOOTBALL
+    )
+    fixture_id = linha["fixture_id"]
+    if not df.empty and (
+        df["fixture_id"].astype(str).eq(str(fixture_id))
+        & df["status"].astype(str).eq("ACOMPANHANDO")
+    ).any():
+        return False
+    agora = datetime.now()
+    registro = {coluna: "" for coluna in COLUNAS_VALIDACAO_APIFOOTBALL}
+    registro.update({
+        "id_alerta": f"AF-{fixture_id}-{agora.strftime('%Y%m%d%H%M%S')}",
+        "data_hora_alerta": agora.strftime("%Y-%m-%d %H:%M:%S"),
+        "fixture_id": fixture_id,
+        "jogo": linha["jogo"],
+        "minuto_alerta": linha["minuto"],
+        "placar_alerta": linha["placar"],
+        "time_destaque": linha["time_destaque"],
+        "indice_alerta": linha["indice_destaque"],
+        "momento_10_min": max(linha["momento_casa"], linha["momento_fora"]),
+        "corners_alerta": numero_af(linha["corners_casa"]) + numero_af(linha["corners_fora"]),
+        "gol_ate_5_min": "PENDENTE", "gol_ate_10_min": "PENDENTE",
+        "escanteio_ate_5_min": "PENDENTE", "escanteio_ate_10_min": "PENDENTE",
+        "status": "ACOMPANHANDO",
+    })
+    df = pd.concat([df, pd.DataFrame([registro])], ignore_index=True)
+    if not salvar_csv_github_generico(
+        APIFOOTBALL_VALIDACAO_PATH, df, "Registra alerta API-Football"
+    ):
+        return False
+    enviar_alerta_telegram(
+        "🚨 PRESSÃO ALTA — API-FOOTBALL\n\n"
+        f"⚽ {linha['jogo']}\n"
+        f"⏱ Minuto: {int(numero_af(linha['minuto']))}'\n"
+        f"📍 Placar: {linha['placar']}\n"
+        f"🔥 Destaque: {linha['time_destaque']}\n"
+        f"📊 Índice: {numero_af(linha['indice_destaque']):.1f}%\n"
+        f"⚡ Momento recente: {max(linha['momento_casa'], linha['momento_fora']):.1f}%\n\n"
+        "🧪 Sinal estatístico em validação; nenhuma aposta é automática."
+    )
+    return True
+
+
+def processar_jogo_af(jogo, df, restante):
+    fixture = jogo.get("fixture", {}) or {}
+    fixture_id = fixture.get("id")
+    minuto = (fixture.get("status", {}) or {}).get("elapsed")
+    if fixture_id is None or minuto is None:
+        return df, restante, False
+    stats_resp, restante_stats = apifootball_get(
+        "fixtures/statistics", {"fixture": fixture_id}
+    )
+    if stats_resp is None:
+        return df, restante_stats, False
+    stats = extrair_stats_apifootball(stats_resp)
+    times = jogo.get("teams", {}) or {}
+    casa = (times.get("home", {}) or {}).get("name", "Casa")
+    fora = (times.get("away", {}) or {}).get("name", "Visitante")
+    goals = jogo.get("goals", {}) or {}
+    league = jogo.get("league", {}) or {}
+    campos = {
+        "posse_casa": stat_af(stats, "home", ["Ball Possession"]),
+        "posse_fora": stat_af(stats, "away", ["Ball Possession"]),
+        "corners_casa": stat_af(stats, "home", ["Corner Kicks"]),
+        "corners_fora": stat_af(stats, "away", ["Corner Kicks"]),
+        "chutes_gol_casa": stat_af(stats, "home", ["Shots on Goal"]),
+        "chutes_gol_fora": stat_af(stats, "away", ["Shots on Goal"]),
+        "chutes_total_casa": stat_af(stats, "home", ["Total Shots"]),
+        "chutes_total_fora": stat_af(stats, "away", ["Total Shots"]),
+        "amarelos_casa": stat_af(stats, "home", ["Yellow Cards"]),
+        "amarelos_fora": stat_af(stats, "away", ["Yellow Cards"]),
+        "vermelhos_casa": stat_af(stats, "home", ["Red Cards"]),
+        "vermelhos_fora": stat_af(stats, "away", ["Red Cards"]),
+    }
+    essenciais = [campos[x] for x in (
+        "posse_casa", "posse_fora", "corners_casa", "corners_fora",
+        "chutes_gol_casa", "chutes_gol_fora"
+    )]
+    cobertura = sum(x is not None for x in essenciais) / len(essenciais) * 100
+    qualidade = "ALTA" if cobertura >= 83 else "MEDIA" if cobertura >= 50 else "INSUFICIENTE"
+    numericos = {chave: numero_af(valor) for chave, valor in campos.items()}
+    indice_h, indice_a = indices_apifootball(numericos)
+    base = {**numericos, "minuto": minuto}
+    anterior = ultimo_snapshot_af(df, fixture_id, minuto)
+    momento_h, momento_a, tem_janela = momento_apifootball(base, anterior)
+    combinado_h, combinado_a = combinar_indices(indice_h, indice_a, momento_h, momento_a)
+    nivel, dominante = classificar_pressao_live(
+        combinado_h, combinado_a, momento_h, momento_a, casa, fora
+    )
+    if not tem_janela or qualidade == "INSUFICIENTE":
+        nivel = "COLETANDO"
+    linha = {
+        "data_hora": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "fixture_id": fixture_id, "liga": league.get("name", ""),
+        "pais": league.get("country", ""), "jogo": f"{casa} x {fora}",
+        "minuto": int(minuto),
+        "placar": f"{goals.get('home', 0)} x {goals.get('away', 0)}",
+        "status": (fixture.get("status", {}) or {}).get("short", ""),
+        **campos, "qualidade_coleta": qualidade,
+        "quota_restante": restante_stats if restante_stats >= 0 else restante,
+        "indice_casa": combinado_h, "indice_fora": combinado_a,
+        "momento_casa": momento_h, "momento_fora": momento_a,
+        "nivel_pressao": nivel, "time_destaque": dominante,
+        "indice_destaque": max(combinado_h, combinado_a),
+        "diferenca": round(abs(combinado_h - combinado_a), 1),
+    }
+    nivel_anterior = str(anterior.get("nivel_pressao", "")).upper() if anterior else ""
+    atualizar_validacao_af(linha)
+    mascara = (
+        df["fixture_id"].astype(str).eq(str(fixture_id))
+        & pd.to_numeric(df["minuto"], errors="coerce").eq(int(minuto))
+    ) if not df.empty else pd.Series(dtype=bool)
+    if not df.empty and mascara.any():
+        idx = df.index[mascara][-1]
+        for chave, valor in linha.items():
+            df.at[idx, chave] = valor
+    else:
+        df = pd.concat([df, pd.DataFrame([linha])], ignore_index=True)
+    if nivel == "ALTA" and nivel_anterior != "ALTA":
+        registrar_alerta_af(linha)
+    log(
+        f"API-Football: {linha['jogo']} min {minuto} • "
+        f"pressão {nivel} • dados {qualidade} • quota {linha['quota_restante']}"
+    )
+    return df, linha["quota_restante"], True
+
+
+def ciclo_apifootball():
+    if not APIFOOTBALL_KEY:
+        return
+    dados, restante = apifootball_get("fixtures", {"live": "all"})
+    if dados is None:
+        return
+    jogos = dados.get("response", []) or []
+    if APIFOOTBALL_LIGAS:
+        jogos = [
+            jogo for jogo in jogos
+            if str((jogo.get("league", {}) or {}).get("id")) in APIFOOTBALL_LIGAS
+        ]
+    if restante >= 0 and restante <= APIFOOTBALL_RESERVA_DIA:
+        log(f"API-Football: reserva diária atingida ({restante} restantes)")
+        return
+    if not jogos:
+        log(f"API-Football: 0 jogos ao vivo • quota restante {restante}")
+        return
+    df = ler_csv_github_generico(APIFOOTBALL_PATH, COLUNAS_APIFOOTBALL)
+    processados = 0
+    for jogo in jogos[:max(1, APIFOOTBALL_MAX_JOGOS)]:
+        if restante >= 0 and restante <= APIFOOTBALL_RESERVA_DIA:
+            break
+        try:
+            df, restante, mudou = processar_jogo_af(jogo, df, restante)
+            processados += int(mudou)
+        except Exception as exc:
+            log(f"API-Football erro em fixture: {exc}")
+    ok = salvar_csv_github_generico(
+        APIFOOTBALL_PATH, df, "Atualiza pressão API-Football"
+    )
+    log(
+        f"API-Football: {len(jogos)} ao vivo • {processados} processados • "
         f"GitHub {'OK' if ok else 'FALHOU'}"
     )
 
