@@ -33,3 +33,4 @@ data_hora,fixture_id,liga,pais,jogo,minuto,placar,status,posse_casa,posse_fora,c
 2026-09-04 02:04:32,1636629,Primera Division,Nicaragua,Matagalpa x UNAN Managua,28,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,96
 2026-09-04 03:09:32,1636629,Primera Division,Nicaragua,Matagalpa x UNAN Managua,77,1 x 0,2H,,,,,,,,,,,,,INSUFICIENTE,94
 2026-09-04 09:29:32,1569361,Campionato Primavera - 1,Italy,Lecce U20 x Roma U20,28,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,87
+2026-09-04 10:34:32,1510435,K League 2,South-Korea,Cheongju x Seoul E-Land FC,3,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,85
