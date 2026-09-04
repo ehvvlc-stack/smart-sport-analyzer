@@ -41,3 +41,4 @@ data_hora,fixture_id,liga,pais,jogo,minuto,placar,status,posse_casa,posse_fora,c
 2026-09-04 15:59:32,1504297,Ykkösliiga,Finland,JIPPO x Kooteepee,28,0 x 1,1H,,,,,,,,,,,,,INSUFICIENTE,75
 2026-09-04 17:04:33,1494748,Eliteserien,Norway,Aalesund x Start,3,0 x 0,1H,46.0,54.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,ALTA,73
 2026-09-04 18:09:34,1500188,Primera C,Argentina,Yupanqui x Leones de Rosario,10,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,71
+2026-09-04 19:14:34,1492754,Premier Division,Ireland,Shamrock Rovers x Shelbourne,14,0 x 0,1H,60.0,40.0,1.0,2.0,0.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,ALTA,69
