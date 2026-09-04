@@ -1123,6 +1123,31 @@ def processar_jogo_af(jogo, df, restante):
     )
     if not tem_janela or qualidade == "INSUFICIENTE":
         nivel = "COLETANDO"
+    # Um gol é resultado, não evidência de que outro gol virá. Bloqueamos o
+    # sinal por três minutos e deixamos a janela ofensiva recomeçar.
+    ultimo_gol_af = None
+    for evento in jogo.get("events", []) or []:
+        tipo_evento = str(evento.get("type", "")).strip().lower()
+        if tipo_evento != "goal":
+            continue
+        try:
+            minuto_evento = int((evento.get("time", {}) or {}).get("elapsed"))
+            if minuto_evento <= int(minuto):
+                ultimo_gol_af = max(ultimo_gol_af or minuto_evento, minuto_evento)
+        except (TypeError, ValueError):
+            pass
+    if ultimo_gol_af is None and anterior is not None:
+        try:
+            gols_antes = sum(
+                int(numero_af(x)) for x in str(anterior.get("placar", "0 x 0")).split(" x ")
+            )
+            gols_agora = int(numero_af(goals.get("home"))) + int(numero_af(goals.get("away")))
+            if gols_agora > gols_antes:
+                ultimo_gol_af = int(minuto)
+        except Exception:
+            pass
+    if ultimo_gol_af is not None and 0 <= int(minuto) - ultimo_gol_af <= 3:
+        nivel = "PÓS_GOL"
     lado_destaque = "casa" if combinado_h >= combinado_a else "fora"
     dna_tipo, dna_score, dna_motivos, acoes_recentes, situacao_placar = (
         diagnosticar_dna_pressao(
@@ -1623,18 +1648,39 @@ def revisar_validacoes_pendentes_worker():
 def pontuar_evento(evento):
     nome = str(evento["Evento"]).lower()
     if "goal" in nome:
-        return 8
+        return 0
     if "red" in nome:
         return -6
     if "yellow" in nome:
         return -2
     if "substitution" in nome:
+        return 0
+    if "corner" in nome or "escanteio" in nome:
+        return 3
+    if "shot on target" in nome or "shot on goal" in nome:
+        return 4
+    if "shot" in nome or "finaliza" in nome:
+        return 2
+    if "dangerous attack" in nome or "ataque perigoso" in nome:
+        return 2
+    if "attack" in nome or "ataque" in nome:
         return 1
-    return 1
+    return 0
 
 def pressao_eventos(eventos, minuto_atual, casa, visitante, janela=10):
     inicio = max(0, minuto_atual - janela)
-    recentes = [e for e in eventos if inicio < e["minuto_num"] <= minuto_atual]
+    gols_anteriores = [
+        e for e in eventos
+        if "goal" in str(e.get("Evento", "")).lower()
+        and e["minuto_num"] <= minuto_atual
+    ]
+    if gols_anteriores:
+        inicio = max(inicio, max(e["minuto_num"] for e in gols_anteriores))
+    recentes = [
+        e for e in eventos
+        if inicio < e["minuto_num"] <= minuto_atual
+        and "goal" not in str(e.get("Evento", "")).lower()
+    ]
     pc = pv = 0
     for e in recentes:
         pontos = pontuar_evento(e)
@@ -1956,6 +2002,15 @@ def atualizar_snapshot(df, jogo):
     nivel, dominante = classificar_pressao_live(
         ch, ca, momento["indice_casa"], momento["indice_visitante"], casa, visitante
     )
+
+    minutos_gols = [
+        int(e.get("minuto_num", 0) or 0)
+        for e in eventos
+        if "goal" in str(e.get("Evento", "")).lower()
+        and int(e.get("minuto_num", 0) or 0) <= int(minuto)
+    ]
+    if minutos_gols and 0 <= int(minuto) - max(minutos_gols) <= 3:
+        nivel = "PÓS_GOL"
 
     if ch >= ca:
         indice = ch
