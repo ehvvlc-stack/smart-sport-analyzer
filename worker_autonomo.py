@@ -447,12 +447,18 @@ COLUNAS_APIFOOTBALL = [
     "time_destaque",
     "indice_destaque",
     "diferenca",
+    "dna_pressao",
+    "dna_score",
+    "dna_motivos",
+    "acoes_recentes_destaque",
+    "situacao_placar",
 ]
 
 COLUNAS_VALIDACAO_APIFOOTBALL = [
     "id_alerta", "data_hora_alerta", "fixture_id", "jogo",
     "minuto_alerta", "placar_alerta", "time_destaque",
     "indice_alerta", "momento_10_min", "corners_alerta",
+    "dna_pressao", "dna_score", "dna_motivos", "situacao_placar",
     "gol_ate_5_min", "gol_ate_10_min", "escanteio_ate_5_min",
     "escanteio_ate_10_min", "status",
 ]
@@ -922,6 +928,65 @@ def ultimo_snapshot_af(df, fixture_id, minuto):
     return candidatos.sort_values("_minuto").iloc[-1].to_dict()
 
 
+def diagnosticar_dna_pressao(atual, anterior, lado, minuto, gols_casa, gols_fora):
+    if anterior is None:
+        return "EM_FORMAÇÃO", 0.0, "Aguardando o segundo snapshot", 0.0, "INDEFINIDA"
+
+    sufixo = "casa" if lado == "casa" else "fora"
+
+    def delta(campo):
+        return max(
+            0.0,
+            numero_af(atual.get(f"{campo}_{sufixo}"))
+            - numero_af(anterior.get(f"{campo}_{sufixo}")),
+        )
+
+    novos_corners = delta("corners")
+    novos_sog = delta("chutes_gol")
+    novos_chutes = delta("chutes_total")
+    acoes = novos_corners * 3 + novos_sog * 4 + novos_chutes
+
+    gols_time = gols_casa if lado == "casa" else gols_fora
+    gols_rival = gols_fora if lado == "casa" else gols_casa
+    if gols_time < gols_rival:
+        situacao = "PERDENDO"
+    elif gols_time > gols_rival:
+        situacao = "VENCENDO"
+    else:
+        situacao = "EMPATANDO"
+
+    motivos = []
+    if novos_sog >= 2:
+        motivos.append(f"{int(novos_sog)} novos chutes no gol")
+    elif novos_sog >= 1:
+        motivos.append("novo chute no gol")
+    if novos_corners >= 2:
+        motivos.append(f"{int(novos_corners)} novos escanteios")
+    elif novos_corners >= 1:
+        motivos.append("novo escanteio")
+    if novos_chutes >= 4:
+        motivos.append(f"{int(novos_chutes)} novas finalizações")
+
+    score = min(
+        100.0,
+        novos_sog * 25 + novos_corners * 15 + novos_chutes * 5,
+    )
+    if minuto >= 70 and situacao == "PERDENDO" and acoes >= 8:
+        tipo = "DESESPERADA"
+        motivos.append("time perdendo após os 70 minutos")
+    elif novos_sog >= 1 and (novos_corners >= 1 or novos_chutes >= 3):
+        tipo = "PERIGOSA"
+    elif acoes >= 5 and novos_sog == 0:
+        tipo = "ESTÉRIL"
+        motivos.append("pressão sem chute no gol")
+        score = min(score, 45.0)
+    else:
+        tipo = "EM_CONSTRUÇÃO"
+        motivos.append("volume ofensivo ainda limitado")
+
+    return tipo, round(score, 1), "; ".join(motivos), round(acoes, 1), situacao
+
+
 def atualizar_validacao_af(linha):
     df = ler_csv_github_generico(
         APIFOOTBALL_VALIDACAO_PATH, COLUNAS_VALIDACAO_APIFOOTBALL
@@ -981,6 +1046,10 @@ def registrar_alerta_af(linha):
         "indice_alerta": linha["indice_destaque"],
         "momento_10_min": max(linha["momento_casa"], linha["momento_fora"]),
         "corners_alerta": numero_af(linha["corners_casa"]) + numero_af(linha["corners_fora"]),
+        "dna_pressao": linha["dna_pressao"],
+        "dna_score": linha["dna_score"],
+        "dna_motivos": linha["dna_motivos"],
+        "situacao_placar": linha["situacao_placar"],
         "gol_ate_5_min": "PENDENTE", "gol_ate_10_min": "PENDENTE",
         "escanteio_ate_5_min": "PENDENTE", "escanteio_ate_10_min": "PENDENTE",
         "status": "ACOMPANHANDO",
@@ -998,6 +1067,9 @@ def registrar_alerta_af(linha):
         f"🔥 Destaque: {linha['time_destaque']}\n"
         f"📊 Índice: {numero_af(linha['indice_destaque']):.1f}%\n"
         f"⚡ Momento recente: {max(linha['momento_casa'], linha['momento_fora']):.1f}%\n\n"
+        f"🧬 DNA: {linha['dna_pressao']} ({numero_af(linha['dna_score']):.0f}/100)\n"
+        f"🔎 {linha['dna_motivos']}\n"
+        f"🎯 Situação: {linha['situacao_placar']}\n\n"
         "🧪 Sinal estatístico em validação; nenhuma aposta é automática."
     )
     return True
@@ -1051,6 +1123,17 @@ def processar_jogo_af(jogo, df, restante):
     )
     if not tem_janela or qualidade == "INSUFICIENTE":
         nivel = "COLETANDO"
+    lado_destaque = "casa" if combinado_h >= combinado_a else "fora"
+    dna_tipo, dna_score, dna_motivos, acoes_recentes, situacao_placar = (
+        diagnosticar_dna_pressao(
+            base,
+            anterior,
+            lado_destaque,
+            int(minuto),
+            int(numero_af(goals.get("home"))),
+            int(numero_af(goals.get("away"))),
+        )
+    )
     linha = {
         "data_hora": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "fixture_id": fixture_id, "liga": league.get("name", ""),
@@ -1065,6 +1148,11 @@ def processar_jogo_af(jogo, df, restante):
         "nivel_pressao": nivel, "time_destaque": dominante,
         "indice_destaque": max(combinado_h, combinado_a),
         "diferenca": round(abs(combinado_h - combinado_a), 1),
+        "dna_pressao": dna_tipo,
+        "dna_score": dna_score,
+        "dna_motivos": dna_motivos,
+        "acoes_recentes_destaque": acoes_recentes,
+        "situacao_placar": situacao_placar,
     }
     nivel_anterior = str(anterior.get("nivel_pressao", "")).upper() if anterior else ""
     atualizar_validacao_af(linha)
@@ -1082,7 +1170,8 @@ def processar_jogo_af(jogo, df, restante):
         registrar_alerta_af(linha)
     log(
         f"API-Football: {linha['jogo']} min {minuto} • "
-        f"pressão {nivel} • dados {qualidade} • quota {linha['quota_restante']}"
+        f"pressão {nivel} • DNA {dna_tipo} • dados {qualidade} • "
+        f"quota {linha['quota_restante']}"
     )
     return df, linha["quota_restante"], True
 
