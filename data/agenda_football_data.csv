@@ -19,3 +19,8 @@ fixture_id,data_hora,status,casa_id,casa,fora_id,fora,competicao,rodada
 555008,2026-09-12T21:30:00Z,2026-09-13 19:00:00Z,1769,SE Palmeiras,1776,São Paulo FC,Campeonato Brasileiro Série A,27
 555002,2026-09-12T23:30:00Z,2026-09-13 19:00:00Z,1770,Botafogo FR,4286,RB Bragantino,Campeonato Brasileiro Série A,27
 555009,2026-09-13T00:00:00Z,2026-09-13 19:00:00Z,6685,Santos FC,1771,Cruzeiro EC,Campeonato Brasileiro Série A,27
+555010,2026-09-19T00:00:00Z,2026-09-20 19:00:00Z,1768,CA Paranaense,1777,EC Bahia,Campeonato Brasileiro Série A,28
+555012,2026-09-19T00:00:00Z,2026-09-20 19:00:00Z,1779,SC Corinthians Paulista,1765,Fluminense FC,Campeonato Brasileiro Série A,28
+555013,2026-09-19T00:00:00Z,2026-09-20 19:00:00Z,1783,CR Flamengo,4286,RB Bragantino,Campeonato Brasileiro Série A,28
+555014,2026-09-19T00:00:00Z,2026-09-20 19:00:00Z,1767,Grêmio FBPA,1769,SE Palmeiras,Campeonato Brasileiro Série A,28
+555019,2026-09-19T00:00:00Z,2026-09-20 19:00:00Z,1782,EC Vitória,1771,Cruzeiro EC,Campeonato Brasileiro Série A,28
