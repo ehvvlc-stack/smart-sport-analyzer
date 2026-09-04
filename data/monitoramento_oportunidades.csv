@@ -86,3 +86,4 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713952-13,2026-09-04 18:24:48,19713952,Viborg FF x Lyngby Boldklub,66,13,0 x 2,BAIXA,Viborg FF,52.5,5.0,50.0,54.0,1.0,AO_VIVO,,,,,,,
 19713952-14,2026-09-04 18:34:31,19713952,Viborg FF x Lyngby Boldklub,74,14,0 x 2,ALTA,Viborg FF,69.0,38.0,100.0,56.0,2.0,AO_VIVO,,,,ALTA,100.0,,7
 19713952-15,2026-09-04 18:39:31,19713952,Viborg FF x Lyngby Boldklub,79,15,0 x 2,MODERADA,Viborg FF,61.8,23.6,80.0,56.0,1.0,AO_VIVO,,,,ALTA,100.0,,9
+19713952-17,2026-09-04 18:44:31,19713952,Viborg FF x Lyngby Boldklub,86,17,0 x 2,BAIXA,Viborg FF,50.9,1.8,40.0,58.0,2.0,AO_VIVO,,,,ALTA,100.0,,12
