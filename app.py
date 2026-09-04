@@ -2489,6 +2489,22 @@ def ler_validacoes():
         "status"
     ]
 
+    # O worker do Railway grava no GitHub. Quando a persistência remota está
+    # configurada, o GitHub é a fonte principal e o CSV local funciona como
+    # cache/fallback. Assim sinais novos aparecem sem apagar arquivos à mão.
+    if persistencia_github_ativa():
+        remoto = baixar_validacao_github()
+        if remoto is not None:
+            for coluna in colunas:
+                if coluna not in remoto.columns:
+                    remoto[coluna] = ""
+            remoto = remoto[colunas].astype("object")
+            try:
+                remoto.to_csv(ARQUIVO_VALIDACAO, index=False)
+            except Exception:
+                pass
+            return remoto
+
     if not ARQUIVO_VALIDACAO.exists():
         remoto = baixar_validacao_github()
 
@@ -3309,11 +3325,7 @@ def tabela_validacoes_em_andamento(df):
         return pd.DataFrame()
 
     base = df[
-        (df["status"].astype(str) != "DEMO")
-        & (
-            df["gol_time_destaque_10_min"].astype(str).eq("PENDENTE")
-            | df["escanteio_time_destaque_10_min"].astype(str).eq("PENDENTE")
-        )
+        df["status"].astype(str).eq("ACOMPANHANDO")
     ].copy()
 
     if base.empty:
