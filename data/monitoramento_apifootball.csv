@@ -43,3 +43,4 @@ data_hora,fixture_id,liga,pais,jogo,minuto,placar,status,posse_casa,posse_fora,c
 2026-09-04 18:09:34,1500188,Primera C,Argentina,Yupanqui x Leones de Rosario,10,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,71
 2026-09-04 19:14:34,1492754,Premier Division,Ireland,Shamrock Rovers x Shelbourne,14,0 x 0,1H,60.0,40.0,1.0,2.0,0.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,ALTA,69
 2026-09-04 20:19:33,1493111,Liga Profesional Argentina,Argentina,Estudiantes de Rio Cuarto x Sarmiento Junin,36,0 x 1,1H,64.0,36.0,4.0,1.0,1.0,0.0,8.0,3.0,1.0,0.0,0.0,0.0,ALTA,67
+2026-09-04 21:24:33,1618997,Primera División,Bolivia,ABB x Universitario de Vinto,9,0 x 0,1H,63.0,37.0,,,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,MEDIA,65
