@@ -1,46 +1,47 @@
-data_hora,fixture_id,liga,pais,jogo,minuto,placar,status,posse_casa,posse_fora,corners_casa,corners_fora,chutes_gol_casa,chutes_gol_fora,chutes_total_casa,chutes_total_fora,amarelos_casa,amarelos_fora,vermelhos_casa,vermelhos_fora,qualidade_coleta,quota_restante
-2026-08-23 08:03:12,1520536,K3 League,South-Korea,Jeonbuk Motors II x Ulsan Citizen,3,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,84
-2026-08-23 08:04:11,1520536,K3 League,South-Korea,Jeonbuk Motors II x Ulsan Citizen,4,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,80
-2026-08-23 08:05:13,1520536,K3 League,South-Korea,Jeonbuk Motors II x Ulsan Citizen,5,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,76
-2026-08-23 08:06:09,1520536,K3 League,South-Korea,Jeonbuk Motors II x Ulsan Citizen,6,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,71
-2026-08-23 08:06:38,1520536,K3 League,South-Korea,Jeonbuk Motors II x Ulsan Citizen,7,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,69
-2026-08-26 04:22:12,1548368,CONCACAF Central American Cup,World,CS Cartagines x FAS,90,2 x 0,2H,,,,,,,,,,,,,INSUFICIENTE,97
-2026-08-26 04:25:03,1548369,CONCACAF Central American Cup,World,Municipal x CD Motagua,90,1 x 1,2H,,,,,,,,,,,,,INSUFICIENTE,91
-2026-09-01 20:19:38,1549469,Primera División,Peru,Atletico Grau x FBC Melgar,18,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,98
-2026-09-01 20:21:19,1549469,Primera División,Peru,Atletico Grau x FBC Melgar,19,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,96
-2026-09-01 20:22:14,1549469,Primera División,Peru,Atletico Grau x FBC Melgar,20,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,94
-2026-09-01 20:22:54,1549469,Primera División,Peru,Atletico Grau x FBC Melgar,21,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,88
-2026-09-01 20:24:00,1549469,Primera División,Peru,Atletico Grau x FBC Melgar,22,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,86
-2026-09-01 20:25:10,1549469,Primera División,Peru,Atletico Grau x FBC Melgar,23,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,84
-2026-09-01 20:26:12,1549469,Primera División,Peru,Atletico Grau x FBC Melgar,24,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,82
-2026-09-01 20:26:50,1549469,Primera División,Peru,Atletico Grau x FBC Melgar,25,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,80
-2026-09-01 20:28:01,1549469,Primera División,Peru,Atletico Grau x FBC Melgar,26,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,72
-2026-09-01 20:28:25,1549469,Primera División,Peru,Atletico Grau x FBC Melgar,27,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,70
-2026-09-01 20:30:13,1549469,Primera División,Peru,Atletico Grau x FBC Melgar,28,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,66
-2026-09-01 20:30:34,1549469,Primera División,Peru,Atletico Grau x FBC Melgar,29,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,60
-2026-09-01 20:31:57,1549469,Primera División,Peru,Atletico Grau x FBC Melgar,30,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,56
-2026-09-01 20:33:05,1549469,Primera División,Peru,Atletico Grau x FBC Melgar,31,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,54
-2026-09-01 20:33:46,1549469,Primera División,Peru,Atletico Grau x FBC Melgar,32,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,52
-2026-09-01 20:35:06,1549469,Primera División,Peru,Atletico Grau x FBC Melgar,33,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,48
-2026-09-01 20:36:21,1549469,Primera División,Peru,Atletico Grau x FBC Melgar,34,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,46
-2026-09-01 20:36:52,1549469,Primera División,Peru,Atletico Grau x FBC Melgar,35,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,44
-2026-09-01 20:38:19,1549469,Primera División,Peru,Atletico Grau x FBC Melgar,36,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,38
-2026-09-01 20:39:14,1549469,Primera División,Peru,Atletico Grau x FBC Melgar,37,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,36
-2026-09-01 20:40:05,1549469,Primera División,Peru,Atletico Grau x FBC Melgar,38,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,36
-2026-09-03 22:49:32,1519476,Liga Pro,Ecuador,Leones del Norte x Orense SC,55,0 x 0,2H,58.0,42.0,3.0,2.0,5.0,0.0,12.0,3.0,2.0,0.0,0.0,0.0,ALTA,98
-2026-09-03 23:54:32,1636631,Division Intermedia,Paraguay,SOL DE America x General Caballero,90,1 x 1,2H,,,,,,,,,,,,,INSUFICIENTE,96
-2026-09-04 00:59:32,1629824,Serie D,Brazil,CSA x Nacional AM,90,0 x 0,2H,,,,,,,,,,,,,INSUFICIENTE,98
-2026-09-04 02:04:32,1636629,Primera Division,Nicaragua,Matagalpa x UNAN Managua,28,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,96
-2026-09-04 03:09:32,1636629,Primera Division,Nicaragua,Matagalpa x UNAN Managua,77,1 x 0,2H,,,,,,,,,,,,,INSUFICIENTE,94
-2026-09-04 09:29:32,1569361,Campionato Primavera - 1,Italy,Lecce U20 x Roma U20,28,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,87
-2026-09-04 10:34:32,1510435,K League 2,South-Korea,Cheongju x Seoul E-Land FC,3,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,85
-2026-09-04 11:39:32,1550707,ASEAN Club Championship,World,Manila Digger x Kasuka,40,1 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,83
-2026-09-04 12:44:32,1519142,Youth Championship,Russia,CSKA Moskva U19 x Nizhny Novgorod U19,43,1 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,81
-2026-09-04 13:49:32,1529993,Supreme Division Women,Russia,Krylya Sovetov W x Dinamo Moskva W,45,0 x 1,1H,,,,,,,,,,,,,INSUFICIENTE,79
-2026-09-04 14:54:32,1534433,1. Division,Belarus,Volna x Dinamo Minsk II,23,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,77
-2026-09-04 15:59:32,1504297,Ykkösliiga,Finland,JIPPO x Kooteepee,28,0 x 1,1H,,,,,,,,,,,,,INSUFICIENTE,75
-2026-09-04 17:04:33,1494748,Eliteserien,Norway,Aalesund x Start,3,0 x 0,1H,46.0,54.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,ALTA,73
-2026-09-04 18:09:34,1500188,Primera C,Argentina,Yupanqui x Leones de Rosario,10,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,71
-2026-09-04 19:14:34,1492754,Premier Division,Ireland,Shamrock Rovers x Shelbourne,14,0 x 0,1H,60.0,40.0,1.0,2.0,0.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,ALTA,69
-2026-09-04 20:19:33,1493111,Liga Profesional Argentina,Argentina,Estudiantes de Rio Cuarto x Sarmiento Junin,36,0 x 1,1H,64.0,36.0,4.0,1.0,1.0,0.0,8.0,3.0,1.0,0.0,0.0,0.0,ALTA,67
-2026-09-04 21:24:33,1618997,Primera División,Bolivia,ABB x Universitario de Vinto,9,0 x 0,1H,63.0,37.0,,,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,MEDIA,65
+data_hora,fixture_id,liga,pais,jogo,minuto,placar,status,posse_casa,posse_fora,corners_casa,corners_fora,chutes_gol_casa,chutes_gol_fora,chutes_total_casa,chutes_total_fora,amarelos_casa,amarelos_fora,vermelhos_casa,vermelhos_fora,qualidade_coleta,quota_restante,indice_casa,indice_fora,momento_casa,momento_fora,nivel_pressao,time_destaque,indice_destaque,diferenca
+2026-08-23 08:03:12,1520536,K3 League,South-Korea,Jeonbuk Motors II x Ulsan Citizen,3,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,84,,,,,,,,
+2026-08-23 08:04:11,1520536,K3 League,South-Korea,Jeonbuk Motors II x Ulsan Citizen,4,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,80,,,,,,,,
+2026-08-23 08:05:13,1520536,K3 League,South-Korea,Jeonbuk Motors II x Ulsan Citizen,5,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,76,,,,,,,,
+2026-08-23 08:06:09,1520536,K3 League,South-Korea,Jeonbuk Motors II x Ulsan Citizen,6,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,71,,,,,,,,
+2026-08-23 08:06:38,1520536,K3 League,South-Korea,Jeonbuk Motors II x Ulsan Citizen,7,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,69,,,,,,,,
+2026-08-26 04:22:12,1548368,CONCACAF Central American Cup,World,CS Cartagines x FAS,90,2 x 0,2H,,,,,,,,,,,,,INSUFICIENTE,97,,,,,,,,
+2026-08-26 04:25:03,1548369,CONCACAF Central American Cup,World,Municipal x CD Motagua,90,1 x 1,2H,,,,,,,,,,,,,INSUFICIENTE,91,,,,,,,,
+2026-09-01 20:19:38,1549469,Primera División,Peru,Atletico Grau x FBC Melgar,18,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,98,,,,,,,,
+2026-09-01 20:21:19,1549469,Primera División,Peru,Atletico Grau x FBC Melgar,19,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,96,,,,,,,,
+2026-09-01 20:22:14,1549469,Primera División,Peru,Atletico Grau x FBC Melgar,20,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,94,,,,,,,,
+2026-09-01 20:22:54,1549469,Primera División,Peru,Atletico Grau x FBC Melgar,21,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,88,,,,,,,,
+2026-09-01 20:24:00,1549469,Primera División,Peru,Atletico Grau x FBC Melgar,22,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,86,,,,,,,,
+2026-09-01 20:25:10,1549469,Primera División,Peru,Atletico Grau x FBC Melgar,23,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,84,,,,,,,,
+2026-09-01 20:26:12,1549469,Primera División,Peru,Atletico Grau x FBC Melgar,24,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,82,,,,,,,,
+2026-09-01 20:26:50,1549469,Primera División,Peru,Atletico Grau x FBC Melgar,25,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,80,,,,,,,,
+2026-09-01 20:28:01,1549469,Primera División,Peru,Atletico Grau x FBC Melgar,26,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,72,,,,,,,,
+2026-09-01 20:28:25,1549469,Primera División,Peru,Atletico Grau x FBC Melgar,27,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,70,,,,,,,,
+2026-09-01 20:30:13,1549469,Primera División,Peru,Atletico Grau x FBC Melgar,28,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,66,,,,,,,,
+2026-09-01 20:30:34,1549469,Primera División,Peru,Atletico Grau x FBC Melgar,29,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,60,,,,,,,,
+2026-09-01 20:31:57,1549469,Primera División,Peru,Atletico Grau x FBC Melgar,30,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,56,,,,,,,,
+2026-09-01 20:33:05,1549469,Primera División,Peru,Atletico Grau x FBC Melgar,31,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,54,,,,,,,,
+2026-09-01 20:33:46,1549469,Primera División,Peru,Atletico Grau x FBC Melgar,32,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,52,,,,,,,,
+2026-09-01 20:35:06,1549469,Primera División,Peru,Atletico Grau x FBC Melgar,33,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,48,,,,,,,,
+2026-09-01 20:36:21,1549469,Primera División,Peru,Atletico Grau x FBC Melgar,34,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,46,,,,,,,,
+2026-09-01 20:36:52,1549469,Primera División,Peru,Atletico Grau x FBC Melgar,35,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,44,,,,,,,,
+2026-09-01 20:38:19,1549469,Primera División,Peru,Atletico Grau x FBC Melgar,36,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,38,,,,,,,,
+2026-09-01 20:39:14,1549469,Primera División,Peru,Atletico Grau x FBC Melgar,37,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,36,,,,,,,,
+2026-09-01 20:40:05,1549469,Primera División,Peru,Atletico Grau x FBC Melgar,38,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,36,,,,,,,,
+2026-09-03 22:49:32,1519476,Liga Pro,Ecuador,Leones del Norte x Orense SC,55,0 x 0,2H,58.0,42.0,3.0,2.0,5.0,0.0,12.0,3.0,2.0,0.0,0.0,0.0,ALTA,98,,,,,,,,
+2026-09-03 23:54:32,1636631,Division Intermedia,Paraguay,SOL DE America x General Caballero,90,1 x 1,2H,,,,,,,,,,,,,INSUFICIENTE,96,,,,,,,,
+2026-09-04 00:59:32,1629824,Serie D,Brazil,CSA x Nacional AM,90,0 x 0,2H,,,,,,,,,,,,,INSUFICIENTE,98,,,,,,,,
+2026-09-04 02:04:32,1636629,Primera Division,Nicaragua,Matagalpa x UNAN Managua,28,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,96,,,,,,,,
+2026-09-04 03:09:32,1636629,Primera Division,Nicaragua,Matagalpa x UNAN Managua,77,1 x 0,2H,,,,,,,,,,,,,INSUFICIENTE,94,,,,,,,,
+2026-09-04 09:29:32,1569361,Campionato Primavera - 1,Italy,Lecce U20 x Roma U20,28,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,87,,,,,,,,
+2026-09-04 10:34:32,1510435,K League 2,South-Korea,Cheongju x Seoul E-Land FC,3,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,85,,,,,,,,
+2026-09-04 11:39:32,1550707,ASEAN Club Championship,World,Manila Digger x Kasuka,40,1 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,83,,,,,,,,
+2026-09-04 12:44:32,1519142,Youth Championship,Russia,CSKA Moskva U19 x Nizhny Novgorod U19,43,1 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,81,,,,,,,,
+2026-09-04 13:49:32,1529993,Supreme Division Women,Russia,Krylya Sovetov W x Dinamo Moskva W,45,0 x 1,1H,,,,,,,,,,,,,INSUFICIENTE,79,,,,,,,,
+2026-09-04 14:54:32,1534433,1. Division,Belarus,Volna x Dinamo Minsk II,23,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,77,,,,,,,,
+2026-09-04 15:59:32,1504297,Ykkösliiga,Finland,JIPPO x Kooteepee,28,0 x 1,1H,,,,,,,,,,,,,INSUFICIENTE,75,,,,,,,,
+2026-09-04 17:04:33,1494748,Eliteserien,Norway,Aalesund x Start,3,0 x 0,1H,46.0,54.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,ALTA,73,,,,,,,,
+2026-09-04 18:09:34,1500188,Primera C,Argentina,Yupanqui x Leones de Rosario,10,0 x 0,1H,,,,,,,,,,,,,INSUFICIENTE,71,,,,,,,,
+2026-09-04 19:14:34,1492754,Premier Division,Ireland,Shamrock Rovers x Shelbourne,14,0 x 0,1H,60.0,40.0,1.0,2.0,0.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,ALTA,69,,,,,,,,
+2026-09-04 20:19:33,1493111,Liga Profesional Argentina,Argentina,Estudiantes de Rio Cuarto x Sarmiento Junin,36,0 x 1,1H,64.0,36.0,4.0,1.0,1.0,0.0,8.0,3.0,1.0,0.0,0.0,0.0,ALTA,67,,,,,,,,
+2026-09-04 21:24:33,1618997,Primera División,Bolivia,ABB x Universitario de Vinto,9,0 x 0,1H,63.0,37.0,,,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,MEDIA,65,,,,,,,,
+2026-09-04 22:24:21,1493109,Liga Profesional Argentina,Argentina,Belgrano Cordoba x Huracan,23,0 x 0,1H,56.0,44.0,1.0,0.0,2.0,0.0,4.0,0.0,0.0,0.0,0.0,0.0,ALTA,63,77.3,22.7,50.0,50.0,COLETANDO,Belgrano Cordoba,77.3,54.6
