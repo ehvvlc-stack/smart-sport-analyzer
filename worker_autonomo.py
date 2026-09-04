@@ -1373,6 +1373,48 @@ def preparar_eventos(jogo, nomes_por_id):
         linhas.append({"minuto_num": minuto, "Time": time_nome, "Evento": tipo})
     linhas.sort(key=lambda x: x["minuto_num"])
     return linhas
+
+
+def fixture_sportmonks_encerrado(jogo):
+    estado = jogo.get("state", {}) or {}
+    texto = " ".join(
+        str(estado.get(campo, ""))
+        for campo in ("name", "short_name", "developer_name", "state")
+    ).strip().lower()
+    termos = (
+        "finished", "full time", "fulltime", "after penalties",
+        "after extra time", "ended", "finalizado", "ft", "aet", "pen",
+    )
+    palavras = set(texto.replace("-", " ").split())
+    return any(termo in texto for termo in termos[:-3]) or bool(
+        palavras.intersection({"ft", "aet", "pen"})
+    )
+
+
+def idade_alerta_horas(valor):
+    try:
+        horario = pd.to_datetime(valor, errors="coerce")
+        if pd.isna(horario):
+            return 0.0
+        agora = pd.Timestamp.now(tz="UTC")
+        if horario.tzinfo is None:
+            horario = horario.tz_localize("UTC")
+        else:
+            horario = horario.tz_convert("UTC")
+        return max(0.0, (agora - horario).total_seconds() / 3600)
+    except Exception:
+        return 0.0
+
+
+def encerrar_campos_corner_sem_dados(df, idx):
+    for coluna in (
+        "escanteio_ate_5_min", "escanteio_ate_10_min",
+        "escanteio_time_destaque_5_min", "escanteio_time_destaque_10_min",
+    ):
+        if coluna in df.columns and str(df.at[idx, coluna]).strip() == "PENDENTE":
+            df.at[idx, coluna] = "NÃO AVALIADO"
+
+
 def revisar_validacoes_pendentes_worker():
     df = ler_validacoes_github()
 
@@ -1425,6 +1467,16 @@ def revisar_validacoes_pendentes_worker():
             jogo = cache_jogos[fixture_id]
 
             if not jogo:
+                if idade_alerta_horas(df.at[idx, "data_hora_alerta"]) >= 6:
+                    df.at[idx, "status"] = "DADOS_INDISPONIVEIS"
+                    df.at[idx, "resultado_gol"] = "NÃO AVALIADO"
+                    for coluna in (
+                        "gol_ate_5_min", "gol_ate_10_min",
+                        "gol_time_destaque_5_min", "gol_time_destaque_10_min",
+                    ):
+                        df.at[idx, coluna] = "NÃO AVALIADO"
+                    encerrar_campos_corner_sem_dados(df, idx)
+                    alterou = True
                 continue
 
             casa, visitante, ids, nomes = identificar_times(jogo)
@@ -1435,6 +1487,9 @@ def revisar_validacoes_pendentes_worker():
             )
 
             minuto_atual = minuto_estimado(jogo)
+            encerrado = fixture_sportmonks_encerrado(jogo)
+            if encerrado:
+                minuto_atual = max(90, minuto_atual or 0)
 
             gols_depois = []
 
@@ -1529,6 +1584,7 @@ def revisar_validacoes_pendentes_worker():
                 )
 
                 df.at[idx, "status"] = "ENCERRADO_COM_GOL"
+                encerrar_campos_corner_sem_dados(df, idx)
 
                 alterou = True
 
@@ -1542,6 +1598,7 @@ def revisar_validacoes_pendentes_worker():
                 df.at[idx, "gol_time_destaque_10_min"] = "NÃO"
                 df.at[idx, "resultado_gol"] = "SEM_GOL"
                 df.at[idx, "status"] = "ENCERRADO_SEM_GOL"
+                encerrar_campos_corner_sem_dados(df, idx)
 
                 alterou = True
 
