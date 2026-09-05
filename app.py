@@ -7608,9 +7608,22 @@ def construir_auditoria_sinais(df_monitoramento):
     base["data_ordem"] = pd.to_datetime(base["data_hora"], errors="coerce")
     base["gols_total"] = base["placar"].apply(total_gols_placar_auditoria)
     base = base.sort_values(["fixture_id", "minuto_num", "data_ordem"])
-    candidatos = base[
-        base["nivel_pressao"].fillna("").astype(str).str.upper().eq("ALTA")
-    ]
+    nivel_normalizado = base["nivel_pressao"].fillna("").astype(str).str.upper()
+    dna_normalizado = base["dna_pressao"].fillna("").astype(str).str.upper()
+    indice_num = pd.to_numeric(base["indice_destaque"], errors="coerce").fillna(0)
+    dna_score_num = pd.to_numeric(base["dna_score"], errors="coerce").fillna(0)
+
+    pressao_alta = nivel_normalizado.eq("ALTA")
+    quase_sinal = (
+        ~pressao_alta
+        & base["minuto_num"].between(10, 80, inclusive="both")
+        & (
+            indice_num.ge(60)
+            | dna_score_num.ge(50)
+            | dna_normalizado.isin(["PERIGOSA", "DESESPERADA"])
+        )
+    )
+    candidatos = base[pressao_alta | quase_sinal]
 
     linhas = []
     for _, candidato in candidatos.iterrows():
@@ -7634,8 +7647,23 @@ def construir_auditoria_sinais(df_monitoramento):
                 return "⏳ SEM JANELA"
             return "🟢 GOL" if gols_depois > gols_iniciais else "⚪ SEM GOL"
 
+        nivel_candidato = str(candidato["nivel_pressao"]).upper()
         aprovado = str(candidato["elegivel_telegram"]).upper() == "SIM"
-        if aprovado:
+        if nivel_candidato != "ALTA":
+            decisao = "👻 MODO SOMBRA"
+            razoes_sombra = []
+            if pd.to_numeric(candidato["indice_destaque"], errors="coerce") >= 60:
+                razoes_sombra.append("índice próximo do sinal")
+            if pd.to_numeric(candidato["dna_score"], errors="coerce") >= 50:
+                razoes_sombra.append("DNA score relevante")
+            if str(candidato["dna_pressao"]).upper() in {"PERIGOSA", "DESESPERADA"}:
+                razoes_sombra.append(f"DNA {candidato['dna_pressao']}")
+            explicacao = (
+                "Observado silenciosamente: "
+                + ", ".join(razoes_sombra)
+                + f"; pressão ainda {candidato['nivel_pressao']}."
+            )
+        elif aprovado:
             decisao = "✅ ENVIADO"
             explicacao = (
                 f"Escudo aprovado: dados {candidato['qualidade_coleta']}; "
@@ -9359,27 +9387,30 @@ with aba_validacao:
         st.write("## 🔎 Painel de Auditoria dos Sinais")
         st.caption(
             "Explica cada decisão do Escudo e compara o que aconteceu depois "
-            "com sinais enviados e bloqueados. A auditoria usa somente os "
-            "snapshots já coletados e não consome novas requisições da API."
+            "com sinais enviados, bloqueados e quase sinais do Modo Sombra. "
+            "A auditoria usa somente os snapshots já coletados, não consome "
+            "novas requisições e o Modo Sombra nunca envia alertas."
         )
 
         df_auditoria = construir_auditoria_sinais(df_dna)
         if df_auditoria.empty:
             st.info(
-                "Ainda não existem pressões ALTA suficientes para iniciar "
-                "a auditoria. O painel será preenchido automaticamente."
+                "Ainda não existem pressões ALTA ou quase sinais suficientes "
+                "para iniciar a auditoria. O painel será preenchido automaticamente."
             )
         else:
             enviados_auditoria = df_auditoria["decisao"].eq("✅ ENVIADO").sum()
             bloqueados_auditoria = df_auditoria["decisao"].eq("🛡️ BLOQUEADO").sum()
+            sombras_auditoria = df_auditoria["decisao"].eq("👻 MODO SOMBRA").sum()
             concluidos_10 = ~df_auditoria["resultado_10_min"].eq("⏳ SEM JANELA")
             gols_10 = df_auditoria["resultado_10_min"].eq("🟢 GOL")
 
-            a1, a2, a3, a4 = st.columns(4)
-            a1.metric("Candidatos ALTA", len(df_auditoria))
+            a1, a2, a3, a4, a5 = st.columns(5)
+            a1.metric("Casos auditados", len(df_auditoria))
             a2.metric("Enviados", int(enviados_auditoria))
             a3.metric("Bloqueados", int(bloqueados_auditoria))
-            a4.metric("Gols em 10 min", int(gols_10.sum()))
+            a4.metric("Modo Sombra", int(sombras_auditoria))
+            a5.metric("Gols em 10 min", int(gols_10.sum()))
 
             resumo_auditoria = []
             for decisao_nome, grupo in df_auditoria.groupby("decisao"):
@@ -9400,7 +9431,7 @@ with aba_validacao:
                     ) if validos_10.any() else None,
                 })
 
-            st.write("### ⚖️ Enviados x bloqueados")
+            st.write("### ⚖️ Enviados x bloqueados x Modo Sombra")
             st.dataframe(
                 pd.DataFrame(resumo_auditoria),
                 width="stretch",
@@ -9439,7 +9470,7 @@ with aba_validacao:
 
             filtro_decisao = st.selectbox(
                 "Mostrar decisões",
-                ["TODAS", "✅ ENVIADO", "🛡️ BLOQUEADO"],
+                ["TODAS", "✅ ENVIADO", "🛡️ BLOQUEADO", "👻 MODO SOMBRA"],
                 key="filtro_decisao_auditoria",
             )
             tabela_auditoria = df_auditoria.copy()
