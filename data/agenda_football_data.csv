@@ -25,3 +25,8 @@ fixture_id,data_hora,status,casa_id,casa,fora_id,fora,competicao,rodada
 555013,2026-09-19T00:00:00Z,SCHEDULED,1783,CR Flamengo,4286,RB Bragantino,Campeonato Brasileiro Série A,28
 555014,2026-09-19T00:00:00Z,SCHEDULED,1767,Grêmio FBPA,1769,SE Palmeiras,Campeonato Brasileiro Série A,28
 555019,2026-09-19T00:00:00Z,SCHEDULED,1782,EC Vitória,1771,Cruzeiro EC,Campeonato Brasileiro Série A,28
+555011,2026-09-19T19:00:00Z,TIMED,1766,CA Mineiro,1772,Chapecoense AF,Campeonato Brasileiro Série A,28
+555015,2026-09-19T20:00:00Z,TIMED,4364,Mirassol FC,1770,Botafogo FR,Campeonato Brasileiro Série A,28
+555016,2026-09-19T21:30:00Z,TIMED,4287,Clube do Remo,6685,Santos FC,Campeonato Brasileiro Série A,28
+555018,2026-09-19T23:30:00Z,TIMED,1780,CR Vasco da Gama,4241,Coritiba FBC,Campeonato Brasileiro Série A,28
+555017,2026-09-20T00:00:00Z,TIMED,1776,São Paulo FC,6684,SC Internacional,Campeonato Brasileiro Série A,28
