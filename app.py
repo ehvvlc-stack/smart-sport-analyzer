@@ -9101,7 +9101,7 @@ with aba_validacao:
             "placar", "qualidade_coleta", "nivel_pressao", "time_destaque",
             "indice_destaque", "diferenca", "dna_pressao", "dna_score",
             "dna_motivos", "acoes_recentes_destaque", "situacao_placar",
-            "quota_restante",
+            "elegivel_telegram", "motivo_bloqueio", "quota_restante",
         ]
         for coluna in colunas_dna:
             if coluna not in df_dna.columns:
@@ -9120,12 +9120,18 @@ with aba_validacao:
         ).sum()
         estereis = df_dna["dna_pressao"].astype(str).eq("ESTÉRIL").sum()
         altas = df_dna["nivel_pressao"].astype(str).eq("ALTA").sum()
+        elegiveis = df_dna["elegivel_telegram"].astype(str).eq("SIM").sum()
 
         m1, m2, m3, m4 = st.columns(4)
         m1.metric("Jogos observados", jogos_unicos)
         m2.metric("Snapshots", len(df_dna))
         m3.metric("DNA perigoso", int(perigosos))
-        m4.metric("Pressões ALTA", int(altas))
+        m4.metric("Elegíveis Telegram", int(elegiveis))
+
+        st.caption(
+            f"Pressões ALTA registradas para estudo: {int(altas)}. "
+            "Somente as aprovadas pelo Escudo de Qualidade são notificadas."
+        )
 
         if estereis:
             st.info(
@@ -9152,7 +9158,8 @@ with aba_validacao:
             "data_hora", "jogo", "minuto", "placar", "liga",
             "nivel_pressao", "time_destaque", "indice_destaque",
             "dna_pressao", "dna_score", "dna_motivos",
-            "situacao_placar", "qualidade_coleta",
+            "situacao_placar", "qualidade_coleta", "elegivel_telegram",
+            "motivo_bloqueio",
         ]
         tabela_dna = tabela_dna.sort_values(
             ["data_ordem", "minuto_num"], ascending=False
