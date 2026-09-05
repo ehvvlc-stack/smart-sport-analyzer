@@ -93,8 +93,9 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19722790-2,2026-09-05 14:28:53,19722790,Rangers x Motherwell,12,2,1 x 0,PÓS_GOL,Motherwell,57.6,15.2,50.0,72.0,1.0,AO_VIVO,,,,ALTA,100.0,,2
 19722793-2,2026-09-05 14:13:53,19722793,Aberdeen x Kilmarnock,13,2,0 x 0,BAIXA,Aberdeen,53.2,6.4,50.0,43.0,1.0,AO_VIVO,,,,ALTA,100.0,,0
 19722793-3,2026-09-05 14:18:53,19722793,Aberdeen x Kilmarnock,18,3,0 x 0,BAIXA,Aberdeen,53.2,6.4,50.0,43.0,1.0,AO_VIVO,,,,ALTA,100.0,,0
-19722792-3,2026-09-05 14:33:53,19722792,Dundee United x Falkirk,19,3,0 x 1,BAIXA,Falkirk,58.1,16.2,50.0,48.0,1.0,AO_VIVO,,,,ALTA,100.0,,2
+19722792-3,2026-09-05 14:38:53,19722792,Dundee United x Falkirk,19,3,0 x 1,BAIXA,Falkirk,60.2,20.4,50.0,46.0,3.0,AO_VIVO,,,,ALTA,100.0,,2
 19722793-4,2026-09-05 14:23:53,19722793,Aberdeen x Kilmarnock,23,4,0 x 0,BAIXA,Aberdeen,54.5,9.0,50.0,49.0,1.0,AO_VIVO,,,,ALTA,100.0,,0
 19722793-5,2026-09-05 14:28:53,19722793,Aberdeen x Kilmarnock,28,5,0 x 0,BAIXA,Kilmarnock,53.2,6.4,50.0,52.0,0.0,AO_VIVO,,,,ALTA,100.0,,0
-19722790-6,2026-09-05 14:33:53,19722790,Rangers x Motherwell,30,6,1 x 0,BAIXA,Motherwell,56.3,12.6,50.0,71.0,1.0,AO_VIVO,,,,ALTA,100.0,,3
+19722790-6,2026-09-05 14:38:53,19722790,Rangers x Motherwell,30,6,1 x 0,BAIXA,Motherwell,50.3,0.6,50.0,71.0,-1.0,AO_VIVO,,,,ALTA,100.0,,3
 19722793-6,2026-09-05 14:33:53,19722793,Aberdeen x Kilmarnock,33,6,0 x 0,BAIXA,Kilmarnock,53.2,6.4,50.0,49.0,0.0,AO_VIVO,,,,ALTA,100.0,,0
+19722793-7,2026-09-05 14:38:53,19722793,Aberdeen x Kilmarnock,36,7,0 x 0,BAIXA,Aberdeen,52.6,5.2,50.0,51.0,2.0,AO_VIVO,,,,ALTA,100.0,,1
