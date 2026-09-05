@@ -9175,3 +9175,87 @@ with aba_validacao:
             file_name="laboratorio_dna_pressao.csv",
             mime="text/csv",
         )
+
+        st.divider()
+        st.write("### 🏆 Ranking de Confiabilidade das Ligas")
+        st.caption(
+            "Mede a confiabilidade técnica da coleta — não representa lucro "
+            "nem probabilidade de aposta vencedora. O resultado combina "
+            "qualidade dos dados, formação de janelas válidas e amostra."
+        )
+
+        ranking_ligas = []
+        base_ligas = df_dna.copy()
+        base_ligas["liga_limpa"] = base_ligas["liga"].fillna("").astype(str).str.strip()
+        base_ligas = base_ligas[
+            ~base_ligas["liga_limpa"].str.lower().isin(["", "nan", "none"])
+        ]
+
+        for liga_nome, grupo in base_ligas.groupby("liga_limpa"):
+            snapshots_liga = len(grupo)
+            jogos_liga = grupo["fixture_id"].astype(str).nunique()
+            taxa_alta_dados = (
+                grupo["qualidade_coleta"].astype(str).str.upper().eq("ALTA").mean() * 100
+            )
+            dna_normalizado = grupo["dna_pressao"].fillna("").astype(str).str.upper()
+            janela_valida = ~dna_normalizado.isin(
+                ["", "NAN", "NONE", "EM_FORMAÇÃO"]
+            )
+            taxa_janela = janela_valida.mean() * 100
+            fator_amostra = min(1.0, snapshots_liga / 20)
+            score_confiabilidade = round(
+                taxa_alta_dados * 0.55
+                + taxa_janela * 0.25
+                + fator_amostra * 100 * 0.20,
+                1,
+            )
+
+            if snapshots_liga < 5:
+                classificacao = "AMOSTRA INSUFICIENTE"
+            elif score_confiabilidade >= 75 and snapshots_liga >= 10:
+                classificacao = "CONFIÁVEL"
+            elif score_confiabilidade >= 55:
+                classificacao = "PROMISSORA"
+            else:
+                classificacao = "COBERTURA FRACA"
+
+            ranking_ligas.append({
+                "Liga": liga_nome,
+                "Jogos": jogos_liga,
+                "Snapshots": snapshots_liga,
+                "Dados ALTA (%)": round(taxa_alta_dados, 1),
+                "Janelas válidas (%)": round(taxa_janela, 1),
+                "Score técnico": score_confiabilidade,
+                "Classificação": classificacao,
+            })
+
+        if ranking_ligas:
+            df_ranking_ligas = pd.DataFrame(ranking_ligas).sort_values(
+                ["Score técnico", "Snapshots"], ascending=False
+            )
+            confiaveis = df_ranking_ligas[
+                df_ranking_ligas["Classificação"].eq("CONFIÁVEL")
+            ]
+            if confiaveis.empty:
+                st.warning(
+                    "Ainda não há liga com amostra suficiente para ser "
+                    "classificada como CONFIÁVEL. Isso é esperado nesta fase."
+                )
+            else:
+                st.success(
+                    f"{len(confiaveis)} liga(s) atingiram confiabilidade "
+                    "técnica mínima de coleta."
+                )
+            st.dataframe(
+                df_ranking_ligas,
+                width="stretch",
+                hide_index=True,
+            )
+            st.download_button(
+                "⬇️ Baixar ranking das ligas",
+                data=df_ranking_ligas.to_csv(index=False).encode("utf-8-sig"),
+                file_name="ranking_confiabilidade_ligas.csv",
+                mime="text/csv",
+            )
+        else:
+            st.info("Ainda não há ligas suficientes para formar o ranking.")
