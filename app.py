@@ -7590,6 +7590,7 @@ def construir_auditoria_sinais(df_monitoramento):
         "data_hora", "fixture_id", "jogo", "liga", "minuto", "placar",
         "time_destaque", "indice_destaque", "dna_pressao", "dna_score",
         "decisao", "explicacao", "etapa_confirmacao",
+        "curva_pressao", "variacao_indice",
         "resultado_5_min", "resultado_10_min",
     ]
     if df_monitoramento is None or df_monitoramento.empty:
@@ -7600,7 +7601,9 @@ def construir_auditoria_sinais(df_monitoramento):
         "data_hora", "fixture_id", "jogo", "liga", "minuto", "placar",
         "time_destaque", "indice_destaque", "dna_pressao", "dna_score",
         "dna_motivos", "nivel_pressao", "qualidade_coleta",
-        "elegivel_telegram", "motivo_bloqueio", "rastreamento_etapa",
+        "elegivel_telegram", "motivo_bloqueio", "rastreamento_id",
+        "rastreamento_etapa",
+        "curva_pressao", "variacao_indice",
     ]:
         if coluna not in base.columns:
             base[coluna] = ""
@@ -7624,7 +7627,17 @@ def construir_auditoria_sinais(df_monitoramento):
             | dna_normalizado.isin(["PERIGOSA", "DESESPERADA"])
         )
     )
-    candidatos = base[pressao_alta | quase_sinal]
+    candidatos = base[pressao_alta | quase_sinal].copy()
+    ids_rastreamento = candidatos["rastreamento_id"].fillna("").astype(str).str.strip()
+    com_id = candidatos[
+        ~ids_rastreamento.str.lower().isin(["", "nan", "none"])
+    ].drop_duplicates("rastreamento_id", keep="first")
+    sem_id = candidatos[
+        ids_rastreamento.str.lower().isin(["", "nan", "none"])
+    ]
+    candidatos = pd.concat([com_id, sem_id], ignore_index=False).sort_values(
+        ["fixture_id", "minuto_num", "data_ordem"]
+    )
 
     linhas = []
     for _, candidato in candidatos.iterrows():
@@ -7678,6 +7691,16 @@ def construir_auditoria_sinais(df_monitoramento):
                 "Não cumpriu todos os critérios do Escudo de Qualidade."
             )
 
+        leitura_curva = candidato
+        rastreamento_id = str(candidato["rastreamento_id"]).strip()
+        if rastreamento_id and rastreamento_id.lower() not in {"nan", "none"}:
+            leituras_rastreamento = base[
+                base["rastreamento_id"].astype(str).eq(rastreamento_id)
+                & (base["minuto_num"] >= minuto)
+            ]
+            if not leituras_rastreamento.empty:
+                leitura_curva = leituras_rastreamento.iloc[-1]
+
         linhas.append({
             "data_hora": candidato["data_hora"],
             "fixture_id": candidato["fixture_id"],
@@ -7691,7 +7714,9 @@ def construir_auditoria_sinais(df_monitoramento):
             "dna_score": candidato["dna_score"],
             "decisao": decisao,
             "explicacao": explicacao,
-            "etapa_confirmacao": candidato["rastreamento_etapa"],
+            "etapa_confirmacao": leitura_curva["rastreamento_etapa"],
+            "curva_pressao": leitura_curva["curva_pressao"],
+            "variacao_indice": leitura_curva["variacao_indice"],
             "resultado_5_min": resultado_janela(5),
             "resultado_10_min": resultado_janela(10),
         })
@@ -9229,6 +9254,8 @@ with aba_validacao:
             "elegivel_telegram", "motivo_bloqueio", "quota_restante",
             "rastreamento_id", "rastreamento_origem_minuto",
             "rastreamento_etapa",
+            "curva_pressao", "variacao_indice",
+            "confirmacao_telegram_enviada",
         ]
         for coluna in colunas_dna:
             if coluna not in df_dna.columns:
@@ -9472,6 +9499,26 @@ with aba_validacao:
                 hide_index=True,
             )
 
+            curvas_validas = df_auditoria[
+                ~df_auditoria["curva_pressao"].fillna("").astype(str).str.lower().isin(
+                    ["", "nan", "none", "iniciada"]
+                )
+            ]
+            st.write("### 📈 Curva de Pressão")
+            if curvas_validas.empty:
+                st.info(
+                    "As curvas aparecerão quando o rastreador concluir a "
+                    "primeira releitura de 5 minutos."
+                )
+            else:
+                resumo_curvas = (
+                    curvas_validas["curva_pressao"]
+                    .value_counts()
+                    .rename_axis("Evolução")
+                    .reset_index(name="Casos")
+                )
+                st.dataframe(resumo_curvas, width="stretch", hide_index=True)
+
             filtro_decisao = st.selectbox(
                 "Mostrar decisões",
                 ["TODAS", "✅ ENVIADO", "🛡️ BLOQUEADO", "👻 MODO SOMBRA"],
@@ -9492,7 +9539,7 @@ with aba_validacao:
                 "data_hora", "jogo", "liga", "minuto", "placar",
                 "time_destaque", "indice_destaque", "dna_pressao",
                 "dna_score", "decisao", "explicacao",
-                "etapa_confirmacao",
+                "etapa_confirmacao", "curva_pressao", "variacao_indice",
                 "resultado_5_min", "resultado_10_min",
             ]
             st.dataframe(
