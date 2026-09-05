@@ -3,6 +3,7 @@ import time
 import base64
 from io import StringIO
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 
 import pandas as pd
 import requests
@@ -31,6 +32,15 @@ APIFOOTBALL_PATH = os.getenv(
 APIFOOTBALL_VALIDACAO_PATH = os.getenv(
     "APIFOOTBALL_VALIDACAO_PATH",
     "data/validacao_apifootball.csv"
+).strip()
+RELATORIO_DIARIO_ATIVO = os.getenv("RELATORIO_DIARIO_ATIVO", "1").strip() == "1"
+RELATORIO_DIARIO_HORA = int(os.getenv("RELATORIO_DIARIO_HORA", "20"))
+RELATORIO_DIARIO_MINUTO = int(os.getenv("RELATORIO_DIARIO_MINUTO", "0"))
+RELATORIO_DIARIO_FUSO = os.getenv(
+    "RELATORIO_DIARIO_FUSO", "America/Manaus"
+).strip()
+RELATORIO_DIARIO_PATH = os.getenv(
+    "RELATORIO_DIARIO_PATH", "data/status_relatorio_diario.csv"
 ).strip()
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "").strip()
 GITHUB_REPO = os.getenv("GITHUB_REPO", "ehvvlc-stack/smart-sport-analyzer").strip()
@@ -2266,6 +2276,160 @@ def finalizar_desaparecidos(df, ativos):
 
     return df, alterou
 
+def linhas_do_dia(df, coluna_data, data_local, fuso):
+    if df.empty or coluna_data not in df.columns:
+        return df.iloc[0:0].copy()
+    horarios = pd.to_datetime(df[coluna_data], errors="coerce", utc=True)
+    try:
+        datas = horarios.dt.tz_convert(fuso).dt.date
+    except Exception:
+        datas = horarios.dt.date
+    return df[datas.eq(data_local)].copy()
+
+
+def resumo_resultados_diarios(validacoes):
+    if validacoes.empty:
+        return 0, 0, 0
+    total = len(validacoes)
+    coluna = "gol_ate_10_min"
+    if coluna not in validacoes.columns:
+        return total, 0, 0
+    resultados = validacoes[coluna].fillna("").astype(str).str.upper()
+    gols = resultados.eq("SIM").sum()
+    concluidos = resultados.isin(["SIM", "NÃO", "NAO"]).sum()
+    return int(total), int(concluidos), int(gols)
+
+
+def melhor_liga_diaria(df):
+    if df.empty or "liga" not in df.columns:
+        return "Sem dados suficientes"
+    candidatos = []
+    for liga, grupo in df.groupby(df["liga"].fillna("").astype(str)):
+        liga = str(liga).strip()
+        if not liga or liga.lower() in {"nan", "none"}:
+            continue
+        qualidade = grupo.get(
+            "qualidade_coleta", pd.Series(index=grupo.index, dtype=object)
+        ).astype(str).str.upper()
+        taxa = qualidade.eq("ALTA").mean() * 100
+        candidatos.append((taxa, len(grupo), liga))
+    if not candidatos:
+        return "Sem dados suficientes"
+    taxa, quantidade, liga = max(candidatos, key=lambda x: (x[0], x[1]))
+    return f"{liga} ({taxa:.0f}% dados ALTA; {quantidade} snapshot(s))"
+
+
+def relatorio_ja_enviado(data_texto):
+    df = ler_csv_github_generico(
+        RELATORIO_DIARIO_PATH, ["data_local", "data_hora_envio", "status"]
+    )
+    if df.empty:
+        return False
+    return df["data_local"].astype(str).eq(data_texto).any()
+
+
+def registrar_relatorio_enviado(data_texto, agora_local):
+    colunas = ["data_local", "data_hora_envio", "status"]
+    df = ler_csv_github_generico(RELATORIO_DIARIO_PATH, colunas)
+    linha = {
+        "data_local": data_texto,
+        "data_hora_envio": agora_local.strftime("%Y-%m-%d %H:%M:%S"),
+        "status": "ENVIADO",
+    }
+    df = pd.concat([df, pd.DataFrame([linha])], ignore_index=True)
+    return salvar_csv_github_generico(
+        RELATORIO_DIARIO_PATH, df, "Registra envio do relatório diário"
+    )
+
+
+def montar_relatorio_diario(agora_local):
+    fuso = ZoneInfo(RELATORIO_DIARIO_FUSO)
+    data_local = agora_local.date()
+    monitor = ler_csv_github_generico(APIFOOTBALL_PATH, COLUNAS_APIFOOTBALL)
+    monitor_dia = linhas_do_dia(monitor, "data_hora", data_local, fuso)
+    validacoes_sm = linhas_do_dia(
+        ler_validacoes_github(), "data_hora_alerta", data_local, fuso
+    )
+    validacoes_af = linhas_do_dia(
+        ler_csv_github_generico(
+            APIFOOTBALL_VALIDACAO_PATH, COLUNAS_VALIDACAO_APIFOOTBALL
+        ),
+        "data_hora_alerta", data_local, fuso,
+    )
+
+    jogos = (
+        monitor_dia["fixture_id"].astype(str).nunique()
+        if not monitor_dia.empty else 0
+    )
+    snapshots = len(monitor_dia)
+    altas = (
+        monitor_dia["nivel_pressao"].astype(str).eq("ALTA").sum()
+        if not monitor_dia.empty else 0
+    )
+    elegiveis = (
+        monitor_dia["elegivel_telegram"].astype(str).eq("SIM").sum()
+        if not monitor_dia.empty else 0
+    )
+    bloqueados = (
+        (
+            monitor_dia["nivel_pressao"].astype(str).eq("ALTA")
+            & ~monitor_dia["elegivel_telegram"].astype(str).eq("SIM")
+        ).sum()
+        if not monitor_dia.empty else 0
+    )
+    quota = "não informada"
+    if not monitor_dia.empty:
+        quotas = pd.to_numeric(monitor_dia["quota_restante"], errors="coerce").dropna()
+        if not quotas.empty:
+            quota = str(int(quotas.iloc[-1]))
+
+    todas_validacoes = pd.concat(
+        [validacoes_sm, validacoes_af], ignore_index=True, sort=False
+    )
+    total_alertas, concluidos, gols = resumo_resultados_diarios(todas_validacoes)
+    taxa = f"{gols / concluidos * 100:.1f}%" if concluidos else "aguardando amostra"
+    melhor_liga = melhor_liga_diaria(monitor_dia)
+
+    return (
+        "📊 RESUMO DIÁRIO — SMART SPORT\n\n"
+        f"📅 {agora_local.strftime('%d/%m/%Y')}\n"
+        f"⚽ Jogos observados pela API-Football: {jogos}\n"
+        f"📸 Snapshots: {snapshots}\n"
+        f"🔥 Pressões ALTA para estudo: {int(altas)}\n"
+        f"✅ Elegíveis Telegram: {int(elegiveis)}\n"
+        f"🛡 Bloqueados pelo Escudo: {int(bloqueados)}\n"
+        f"🚨 Alertas registrados (duas fontes): {total_alertas}\n"
+        f"🎯 Validações concluídas: {concluidos}\n"
+        f"🥅 Gol em até 10 min: {gols}/{concluidos} ({taxa})\n"
+        f"🏆 Melhor cobertura do dia: {melhor_liga}\n"
+        f"🔋 Cota API-Football: {quota}\n\n"
+        "🤖 Worker funcionando normalmente.\n"
+        "🧪 Resultados experimentais; nenhuma aposta é automática."
+    )
+
+
+def talvez_enviar_relatorio_diario():
+    if not RELATORIO_DIARIO_ATIVO:
+        return False
+    try:
+        fuso = ZoneInfo(RELATORIO_DIARIO_FUSO)
+    except Exception:
+        fuso = timezone.utc
+    agora_local = datetime.now(timezone.utc).astimezone(fuso)
+    horario_alvo = (RELATORIO_DIARIO_HORA, RELATORIO_DIARIO_MINUTO)
+    if (agora_local.hour, agora_local.minute) < horario_alvo:
+        return False
+    data_texto = agora_local.date().isoformat()
+    if relatorio_ja_enviado(data_texto):
+        return False
+    mensagem = montar_relatorio_diario(agora_local)
+    if not enviar_alerta_telegram(mensagem):
+        return False
+    registrar_relatorio_enviado(data_texto, agora_local)
+    log(f"Relatório diário enviado ({RELATORIO_DIARIO_FUSO})")
+    return True
+
+
 def validar_ambiente():
     faltantes = []
     if not SPORTMONKS_TOKEN:
@@ -2377,6 +2541,11 @@ def main():
                 time.time()
                 + APIFOOTBALL_INTERVALO_SEGUNDOS
             )
+
+        try:
+            talvez_enviar_relatorio_diario()
+        except Exception as exc:
+            log(f"Erro no relatório diário: {exc}")
 
         gasto = (
             time.time()
