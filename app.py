@@ -7574,6 +7574,101 @@ with aba_alertas:
         )
 
 
+def total_gols_placar_auditoria(placar):
+    texto = str(placar).lower().replace("×", "x").replace("-", "x")
+    partes = texto.split("x")
+    if len(partes) != 2:
+        return None
+    try:
+        return int(float(partes[0].strip())) + int(float(partes[1].strip()))
+    except (TypeError, ValueError):
+        return None
+
+
+def construir_auditoria_sinais(df_monitoramento):
+    colunas_saida = [
+        "data_hora", "fixture_id", "jogo", "liga", "minuto", "placar",
+        "time_destaque", "indice_destaque", "dna_pressao", "dna_score",
+        "decisao", "explicacao", "resultado_5_min", "resultado_10_min",
+    ]
+    if df_monitoramento is None or df_monitoramento.empty:
+        return pd.DataFrame(columns=colunas_saida)
+
+    base = df_monitoramento.copy()
+    for coluna in [
+        "data_hora", "fixture_id", "jogo", "liga", "minuto", "placar",
+        "time_destaque", "indice_destaque", "dna_pressao", "dna_score",
+        "dna_motivos", "nivel_pressao", "qualidade_coleta",
+        "elegivel_telegram", "motivo_bloqueio",
+    ]:
+        if coluna not in base.columns:
+            base[coluna] = ""
+
+    base["minuto_num"] = pd.to_numeric(base["minuto"], errors="coerce")
+    base["data_ordem"] = pd.to_datetime(base["data_hora"], errors="coerce")
+    base["gols_total"] = base["placar"].apply(total_gols_placar_auditoria)
+    base = base.sort_values(["fixture_id", "minuto_num", "data_ordem"])
+    candidatos = base[
+        base["nivel_pressao"].fillna("").astype(str).str.upper().eq("ALTA")
+    ]
+
+    linhas = []
+    for _, candidato in candidatos.iterrows():
+        minuto = candidato["minuto_num"]
+        gols_iniciais = candidato["gols_total"]
+        posteriores = base[
+            base["fixture_id"].astype(str).eq(str(candidato["fixture_id"]))
+            & (base["minuto_num"] > minuto)
+        ].copy()
+        posteriores["delta_min"] = posteriores["minuto_num"] - minuto
+
+        def resultado_janela(limite):
+            janela = posteriores[
+                (posteriores["delta_min"] >= limite)
+                & (posteriores["delta_min"] <= limite + 5)
+            ]
+            if janela.empty or pd.isna(gols_iniciais):
+                return "⏳ SEM JANELA"
+            gols_depois = janela.iloc[0]["gols_total"]
+            if pd.isna(gols_depois):
+                return "⏳ SEM JANELA"
+            return "🟢 GOL" if gols_depois > gols_iniciais else "⚪ SEM GOL"
+
+        aprovado = str(candidato["elegivel_telegram"]).upper() == "SIM"
+        if aprovado:
+            decisao = "✅ ENVIADO"
+            explicacao = (
+                f"Escudo aprovado: dados {candidato['qualidade_coleta']}; "
+                f"DNA {candidato['dna_pressao']} ({candidato['dna_score']}). "
+                f"{candidato['dna_motivos']}"
+            )
+        else:
+            decisao = "🛡️ BLOQUEADO"
+            motivo = str(candidato["motivo_bloqueio"]).strip()
+            explicacao = motivo if motivo and motivo.lower() not in {"nan", "none"} else (
+                "Não cumpriu todos os critérios do Escudo de Qualidade."
+            )
+
+        linhas.append({
+            "data_hora": candidato["data_hora"],
+            "fixture_id": candidato["fixture_id"],
+            "jogo": candidato["jogo"],
+            "liga": candidato["liga"],
+            "minuto": candidato["minuto"],
+            "placar": candidato["placar"],
+            "time_destaque": candidato["time_destaque"],
+            "indice_destaque": candidato["indice_destaque"],
+            "dna_pressao": candidato["dna_pressao"],
+            "dna_score": candidato["dna_score"],
+            "decisao": decisao,
+            "explicacao": explicacao,
+            "resultado_5_min": resultado_janela(5),
+            "resultado_10_min": resultado_janela(10),
+        })
+
+    return pd.DataFrame(linhas, columns=colunas_saida)
+
+
 with aba_validacao:
 
     st.subheader(
@@ -9259,3 +9354,119 @@ with aba_validacao:
             )
         else:
             st.info("Ainda não há ligas suficientes para formar o ranking.")
+
+        st.divider()
+        st.write("## 🔎 Painel de Auditoria dos Sinais")
+        st.caption(
+            "Explica cada decisão do Escudo e compara o que aconteceu depois "
+            "com sinais enviados e bloqueados. A auditoria usa somente os "
+            "snapshots já coletados e não consome novas requisições da API."
+        )
+
+        df_auditoria = construir_auditoria_sinais(df_dna)
+        if df_auditoria.empty:
+            st.info(
+                "Ainda não existem pressões ALTA suficientes para iniciar "
+                "a auditoria. O painel será preenchido automaticamente."
+            )
+        else:
+            enviados_auditoria = df_auditoria["decisao"].eq("✅ ENVIADO").sum()
+            bloqueados_auditoria = df_auditoria["decisao"].eq("🛡️ BLOQUEADO").sum()
+            concluidos_10 = ~df_auditoria["resultado_10_min"].eq("⏳ SEM JANELA")
+            gols_10 = df_auditoria["resultado_10_min"].eq("🟢 GOL")
+
+            a1, a2, a3, a4 = st.columns(4)
+            a1.metric("Candidatos ALTA", len(df_auditoria))
+            a2.metric("Enviados", int(enviados_auditoria))
+            a3.metric("Bloqueados", int(bloqueados_auditoria))
+            a4.metric("Gols em 10 min", int(gols_10.sum()))
+
+            resumo_auditoria = []
+            for decisao_nome, grupo in df_auditoria.groupby("decisao"):
+                validos_5 = ~grupo["resultado_5_min"].eq("⏳ SEM JANELA")
+                validos_10 = ~grupo["resultado_10_min"].eq("⏳ SEM JANELA")
+                gols_grupo_5 = grupo["resultado_5_min"].eq("🟢 GOL").sum()
+                gols_grupo_10 = grupo["resultado_10_min"].eq("🟢 GOL").sum()
+                resumo_auditoria.append({
+                    "Decisão": decisao_nome,
+                    "Sinais": len(grupo),
+                    "Janelas 5 min": int(validos_5.sum()),
+                    "Gol em 5 min (%)": round(
+                        gols_grupo_5 / validos_5.sum() * 100, 1
+                    ) if validos_5.any() else None,
+                    "Janelas 10 min": int(validos_10.sum()),
+                    "Gol em 10 min (%)": round(
+                        gols_grupo_10 / validos_10.sum() * 100, 1
+                    ) if validos_10.any() else None,
+                })
+
+            st.write("### ⚖️ Enviados x bloqueados")
+            st.dataframe(
+                pd.DataFrame(resumo_auditoria),
+                width="stretch",
+                hide_index=True,
+            )
+            if int(concluidos_10.sum()) < 10:
+                st.warning(
+                    "A amostra concluída ainda é pequena. Os percentuais são "
+                    "experimentais e não devem ser interpretados como garantia."
+                )
+
+            st.write("### 🧬 Resultado por tipo de DNA")
+            resumo_dna_auditoria = []
+            for dna_nome, grupo in df_auditoria.groupby(
+                df_auditoria["dna_pressao"].fillna("SEM CLASSIFICAÇÃO")
+            ):
+                validos = ~grupo["resultado_10_min"].eq("⏳ SEM JANELA")
+                gols_dna = grupo["resultado_10_min"].eq("🟢 GOL").sum()
+                resumo_dna_auditoria.append({
+                    "DNA": dna_nome,
+                    "Sinais": len(grupo),
+                    "Janelas concluídas": int(validos.sum()),
+                    "Gols em 10 min": int(gols_dna),
+                    "Gol em 10 min (%)": round(
+                        gols_dna / validos.sum() * 100, 1
+                    ) if validos.any() else None,
+                })
+            st.dataframe(
+                pd.DataFrame(resumo_dna_auditoria).sort_values(
+                    ["Janelas concluídas", "Gol em 10 min (%)"],
+                    ascending=False,
+                ),
+                width="stretch",
+                hide_index=True,
+            )
+
+            filtro_decisao = st.selectbox(
+                "Mostrar decisões",
+                ["TODAS", "✅ ENVIADO", "🛡️ BLOQUEADO"],
+                key="filtro_decisao_auditoria",
+            )
+            tabela_auditoria = df_auditoria.copy()
+            if filtro_decisao != "TODAS":
+                tabela_auditoria = tabela_auditoria[
+                    tabela_auditoria["decisao"].eq(filtro_decisao)
+                ]
+            tabela_auditoria["data_ordem"] = pd.to_datetime(
+                tabela_auditoria["data_hora"], errors="coerce"
+            )
+            tabela_auditoria = tabela_auditoria.sort_values(
+                "data_ordem", ascending=False
+            )
+            colunas_auditoria = [
+                "data_hora", "jogo", "liga", "minuto", "placar",
+                "time_destaque", "indice_destaque", "dna_pressao",
+                "dna_score", "decisao", "explicacao",
+                "resultado_5_min", "resultado_10_min",
+            ]
+            st.dataframe(
+                tabela_auditoria[colunas_auditoria],
+                width="stretch",
+                hide_index=True,
+            )
+            st.download_button(
+                "⬇️ Baixar auditoria completa",
+                data=df_auditoria.to_csv(index=False).encode("utf-8-sig"),
+                file_name="auditoria_sinais.csv",
+                mime="text/csv",
+            )
