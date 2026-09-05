@@ -454,6 +454,8 @@ COLUNAS_APIFOOTBALL = [
     "situacao_placar",
     "elegivel_telegram",
     "motivo_bloqueio",
+    "prioridade_coleta",
+    "motivo_prioridade",
 ]
 
 COLUNAS_VALIDACAO_APIFOOTBALL = [
@@ -1086,7 +1088,73 @@ def registrar_alerta_af(linha):
     return True
 
 
-def processar_jogo_af(jogo, df, restante):
+def priorizar_jogos_apifootball(jogos, df):
+    """Ordena candidatos usando apenas dados já disponíveis, sem nova chamada."""
+    candidatos = []
+    for jogo in jogos:
+        fixture = jogo.get("fixture", {}) or {}
+        fixture_id = fixture.get("id")
+        minuto = int(numero_af((fixture.get("status", {}) or {}).get("elapsed"), -1))
+        liga = str((jogo.get("league", {}) or {}).get("name", "")).strip()
+        pontos = 0.0
+        motivos = []
+
+        historico_fixture = pd.DataFrame()
+        if not df.empty and fixture_id is not None:
+            historico_fixture = df[
+                df["fixture_id"].astype(str).eq(str(fixture_id))
+            ].copy()
+        if not historico_fixture.empty:
+            minutos_anteriores = pd.to_numeric(
+                historico_fixture["minuto"], errors="coerce"
+            ).dropna()
+            if not minutos_anteriores.empty:
+                delta = minuto - int(minutos_anteriores.max())
+                if 2 <= delta <= 15:
+                    pontos += 100
+                    motivos.append(f"continuidade de janela ({delta} min)")
+                elif delta <= 1:
+                    pontos -= 15
+                    motivos.append("snapshot recente demais")
+                elif delta > 15:
+                    pontos += 5
+                    motivos.append("histórico existente, janela reiniciada")
+
+        if 10 <= minuto <= 75:
+            pontos += 25
+            motivos.append("minuto útil")
+        elif 76 <= minuto <= 85:
+            pontos += 10
+            motivos.append("reta final")
+        elif minuto > 85:
+            pontos -= 10
+            motivos.append("tempo restante reduzido")
+
+        historico_liga = pd.DataFrame()
+        if not df.empty and liga:
+            historico_liga = df[df["liga"].astype(str).eq(liga)].copy()
+        if historico_liga.empty:
+            pontos += 8
+            motivos.append("liga em exploração")
+        else:
+            qualidade = historico_liga["qualidade_coleta"].astype(str).str.upper()
+            taxa_alta = qualidade.eq("ALTA").mean()
+            bonus_qualidade = taxa_alta * 30
+            pontos += bonus_qualidade
+            motivos.append(f"dados ALTA históricos {taxa_alta * 100:.0f}%")
+            pontos += min(10, len(historico_liga)) * 0.5
+
+        candidatos.append((
+            round(pontos, 1),
+            "; ".join(motivos) or "sem prioridade específica",
+            jogo,
+        ))
+
+    candidatos.sort(key=lambda item: item[0], reverse=True)
+    return candidatos
+
+
+def processar_jogo_af(jogo, df, restante, prioridade=0.0, motivo_prioridade=""):
     fixture = jogo.get("fixture", {}) or {}
     fixture_id = fixture.get("id")
     minuto = (fixture.get("status", {}) or {}).get("elapsed")
@@ -1203,6 +1271,8 @@ def processar_jogo_af(jogo, df, restante):
         "situacao_placar": situacao_placar,
         "elegivel_telegram": "SIM" if elegivel_telegram else "NÃO",
         "motivo_bloqueio": "; ".join(motivos_bloqueio),
+        "prioridade_coleta": prioridade,
+        "motivo_prioridade": motivo_prioridade,
     }
     elegivel_anterior = (
         str(anterior.get("elegivel_telegram", "")).strip().upper() == "SIM"
@@ -1254,11 +1324,23 @@ def ciclo_apifootball():
         return
     df = ler_csv_github_generico(APIFOOTBALL_PATH, COLUNAS_APIFOOTBALL)
     processados = 0
-    for jogo in jogos[:max(1, APIFOOTBALL_MAX_JOGOS)]:
+    candidatos = priorizar_jogos_apifootball(jogos, df)
+    selecionados = candidatos[:max(1, APIFOOTBALL_MAX_JOGOS)]
+    for prioridade, motivo_prioridade, jogo in selecionados:
         if restante >= 0 and restante <= APIFOOTBALL_RESERVA_DIA:
             break
         try:
-            df, restante, mudou = processar_jogo_af(jogo, df, restante)
+            fixture_nome = (
+                f"{((jogo.get('teams', {}) or {}).get('home', {}) or {}).get('name', 'Casa')} x "
+                f"{((jogo.get('teams', {}) or {}).get('away', {}) or {}).get('name', 'Visitante')}"
+            )
+            log(
+                f"API-Football radar: {fixture_nome} • prioridade {prioridade:.1f} • "
+                f"{motivo_prioridade}"
+            )
+            df, restante, mudou = processar_jogo_af(
+                jogo, df, restante, prioridade, motivo_prioridade
+            )
             processados += int(mudou)
         except Exception as exc:
             log(f"API-Football erro em fixture: {exc}")
