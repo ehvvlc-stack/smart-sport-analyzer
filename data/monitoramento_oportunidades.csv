@@ -122,3 +122,4 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19722790-18,2026-09-05 16:08:55,19722790,Rangers x Motherwell,90,18,1 x 0,BAIXA,Rangers,52.7,5.4,50.0,41.0,2.0,AO_VIVO,,,,ALTA,100.0,,11
 19713950-0,2026-09-05 16:03:54,19713950,AGF x Silkeborg IF,3,0,0 x 0,BAIXA,AGF,56.4,12.8,50.0,50.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
 19713950-1,2026-09-05 16:08:55,19713950,AGF x Silkeborg IF,8,1,0 x 0,BAIXA,AGF,64.8,29.6,50.0,38.0,1.0,AO_VIVO,,,,ALTA,100.0,,0
+19713950-2,2026-09-05 16:13:53,19713950,AGF x Silkeborg IF,13,2,0 x 0,BAIXA,AGF,69.5,39.0,50.0,59.0,2.0,AO_VIVO,,,,ALTA,100.0,,0
