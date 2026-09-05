@@ -452,6 +452,8 @@ COLUNAS_APIFOOTBALL = [
     "dna_motivos",
     "acoes_recentes_destaque",
     "situacao_placar",
+    "elegivel_telegram",
+    "motivo_bloqueio",
 ]
 
 COLUNAS_VALIDACAO_APIFOOTBALL = [
@@ -932,6 +934,15 @@ def diagnosticar_dna_pressao(atual, anterior, lado, minuto, gols_casa, gols_fora
     if anterior is None:
         return "EM_FORMAÇÃO", 0.0, "Aguardando o segundo snapshot", 0.0, "INDEFINIDA"
 
+    minuto_anterior = int(numero_af(anterior.get("minuto"), -1))
+    intervalo = int(minuto) - minuto_anterior
+    if intervalo < 2 or intervalo > 15:
+        return (
+            "EM_FORMAÇÃO", 0.0,
+            f"Janela inválida: {intervalo} minutos entre snapshots",
+            0.0, "INDEFINIDA",
+        )
+
     sufixo = "casa" if lado == "casa" else "fora"
 
     def delta(campo):
@@ -1159,6 +1170,18 @@ def processar_jogo_af(jogo, df, restante):
             int(numero_af(goals.get("away"))),
         )
     )
+    motivos_bloqueio = []
+    if not tem_janela:
+        motivos_bloqueio.append("sem janela recente válida")
+    if qualidade != "ALTA":
+        motivos_bloqueio.append("qualidade dos dados abaixo de ALTA")
+    if nivel != "ALTA":
+        motivos_bloqueio.append(f"pressão geral {nivel}")
+    if dna_tipo != "PERIGOSA":
+        motivos_bloqueio.append(f"DNA {dna_tipo}")
+    if numero_af(dna_score) < 60:
+        motivos_bloqueio.append("DNA score abaixo de 60")
+    elegivel_telegram = not motivos_bloqueio
     linha = {
         "data_hora": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "fixture_id": fixture_id, "liga": league.get("name", ""),
@@ -1178,8 +1201,13 @@ def processar_jogo_af(jogo, df, restante):
         "dna_motivos": dna_motivos,
         "acoes_recentes_destaque": acoes_recentes,
         "situacao_placar": situacao_placar,
+        "elegivel_telegram": "SIM" if elegivel_telegram else "NÃO",
+        "motivo_bloqueio": "; ".join(motivos_bloqueio),
     }
-    nivel_anterior = str(anterior.get("nivel_pressao", "")).upper() if anterior else ""
+    elegivel_anterior = (
+        str(anterior.get("elegivel_telegram", "")).strip().upper() == "SIM"
+        if anterior else False
+    )
     atualizar_validacao_af(linha)
     mascara = (
         df["fixture_id"].astype(str).eq(str(fixture_id))
@@ -1191,8 +1219,13 @@ def processar_jogo_af(jogo, df, restante):
             df.at[idx, chave] = valor
     else:
         df = pd.concat([df, pd.DataFrame([linha])], ignore_index=True)
-    if nivel == "ALTA" and nivel_anterior != "ALTA":
+    if elegivel_telegram and not elegivel_anterior:
         registrar_alerta_af(linha)
+    elif nivel == "ALTA" and not elegivel_telegram:
+        log(
+            "API-Football: pressão ALTA registrada para estudo, "
+            f"mas Telegram bloqueado ({linha['motivo_bloqueio']})"
+        )
     log(
         f"API-Football: {linha['jogo']} min {minuto} • "
         f"pressão {nivel} • DNA {dna_tipo} • dados {qualidade} • "
