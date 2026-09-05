@@ -7589,7 +7589,8 @@ def construir_auditoria_sinais(df_monitoramento):
     colunas_saida = [
         "data_hora", "fixture_id", "jogo", "liga", "minuto", "placar",
         "time_destaque", "indice_destaque", "dna_pressao", "dna_score",
-        "decisao", "explicacao", "resultado_5_min", "resultado_10_min",
+        "decisao", "explicacao", "etapa_confirmacao",
+        "resultado_5_min", "resultado_10_min",
     ]
     if df_monitoramento is None or df_monitoramento.empty:
         return pd.DataFrame(columns=colunas_saida)
@@ -7599,7 +7600,7 @@ def construir_auditoria_sinais(df_monitoramento):
         "data_hora", "fixture_id", "jogo", "liga", "minuto", "placar",
         "time_destaque", "indice_destaque", "dna_pressao", "dna_score",
         "dna_motivos", "nivel_pressao", "qualidade_coleta",
-        "elegivel_telegram", "motivo_bloqueio",
+        "elegivel_telegram", "motivo_bloqueio", "rastreamento_etapa",
     ]:
         if coluna not in base.columns:
             base[coluna] = ""
@@ -7615,7 +7616,7 @@ def construir_auditoria_sinais(df_monitoramento):
 
     pressao_alta = nivel_normalizado.eq("ALTA")
     quase_sinal = (
-        ~pressao_alta
+        nivel_normalizado.isin(["MODERADA", "COLETANDO"])
         & base["minuto_num"].between(10, 80, inclusive="both")
         & (
             indice_num.ge(60)
@@ -7690,6 +7691,7 @@ def construir_auditoria_sinais(df_monitoramento):
             "dna_score": candidato["dna_score"],
             "decisao": decisao,
             "explicacao": explicacao,
+            "etapa_confirmacao": candidato["rastreamento_etapa"],
             "resultado_5_min": resultado_janela(5),
             "resultado_10_min": resultado_janela(10),
         })
@@ -9225,6 +9227,8 @@ with aba_validacao:
             "indice_destaque", "diferenca", "dna_pressao", "dna_score",
             "dna_motivos", "acoes_recentes_destaque", "situacao_placar",
             "elegivel_telegram", "motivo_bloqueio", "quota_restante",
+            "rastreamento_id", "rastreamento_origem_minuto",
+            "rastreamento_etapa",
         ]
         for coluna in colunas_dna:
             if coluna not in df_dna.columns:
@@ -9488,6 +9492,7 @@ with aba_validacao:
                 "data_hora", "jogo", "liga", "minuto", "placar",
                 "time_destaque", "indice_destaque", "dna_pressao",
                 "dna_score", "decisao", "explicacao",
+                "etapa_confirmacao",
                 "resultado_5_min", "resultado_10_min",
             ]
             st.dataframe(
