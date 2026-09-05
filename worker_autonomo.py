@@ -45,6 +45,24 @@ RELATORIO_DIARIO_FUSO = os.getenv(
 RELATORIO_DIARIO_PATH = os.getenv(
     "RELATORIO_DIARIO_PATH", "data/status_relatorio_diario.csv"
 ).strip()
+SENTINELA_ATIVA = os.getenv("SENTINELA_ATIVA", "1").strip() == "1"
+SENTINELA_FALHAS_LIMITE = int(os.getenv("SENTINELA_FALHAS_LIMITE", "3"))
+SENTINELA_COTA_AVISO = int(os.getenv("SENTINELA_COTA_AVISO", "20"))
+SENTINELA_INATIVIDADE_SEGUNDOS = int(
+    os.getenv("SENTINELA_INATIVIDADE_SEGUNDOS", "10800")
+)
+
+ESTADO_SENTINELA = {
+    "api_football_falhas": 0,
+    "api_football_alertado": False,
+    "sportmonks_falhas": 0,
+    "sportmonks_alertado": False,
+    "github_falhas": 0,
+    "github_alertado": False,
+    "ultima_api_sucesso": time.time(),
+    "inatividade_alertada": False,
+    "cota_alertada_data": "",
+}
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "").strip()
 GITHUB_REPO = os.getenv("GITHUB_REPO", "ehvvlc-stack/smart-sport-analyzer").strip()
 GITHUB_BRANCH = os.getenv("GITHUB_BRANCH", "main").strip()
@@ -136,6 +154,89 @@ def enviar_alerta_telegram(mensagem):
     except requests.RequestException as exc:
         log(f"Erro Telegram: {exc}")
         return False
+
+
+def sentinela_registrar(componente, sucesso, detalhe=""):
+    if not SENTINELA_ATIVA:
+        return
+    chave = componente.lower().replace("-", "_").replace(" ", "_")
+    chave_falhas = f"{chave}_falhas"
+    chave_alertado = f"{chave}_alertado"
+    if chave_falhas not in ESTADO_SENTINELA:
+        return
+
+    if sucesso:
+        estava_alertado = ESTADO_SENTINELA[chave_alertado]
+        ESTADO_SENTINELA[chave_falhas] = 0
+        ESTADO_SENTINELA[chave_alertado] = False
+        if componente == "api_football":
+            ESTADO_SENTINELA["ultima_api_sucesso"] = time.time()
+            if ESTADO_SENTINELA["inatividade_alertada"]:
+                estava_alertado = True
+                ESTADO_SENTINELA["inatividade_alertada"] = False
+        if estava_alertado:
+            enviar_alerta_telegram(
+                "✅ SENTINELA — SERVIÇO RECUPERADO\n\n"
+                f"🔧 Componente: {componente}\n"
+                f"📡 Situação: voltou a funcionar normalmente.\n"
+                f"📝 {detalhe or 'Nova operação concluída com sucesso.'}"
+            )
+        return
+
+    ESTADO_SENTINELA[chave_falhas] += 1
+    falhas = ESTADO_SENTINELA[chave_falhas]
+    log(f"Sentinela: {componente} com {falhas} falha(s) consecutiva(s)")
+    if falhas < max(1, SENTINELA_FALHAS_LIMITE):
+        return
+    if ESTADO_SENTINELA[chave_alertado]:
+        return
+    enviado = enviar_alerta_telegram(
+        "🚨 SENTINELA — ATENÇÃO NECESSÁRIA\n\n"
+        f"🔧 Componente: {componente}\n"
+        f"❌ Falhas consecutivas: {falhas}\n"
+        f"📝 {detalhe or 'A operação não foi concluída.'}\n\n"
+        "O worker continua ativo e tentará novamente automaticamente."
+    )
+    if enviado:
+        ESTADO_SENTINELA[chave_alertado] = True
+
+
+def sentinela_verificar_cota(restante):
+    if not SENTINELA_ATIVA or restante is None:
+        return
+    try:
+        restante = int(restante)
+    except (TypeError, ValueError):
+        return
+    if restante < 0:
+        return
+    hoje = datetime.now(timezone.utc).date().isoformat()
+    if restante > SENTINELA_COTA_AVISO:
+        return
+    if ESTADO_SENTINELA["cota_alertada_data"] == hoje:
+        return
+    if enviar_alerta_telegram(
+        "⚠️ SENTINELA — COTA API-FOOTBALL\n\n"
+        f"🔋 Restam {restante} requisições hoje.\n"
+        f"🛡 Reserva protegida: {APIFOOTBALL_RESERVA_DIA}.\n"
+        "O sistema reduzirá a coleta antes de consumir a reserva."
+    ):
+        ESTADO_SENTINELA["cota_alertada_data"] = hoje
+
+
+def sentinela_verificar_inatividade():
+    if not SENTINELA_ATIVA or ESTADO_SENTINELA["inatividade_alertada"]:
+        return
+    segundos = time.time() - ESTADO_SENTINELA["ultima_api_sucesso"]
+    if segundos < SENTINELA_INATIVIDADE_SEGUNDOS:
+        return
+    if enviar_alerta_telegram(
+        "🚨 SENTINELA — COLETA SEM RESPOSTA\n\n"
+        f"⏱ A API-Football está há aproximadamente {segundos / 3600:.1f} hora(s) "
+        "sem uma resposta bem-sucedida.\n"
+        "O worker continuará tentando automaticamente."
+    ):
+        ESTADO_SENTINELA["inatividade_alertada"] = True
 
 def requisicao(url, params):
     try:
@@ -1500,7 +1601,14 @@ def ciclo_apifootball():
         return APIFOOTBALL_INTERVALO_SEGUNDOS
     dados, restante = apifootball_get("fixtures", {"live": "all"})
     if dados is None:
+        sentinela_registrar(
+            "api_football", False, "A consulta de jogos ao vivo não respondeu."
+        )
         return APIFOOTBALL_INTERVALO_SEGUNDOS
+    sentinela_registrar(
+        "api_football", True, "Consulta de jogos ao vivo concluída."
+    )
+    sentinela_verificar_cota(restante)
     jogos = dados.get("response", []) or []
     if APIFOOTBALL_LIGAS:
         jogos = [
@@ -1537,6 +1645,9 @@ def ciclo_apifootball():
             log(f"API-Football erro em fixture: {exc}")
     ok = salvar_csv_github_generico(
         APIFOOTBALL_PATH, df, "Atualiza pressão API-Football"
+    )
+    sentinela_registrar(
+        "github", ok, "Persistência do monitoramento da API-Football."
     )
     log(
         f"API-Football: {len(jogos)} ao vivo • {processados} processados • "
@@ -2638,7 +2749,7 @@ def ciclo():
 
     if status != 200:
         log(f"SportMonks status {status}")
-        return
+        return False
 
     if not jogos:
         jogos_fd, status_fd = buscar_jogos_football_data()
@@ -2694,6 +2805,7 @@ def ciclo():
         f"Varredura: {len(jogos)} ao vivo â€¢ "
         f"{processados} processados â€¢ {bloqueados} bloqueados"
     )
+    return True
 
 def main():
     validar_ambiente()
@@ -2709,10 +2821,18 @@ def main():
         inicio = time.time()
 
         try:
-            ciclo()
+            sportmonks_ok = ciclo()
+            sentinela_registrar(
+                "sportmonks",
+                sportmonks_ok is not False,
+                "Consulta da fonte SportMonks.",
+            )
         except Exception as exc:
             log(
                 f"Erro geral SportMonks: {exc}"
+            )
+            sentinela_registrar(
+                "sportmonks", False, f"Erro geral: {exc}"
             )
 
         agora = time.time()
@@ -2728,6 +2848,9 @@ def main():
                 log(
                     f"Erro geral API-Football: {exc}"
                 )
+                sentinela_registrar(
+                    "api_football", False, f"Erro geral: {exc}"
+                )
 
             proxima_api_football = (
                 time.time()
@@ -2738,6 +2861,8 @@ def main():
             talvez_enviar_relatorio_diario()
         except Exception as exc:
             log(f"Erro no relatório diário: {exc}")
+
+        sentinela_verificar_inatividade()
 
         gasto = (
             time.time()
