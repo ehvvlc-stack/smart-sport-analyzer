@@ -472,6 +472,9 @@ COLUNAS_APIFOOTBALL = [
     "rastreamento_id",
     "rastreamento_origem_minuto",
     "rastreamento_etapa",
+    "curva_pressao",
+    "variacao_indice",
+    "confirmacao_telegram_enviada",
 ]
 
 COLUNAS_VALIDACAO_APIFOOTBALL = [
@@ -1136,6 +1139,63 @@ def rastreamento_ativo_af(df, fixture_id):
     }
 
 
+def origem_rastreamento_af(df, rastreamento_id):
+    if df.empty or not rastreamento_id:
+        return None
+    historico = df[
+        df["rastreamento_id"].astype(str).eq(str(rastreamento_id))
+    ].copy()
+    if historico.empty:
+        return None
+    historico["minuto_ordem"] = pd.to_numeric(
+        historico["minuto"], errors="coerce"
+    )
+    historico["data_ordem"] = pd.to_datetime(
+        historico["data_hora"], errors="coerce"
+    )
+    return historico.sort_values(["minuto_ordem", "data_ordem"]).iloc[0]
+
+
+def total_gols_af(placar):
+    try:
+        partes = str(placar).lower().replace("×", "x").replace("-", "x").split("x")
+        if len(partes) != 2:
+            return None
+        return int(numero_af(partes[0])) + int(numero_af(partes[1]))
+    except Exception:
+        return None
+
+
+def calcular_curva_pressao_af(origem, linha):
+    if origem is None:
+        return "INICIADA", 0.0
+    indice_origem = numero_af(origem.get("indice_destaque"))
+    indice_atual = numero_af(linha.get("indice_destaque"))
+    variacao = round(indice_atual - indice_origem, 1)
+    gols_origem = total_gols_af(origem.get("placar"))
+    gols_atual = total_gols_af(linha.get("placar"))
+    if gols_origem is not None and gols_atual is not None and gols_atual > gols_origem:
+        return "⚽ GOL APÓS O SINAL", variacao
+    if str(origem.get("time_destaque", "")) != str(linha.get("time_destaque", "")):
+        return "🔄 PRESSÃO INVERTEU", variacao
+    if variacao >= 10:
+        return "🚀 ACELERANDO", variacao
+    if str(linha.get("nivel_pressao", "")).upper() == "ALTA" and variacao >= -5:
+        return "🔥 FORTE SUSTENTADA", variacao
+    if -5 < variacao < 5:
+        return "⚖️ ESTÁVEL", variacao
+    if variacao <= -10:
+        return "📉 PERDEU FORÇA", variacao
+    return "〰️ OSCILANDO", variacao
+
+
+def confirmacao_telegram_ja_enviada_af(df, rastreamento_id):
+    if df.empty or not rastreamento_id or "confirmacao_telegram_enviada" not in df.columns:
+        return False
+    mascara = df["rastreamento_id"].astype(str).eq(str(rastreamento_id))
+    return df.loc[mascara, "confirmacao_telegram_enviada"].astype(str).str.upper().eq("SIM").any()
+
+
 def candidato_rastreamento_af(linha):
     nivel = str(linha.get("nivel_pressao", "")).strip().upper()
     minuto = int(numero_af(linha.get("minuto"), -1))
@@ -1353,12 +1413,18 @@ def processar_jogo_af(jogo, df, restante, prioridade=0.0, motivo_prioridade=""):
         "rastreamento_id": "",
         "rastreamento_origem_minuto": "",
         "rastreamento_etapa": "",
+        "curva_pressao": "",
+        "variacao_indice": "",
+        "confirmacao_telegram_enviada": "NÃO",
     }
+    origem_rastreamento = None
+    delta_confirmacao = 0
     if rastreamento:
         origem_minuto = rastreamento["origem_minuto"]
         delta_confirmacao = int(minuto) - origem_minuto
         linha["rastreamento_id"] = rastreamento["id"]
         linha["rastreamento_origem_minuto"] = origem_minuto
+        origem_rastreamento = origem_rastreamento_af(df, rastreamento["id"])
         if delta_confirmacao >= 10:
             linha["rastreamento_etapa"] = "CONCLUÍDO"
         elif delta_confirmacao >= 5:
@@ -1375,6 +1441,28 @@ def processar_jogo_af(jogo, df, restante, prioridade=0.0, motivo_prioridade=""):
             f"API-Football confirmação iniciada: {linha['jogo']} "
             f"no minuto {int(minuto)}"
         )
+    linha["curva_pressao"], linha["variacao_indice"] = (
+        calcular_curva_pressao_af(origem_rastreamento, linha)
+    )
+
+    if (
+        origem_rastreamento is not None
+        and delta_confirmacao >= 5
+        and str(origem_rastreamento.get("elegivel_telegram", "")).upper() == "SIM"
+        and not confirmacao_telegram_ja_enviada_af(df, linha["rastreamento_id"])
+    ):
+        mensagem_curva = (
+            "📈 ATUALIZAÇÃO DA PRESSÃO — API-FOOTBALL\n\n"
+            f"⚽ {linha['jogo']}\n"
+            f"⏱ Minuto: {int(minuto)}'\n"
+            f"📍 Placar: {linha['placar']}\n"
+            f"🔥 Destaque: {linha['time_destaque']}\n"
+            f"📊 Curva: {linha['curva_pressao']}\n"
+            f"↕️ Variação do índice: {numero_af(linha['variacao_indice']):+.1f}\n\n"
+            "🧪 Confirmação estatística; nenhuma aposta é automática."
+        )
+        if enviar_alerta_telegram(mensagem_curva):
+            linha["confirmacao_telegram_enviada"] = "SIM"
     elegivel_anterior = (
         str(anterior.get("elegivel_telegram", "")).strip().upper() == "SIM"
         if anterior else False
@@ -1401,7 +1489,8 @@ def processar_jogo_af(jogo, df, restante, prioridade=0.0, motivo_prioridade=""):
         f"API-Football: {linha['jogo']} min {minuto} • "
         f"pressão {nivel} • DNA {dna_tipo} • dados {qualidade} • "
         f"quota {linha['quota_restante']} • "
-        f"confirmação {linha['rastreamento_etapa'] or 'inativa'}"
+        f"confirmação {linha['rastreamento_etapa'] or 'inativa'} • "
+        f"curva {linha['curva_pressao'] or 'sem leitura'}"
     )
     return df, linha["quota_restante"], True
 
