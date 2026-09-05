@@ -14,6 +14,9 @@ FOOTBALL_DATA_TOKEN = os.getenv("FOOTBALL_DATA_TOKEN", "").strip()
 APIFOOTBALL_INTERVALO_SEGUNDOS = int(
     os.getenv("APIFOOTBALL_INTERVALO_SEGUNDOS", "2400")
 )
+APIFOOTBALL_CONFIRMACAO_SEGUNDOS = int(
+    os.getenv("APIFOOTBALL_CONFIRMACAO_SEGUNDOS", "300")
+)
 APIFOOTBALL_RESERVA_DIA = int(
     os.getenv("APIFOOTBALL_RESERVA_DIA", "10")
 )
@@ -466,6 +469,9 @@ COLUNAS_APIFOOTBALL = [
     "motivo_bloqueio",
     "prioridade_coleta",
     "motivo_prioridade",
+    "rastreamento_id",
+    "rastreamento_origem_minuto",
+    "rastreamento_etapa",
 ]
 
 COLUNAS_VALIDACAO_APIFOOTBALL = [
@@ -1098,6 +1104,60 @@ def registrar_alerta_af(linha):
     return True
 
 
+def rastreamento_ativo_af(df, fixture_id):
+    if df.empty or fixture_id is None:
+        return None
+    historico = df[df["fixture_id"].astype(str).eq(str(fixture_id))].copy()
+    if historico.empty:
+        return None
+    for coluna in [
+        "rastreamento_id", "rastreamento_origem_minuto", "rastreamento_etapa",
+    ]:
+        if coluna not in historico.columns:
+            historico[coluna] = ""
+    historico["minuto_ordem"] = pd.to_numeric(
+        historico["minuto"], errors="coerce"
+    )
+    historico["data_ordem"] = pd.to_datetime(
+        historico["data_hora"], errors="coerce"
+    )
+    historico = historico.sort_values(["minuto_ordem", "data_ordem"])
+    ultimo = historico.iloc[-1]
+    etapa = str(ultimo["rastreamento_etapa"]).strip().upper()
+    identificador = str(ultimo["rastreamento_id"]).strip()
+    if not identificador or identificador.lower() in {"nan", "none"}:
+        return None
+    if etapa not in {"AGUARDANDO_5", "AGUARDANDO_10"}:
+        return None
+    return {
+        "id": identificador,
+        "origem_minuto": int(numero_af(ultimo["rastreamento_origem_minuto"])),
+        "etapa": etapa,
+    }
+
+
+def candidato_rastreamento_af(linha):
+    nivel = str(linha.get("nivel_pressao", "")).strip().upper()
+    minuto = int(numero_af(linha.get("minuto"), -1))
+    indice = numero_af(linha.get("indice_destaque"))
+    dna_score = numero_af(linha.get("dna_score"))
+    dna = str(linha.get("dna_pressao", "")).strip().upper()
+    if nivel == "ALTA":
+        return True
+    return (
+        nivel in {"MODERADA", "COLETANDO"}
+        and 10 <= minuto <= 80
+        and (indice >= 60 or dna_score >= 50 or dna in {"PERIGOSA", "DESESPERADA"})
+    )
+
+
+def ha_rastreamento_pendente_af(df, fixture_ids_ativos):
+    return any(
+        rastreamento_ativo_af(df, fixture_id) is not None
+        for fixture_id in fixture_ids_ativos
+    )
+
+
 def priorizar_jogos_apifootball(jogos, df):
     """Ordena candidatos usando apenas dados já disponíveis, sem nova chamada."""
     candidatos = []
@@ -1108,6 +1168,12 @@ def priorizar_jogos_apifootball(jogos, df):
         liga = str((jogo.get("league", {}) or {}).get("name", "")).strip()
         pontos = 0.0
         motivos = []
+
+        rastreamento = rastreamento_ativo_af(df, fixture_id)
+        if rastreamento:
+            pontos += 300
+            etapa = rastreamento["etapa"].replace("_", " ").lower()
+            motivos.append(f"confirmação prioritária {etapa}")
 
         historico_fixture = pd.DataFrame()
         if not df.empty and fixture_id is not None:
@@ -1170,6 +1236,7 @@ def processar_jogo_af(jogo, df, restante, prioridade=0.0, motivo_prioridade=""):
     minuto = (fixture.get("status", {}) or {}).get("elapsed")
     if fixture_id is None or minuto is None:
         return df, restante, False
+    rastreamento = rastreamento_ativo_af(df, fixture_id)
     stats_resp, restante_stats = apifootball_get(
         "fixtures/statistics", {"fixture": fixture_id}
     )
@@ -1283,7 +1350,31 @@ def processar_jogo_af(jogo, df, restante, prioridade=0.0, motivo_prioridade=""):
         "motivo_bloqueio": "; ".join(motivos_bloqueio),
         "prioridade_coleta": prioridade,
         "motivo_prioridade": motivo_prioridade,
+        "rastreamento_id": "",
+        "rastreamento_origem_minuto": "",
+        "rastreamento_etapa": "",
     }
+    if rastreamento:
+        origem_minuto = rastreamento["origem_minuto"]
+        delta_confirmacao = int(minuto) - origem_minuto
+        linha["rastreamento_id"] = rastreamento["id"]
+        linha["rastreamento_origem_minuto"] = origem_minuto
+        if delta_confirmacao >= 10:
+            linha["rastreamento_etapa"] = "CONCLUÍDO"
+        elif delta_confirmacao >= 5:
+            linha["rastreamento_etapa"] = "AGUARDANDO_10"
+        else:
+            linha["rastreamento_etapa"] = "AGUARDANDO_5"
+    elif candidato_rastreamento_af(linha):
+        linha["rastreamento_id"] = (
+            f"AFQ-{fixture_id}-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+        )
+        linha["rastreamento_origem_minuto"] = int(minuto)
+        linha["rastreamento_etapa"] = "AGUARDANDO_5"
+        log(
+            f"API-Football confirmação iniciada: {linha['jogo']} "
+            f"no minuto {int(minuto)}"
+        )
     elegivel_anterior = (
         str(anterior.get("elegivel_telegram", "")).strip().upper() == "SIM"
         if anterior else False
@@ -1309,17 +1400,18 @@ def processar_jogo_af(jogo, df, restante, prioridade=0.0, motivo_prioridade=""):
     log(
         f"API-Football: {linha['jogo']} min {minuto} • "
         f"pressão {nivel} • DNA {dna_tipo} • dados {qualidade} • "
-        f"quota {linha['quota_restante']}"
+        f"quota {linha['quota_restante']} • "
+        f"confirmação {linha['rastreamento_etapa'] or 'inativa'}"
     )
     return df, linha["quota_restante"], True
 
 
 def ciclo_apifootball():
     if not APIFOOTBALL_KEY:
-        return
+        return APIFOOTBALL_INTERVALO_SEGUNDOS
     dados, restante = apifootball_get("fixtures", {"live": "all"})
     if dados is None:
-        return
+        return APIFOOTBALL_INTERVALO_SEGUNDOS
     jogos = dados.get("response", []) or []
     if APIFOOTBALL_LIGAS:
         jogos = [
@@ -1328,10 +1420,10 @@ def ciclo_apifootball():
         ]
     if restante >= 0 and restante <= APIFOOTBALL_RESERVA_DIA:
         log(f"API-Football: reserva diária atingida ({restante} restantes)")
-        return
+        return APIFOOTBALL_INTERVALO_SEGUNDOS
     if not jogos:
         log(f"API-Football: 0 jogos ao vivo • quota restante {restante}")
-        return
+        return APIFOOTBALL_INTERVALO_SEGUNDOS
     df = ler_csv_github_generico(APIFOOTBALL_PATH, COLUNAS_APIFOOTBALL)
     processados = 0
     candidatos = priorizar_jogos_apifootball(jogos, df)
@@ -1361,6 +1453,16 @@ def ciclo_apifootball():
         f"API-Football: {len(jogos)} ao vivo • {processados} processados • "
         f"GitHub {'OK' if ok else 'FALHOU'}"
     )
+    fixture_ids_ativos = {
+        (jogo.get("fixture", {}) or {}).get("id") for jogo in jogos
+    }
+    if ha_rastreamento_pendente_af(df, fixture_ids_ativos):
+        log(
+            "API-Football: confirmação pendente; próxima leitura em "
+            f"{APIFOOTBALL_CONFIRMACAO_SEGUNDOS} segundos"
+        )
+        return APIFOOTBALL_CONFIRMACAO_SEGUNDOS
+    return APIFOOTBALL_INTERVALO_SEGUNDOS
 
 
 def identificar_times(jogo):
@@ -2530,8 +2632,9 @@ def main():
             APIFOOTBALL_KEY
             and agora >= proxima_api_football
         ):
+            intervalo_api_football = APIFOOTBALL_INTERVALO_SEGUNDOS
             try:
-                ciclo_apifootball()
+                intervalo_api_football = ciclo_apifootball()
             except Exception as exc:
                 log(
                     f"Erro geral API-Football: {exc}"
@@ -2539,7 +2642,7 @@ def main():
 
             proxima_api_football = (
                 time.time()
-                + APIFOOTBALL_INTERVALO_SEGUNDOS
+                + max(60, int(intervalo_api_football or APIFOOTBALL_INTERVALO_SEGUNDOS))
             )
 
         try:
