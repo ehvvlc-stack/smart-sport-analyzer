@@ -1,6 +1,6 @@
 fixture_id,data_hora,status,casa_id,casa,fora_id,fora,competicao,rodada
 554995,2026-09-06T00:00:00Z,FINISHED,1765,Fluminense FC,1780,CR Vasco da Gama,Campeonato Brasileiro Série A,26
-554993,2026-09-06T14:00:00Z,TIMED,4241,Coritiba FBC,4364,Mirassol FC,Campeonato Brasileiro Série A,26
+554993,2026-09-06T14:00:00Z,FINISHED,4241,Coritiba FBC,4364,Mirassol FC,Campeonato Brasileiro Série A,26
 554994,2026-09-06T19:00:00Z,TIMED,1771,Cruzeiro EC,1768,CA Paranaense,Campeonato Brasileiro Série A,26
 554996,2026-09-06T19:00:00Z,TIMED,6684,SC Internacional,6685,Santos FC,Campeonato Brasileiro Série A,26
 554997,2026-09-06T19:00:00Z,TIMED,4287,Clube do Remo,1783,CR Flamengo,Campeonato Brasileiro Série A,26
