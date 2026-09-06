@@ -145,4 +145,4 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19722788-18,2026-09-05 21:13:53,19722788,St. Mirren x Celtic,90,18,1 x 2,BAIXA,Celtic,54.7,9.4,50.0,60.0,4.0,FINALIZADO,2026-09-05 21:18:54,1 x 2,ULTIMO_OBSERVADO,ALTA,100.0,,19
 19713948-1,2026-09-06 12:06:32,19713948,Sønderjyske Fodbold x Horsens,6,1,0 x 0,BAIXA,Horsens,55.3,10.6,50.0,74.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
 19713948-2,2026-09-06 12:16:31,19713948,Sønderjyske Fodbold x Horsens,12,2,1 x 0,PÓS_GOL,Sønderjyske Fodbold,68.8,37.6,50.0,56.0,1.0,AO_VIVO,,,,ALTA,100.0,,1
-19713948-4,2026-09-06 12:21:32,19713948,Sønderjyske Fodbold x Horsens,20,4,1 x 1,PÓS_GOL,Sønderjyske Fodbold,67.5,35.0,50.0,50.0,1.0,AO_VIVO,,,,ALTA,100.0,,3
+19713948-4,2026-09-06 12:26:32,19713948,Sønderjyske Fodbold x Horsens,23,4,1 x 1,BAIXA,Sønderjyske Fodbold,62.0,24.0,50.0,55.0,1.0,AO_VIVO,,,,ALTA,100.0,,4
