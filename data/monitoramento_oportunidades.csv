@@ -152,5 +152,8 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713948-13,2026-09-06 13:31:31,19713948,Sønderjyske Fodbold x Horsens,69,13,1 x 3,BAIXA,Horsens,50.8,1.6,50.0,61.0,0.0,AO_VIVO,,,,ALTA,100.0,,15
 19713948-15,2026-09-06 13:41:32,19713948,Sønderjyske Fodbold x Horsens,79,15,1 x 4,PÓS_GOL,Horsens,51.5,3.0,50.0,61.0,0.0,AO_VIVO,,,,ALTA,100.0,,18
 19713948-16,2026-09-06 13:46:32,19713948,Sønderjyske Fodbold x Horsens,83,16,2 x 5,PÓS_GOL,Horsens,51.6,3.2,50.0,61.0,0.0,AO_VIVO,,,,ALTA,100.0,,21
-19713948-17,2026-09-06 14:01:31,19713948,Sønderjyske Fodbold x Horsens,87,17,2 x 5,BAIXA,Horsens,52.3,4.6,50.0,61.0,0.0,AO_VIVO,,,,ALTA,100.0,,23
+19713948-17,2026-09-06 14:06:32,19713948,Sønderjyske Fodbold x Horsens,87,17,2 x 5,BAIXA,Horsens,52.3,4.6,50.0,61.0,0.0,AO_VIVO,,,,ALTA,100.0,,23
 19713946-0,2026-09-06 14:01:31,19713946,Odense BK x FC København,1,0,0 x 0,BAIXA,Odense BK,50.0,0.0,50.0,50.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
+19722791-1,2026-09-06 14:06:32,19722791,Hearts x Dundee,6,1,0 x 0,BAIXA,Hearts,71.5,43.0,50.0,68.0,1.0,AO_VIVO,,,,ALTA,100.0,,0
+19713946-1,2026-09-06 14:06:32,19713946,Odense BK x FC København,5,1,0 x 1,PÓS_GOL,Odense BK,50.0,0.0,50.0,50.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",1
+19722789-1,2026-09-06 14:06:32,19722789,St. Johnstone x Hibernian,6,1,0 x 0,BAIXA,Hibernian,52.0,4.0,50.0,59.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
