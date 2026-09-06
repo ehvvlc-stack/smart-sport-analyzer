@@ -157,5 +157,7 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19722791-1,2026-09-06 14:06:32,19722791,Hearts x Dundee,6,1,0 x 0,BAIXA,Hearts,71.5,43.0,50.0,68.0,1.0,AO_VIVO,,,,ALTA,100.0,,0
 19713946-1,2026-09-06 14:11:32,19713946,Odense BK x FC København,5,1,0 x 1,PÓS_GOL,Odense BK,52.4,4.8,50.0,61.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",1
 19722789-1,2026-09-06 14:06:32,19722789,St. Johnstone x Hibernian,6,1,0 x 0,BAIXA,Hibernian,52.0,4.0,50.0,59.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
-19722791-2,2026-09-06 14:11:32,19722791,Hearts x Dundee,11,2,0 x 0,BAIXA,Hearts,71.5,43.0,50.0,68.0,1.0,AO_VIVO,,,,ALTA,100.0,,0
+19722791-2,2026-09-06 14:16:32,19722791,Hearts x Dundee,10,2,0 x 0,BAIXA,Hearts,70.2,40.4,50.0,62.0,1.0,AO_VIVO,,,,ALTA,100.0,,1
 19722789-2,2026-09-06 14:11:32,19722789,St. Johnstone x Hibernian,11,2,0 x 0,BAIXA,Hibernian,59.9,19.8,50.0,66.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
+19713946-2,2026-09-06 14:16:32,19713946,Odense BK x FC København,12,2,0 x 1,BAIXA,Odense BK,59.2,18.4,50.0,63.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",2
+19722789-3,2026-09-06 14:16:32,19722789,St. Johnstone x Hibernian,16,3,0 x 0,BAIXA,Hibernian,57.9,15.8,50.0,57.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
