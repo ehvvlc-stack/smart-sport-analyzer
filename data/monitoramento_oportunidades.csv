@@ -191,3 +191,4 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713944-13,2026-09-06 17:31:32,19713944,Brøndby IF x Randers FC,66,13,0 x 2,PÓS_GOL,Randers FC,53.2,6.4,50.0,35.0,2.0,AO_VIVO,,,,ALTA,100.0,,13
 19713944-14,2026-09-06 17:36:32,19713944,Brøndby IF x Randers FC,72,14,0 x 3,PÓS_GOL,Randers FC,51.3,2.6,50.0,34.0,1.0,AO_VIVO,,,,ALTA,100.0,,14
 19713944-15,2026-09-06 17:41:32,19713944,Brøndby IF x Randers FC,75,15,0 x 3,PÓS_GOL,Brøndby IF,50.1,0.2,50.0,67.0,-1.0,AO_VIVO,,,,ALTA,100.0,,15
+19713944-17,2026-09-06 17:46:32,19713944,Brøndby IF x Randers FC,85,17,0 x 3,BAIXA,Brøndby IF,53.0,6.0,50.0,67.0,1.0,AO_VIVO,,,,ALTA,100.0,,17
