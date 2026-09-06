@@ -1,6 +1,4 @@
 fixture_id,data_hora,status,casa_id,casa,fora_id,fora,competicao,rodada
-554991,2026-09-05T19:00:00Z,FINISHED,4286,RB Bragantino,1777,EC Bahia,Campeonato Brasileiro Série A,26
-554998,2026-09-05T21:30:00Z,FINISHED,1776,São Paulo FC,1766,CA Mineiro,Campeonato Brasileiro Série A,26
 554995,2026-09-06T00:00:00Z,TIMED,1765,Fluminense FC,1780,CR Vasco da Gama,Campeonato Brasileiro Série A,26
 554993,2026-09-06T14:00:00Z,TIMED,4241,Coritiba FBC,4364,Mirassol FC,Campeonato Brasileiro Série A,26
 554994,2026-09-06T19:00:00Z,TIMED,1771,Cruzeiro EC,1768,CA Paranaense,Campeonato Brasileiro Série A,26
