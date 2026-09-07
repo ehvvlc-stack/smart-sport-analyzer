@@ -208,3 +208,4 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713942-13,2026-09-07 18:26:32,19713942,FC Midtjylland x Nordsjælland,65,13,0 x 1,PÓS_GOL,Nordsjælland,50.9,1.8,50.0,52.0,0.0,AO_VIVO,,,,ALTA,100.0,,10
 19713942-14,2026-09-07 18:31:32,19713942,FC Midtjylland x Nordsjælland,72,14,1 x 1,PÓS_GOL,Nordsjælland,50.9,1.8,50.0,52.0,0.0,AO_VIVO,,,,ALTA,100.0,,11
 19713942-15,2026-09-07 18:41:32,19713942,FC Midtjylland x Nordsjælland,76,15,1 x 2,PÓS_GOL,Nordsjælland,50.9,1.8,50.0,52.0,0.0,AO_VIVO,,,,ALTA,100.0,,13
+19713942-17,2026-09-07 18:46:32,19713942,FC Midtjylland x Nordsjælland,86,17,2 x 2,PÓS_GOL,FC Midtjylland,50.9,1.8,50.0,49.0,1.0,AO_VIVO,,,,ALTA,100.0,,16
