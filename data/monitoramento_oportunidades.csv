@@ -211,3 +211,5 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713942-17,2026-09-07 19:06:32,19713942,FC Midtjylland x Nordsjælland,86,17,2 x 2,PÓS_GOL,FC Midtjylland,50.8,1.6,50.0,50.0,1.0,FINALIZADO,2026-09-07 19:11:33,2 x 2,ULTIMO_OBSERVADO,ALTA,100.0,,16
 19722807-1,2026-09-09 18:51:32,19722807,Rangers x St. Mirren,6,1,0 x 0,BAIXA,Rangers,60.2,20.4,50.0,67.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
 19722807-2,2026-09-09 18:56:32,19722807,Rangers x St. Mirren,11,2,0 x 0,BAIXA,Rangers,59.9,19.8,50.0,66.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
+19722806-0,2026-09-09 19:01:32,19722806,St. Johnstone x Celtic,1,0,0 x 0,BAIXA,St. Johnstone,50.0,0.0,50.0,50.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
+19722807-3,2026-09-09 19:01:32,19722807,Rangers x St. Mirren,16,3,0 x 0,BAIXA,Rangers,56.2,12.4,50.0,49.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
