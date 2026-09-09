@@ -213,3 +213,5 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19722807-2,2026-09-09 18:56:32,19722807,Rangers x St. Mirren,11,2,0 x 0,BAIXA,Rangers,59.9,19.8,50.0,66.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
 19722806-0,2026-09-09 19:01:32,19722806,St. Johnstone x Celtic,1,0,0 x 0,BAIXA,St. Johnstone,50.0,0.0,50.0,50.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
 19722807-3,2026-09-09 19:01:32,19722807,Rangers x St. Mirren,16,3,0 x 0,BAIXA,Rangers,56.2,12.4,50.0,49.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
+19722807-4,2026-09-09 19:06:32,19722807,Rangers x St. Mirren,21,4,0 x 0,BAIXA,Rangers,68.2,36.4,50.0,53.0,5.0,AO_VIVO,,,,ALTA,100.0,,0
+19722806-1,2026-09-09 19:06:32,19722806,St. Johnstone x Celtic,6,1,0 x 0,BAIXA,Celtic,67.4,34.8,50.0,78.0,1.0,AO_VIVO,,,,ALTA,100.0,,0
