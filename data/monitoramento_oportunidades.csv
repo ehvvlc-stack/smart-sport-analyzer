@@ -244,4 +244,4 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19722806-18,2026-09-09 21:01:32,19722806,St. Johnstone x Celtic,90,18,0 x 1,BAIXA,Celtic,58.1,16.2,50.0,60.0,9.0,FINALIZADO,2026-09-09 21:06:33,0 x 1,ULTIMO_OBSERVADO,ALTA,100.0,,15
 19713940-0,2026-09-11 17:01:32,19713940,FC København x Horsens,1,0,0 x 0,BAIXA,FC København,61.1,22.2,50.0,50.0,1.0,AO_VIVO,,,,ALTA,100.0,,0
 19713940-1,2026-09-11 17:36:32,19713940,FC København x Horsens,7,1,1 x 0,PÓS_GOL,Horsens,51.1,2.2,50.0,36.0,0.0,AO_VIVO,,,,ALTA,100.0,,1
-19713940-7,2026-09-11 17:46:32,19713940,FC København x Horsens,38,7,1 x 0,BAIXA,FC København,50.6,1.2,50.0,64.0,1.0,AO_VIVO,,,,ALTA,100.0,,2
+19713940-7,2026-09-11 17:51:32,19713940,FC København x Horsens,38,7,1 x 0,BAIXA,FC København,50.6,1.2,50.0,64.0,1.0,AO_VIVO,,,,ALTA,100.0,,2
