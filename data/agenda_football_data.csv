@@ -1,5 +1,5 @@
 fixture_id,data_hora,status,casa_id,casa,fora_id,fora,competicao,rodada
-555004,2026-09-12T00:00:00Z,PAUSED,4241,Coritiba FBC,1768,CA Paranaense,Campeonato Brasileiro Série A,27
+555004,2026-09-12T00:00:00Z,IN_PLAY,4241,Coritiba FBC,1768,CA Paranaense,Campeonato Brasileiro Série A,27
 555000,2026-09-12T19:00:00Z,TIMED,1766,CA Mineiro,1765,Fluminense FC,Campeonato Brasileiro Série A,27
 555006,2026-09-12T19:00:00Z,TIMED,1767,Grêmio FBPA,1780,CR Vasco da Gama,Campeonato Brasileiro Série A,27
 555003,2026-09-12T20:00:00Z,TIMED,1772,Chapecoense AF,6684,SC Internacional,Campeonato Brasileiro Série A,27
