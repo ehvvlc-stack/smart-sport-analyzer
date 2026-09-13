@@ -266,5 +266,5 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713931-15,2026-09-13 13:36:32,19713931,Silkeborg IF x Viborg FF,78,15,1 x 1,BAIXA,Silkeborg IF,51.0,2.0,50.0,53.0,1.0,AO_VIVO,,,,ALTA,100.0,,8
 19713931-16,2026-09-13 13:41:32,19713931,Silkeborg IF x Viborg FF,81,16,1 x 1,BAIXA,Viborg FF,50.4,0.8,50.0,46.0,0.0,AO_VIVO,,,,ALTA,100.0,,10
 19713931-17,2026-09-13 13:46:32,19713931,Silkeborg IF x Viborg FF,89,17,1 x 1,BAIXA,Silkeborg IF,50.0,0.0,50.0,54.0,0.0,AO_VIVO,,,,ALTA,100.0,,11
-19713935-17,2026-09-13 13:56:32,19713935,Lyngby Boldklub x Sønderjyske Fodbold,89,17,1 x 1,BAIXA,Lyngby Boldklub,50.2,0.4,50.0,57.0,-1.0,AO_VIVO,,,,ALTA,100.0,,14
-19713931-18,2026-09-13 13:56:32,19713931,Silkeborg IF x Viborg FF,90,18,1 x 1,BAIXA,Viborg FF,52.7,5.4,50.0,46.0,2.0,AO_VIVO,,,,ALTA,100.0,,13
+19713935-17,2026-09-13 14:01:34,19713935,Lyngby Boldklub x Sønderjyske Fodbold,89,17,1 x 1,BAIXA,Lyngby Boldklub,51.3,2.6,50.0,57.0,0.0,AO_VIVO,,,,ALTA,100.0,,14
+19713931-18,2026-09-13 14:01:34,19713931,Silkeborg IF x Viborg FF,90,18,1 x 1,BAIXA,Viborg FF,52.7,5.4,50.0,46.0,2.0,AO_VIVO,,,,ALTA,100.0,,13
