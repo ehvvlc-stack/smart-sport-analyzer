@@ -278,5 +278,6 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713937-12,2026-09-13 15:31:32,19713937,Randers FC x Odense BK,62,12,1 x 1,BAIXA,Odense BK,55.0,10.0,50.0,53.0,6.0,AO_VIVO,,,,ALTA,100.0,,9
 19713937-15,2026-09-13 15:41:34,19713937,Randers FC x Odense BK,78,15,1 x 2,PÓS_GOL,Odense BK,56.2,12.4,50.0,54.0,7.0,AO_VIVO,,,,ALTA,100.0,,13
 19713937-17,2026-09-13 15:46:33,19713937,Randers FC x Odense BK,85,17,1 x 2,BAIXA,Odense BK,56.7,13.4,50.0,54.0,8.0,AO_VIVO,,,,ALTA,100.0,,14
-19713937-18,2026-09-13 16:01:36,19713937,Randers FC x Odense BK,90,18,1 x 2,BAIXA,Odense BK,58.0,16.0,50.0,55.0,8.0,AO_VIVO,,,,ALTA,100.0,,17
+19713937-18,2026-09-13 16:06:32,19713937,Randers FC x Odense BK,90,18,1 x 2,BAIXA,Odense BK,58.0,16.0,50.0,55.0,8.0,AO_VIVO,,,,ALTA,100.0,,17
 19713929-0,2026-09-13 16:01:36,19713929,Nordsjælland x AGF,1,0,0 x 0,BAIXA,Nordsjælland,50.0,0.0,50.0,50.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
+19713929-1,2026-09-13 16:06:32,19713929,Nordsjælland x AGF,6,1,0 x 0,BAIXA,AGF,56.6,13.2,50.0,51.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
