@@ -288,3 +288,4 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713929-13,2026-09-13 17:36:32,19713929,Nordsjælland x AGF,68,13,0 x 0,BAIXA,Nordsjælland,50.4,0.8,50.0,55.0,-1.0,AO_VIVO,,,,ALTA,100.0,,11
 19713929-15,2026-09-13 17:51:32,19713929,Nordsjælland x AGF,79,15,1 x 0,PÓS_GOL,Nordsjælland,51.0,2.0,50.0,55.0,-1.0,AO_VIVO,,,,ALTA,100.0,,16
 19713929-17,2026-09-13 17:56:32,19713929,Nordsjælland x AGF,89,17,1 x 0,BAIXA,Nordsjælland,50.7,1.4,50.0,53.0,-1.0,AO_VIVO,,,,ALTA,100.0,,17
+19713929-18,2026-09-13 18:01:33,19713929,Nordsjælland x AGF,90,18,2 x 0,PÓS_GOL,AGF,50.8,1.6,50.0,47.0,2.0,AO_VIVO,,,,ALTA,100.0,,18
