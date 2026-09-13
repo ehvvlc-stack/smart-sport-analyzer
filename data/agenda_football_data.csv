@@ -1,5 +1,5 @@
 fixture_id,data_hora,status,casa_id,casa,fora_id,fora,competicao,rodada
-555009,2026-09-13T00:00:00Z,IN_PLAY,6685,Santos FC,1771,Cruzeiro EC,Campeonato Brasileiro Série A,27
+555009,2026-09-13T00:00:00Z,PAUSED,6685,Santos FC,1771,Cruzeiro EC,Campeonato Brasileiro Série A,27
 555007,2026-09-13T19:00:00Z,TIMED,4364,Mirassol FC,1782,EC Vitória,Campeonato Brasileiro Série A,27
 555005,2026-09-13T20:30:00Z,TIMED,1783,CR Flamengo,1779,SC Corinthians Paulista,Campeonato Brasileiro Série A,27
 555001,2026-09-14T23:00:00Z,TIMED,1777,EC Bahia,4287,Clube do Remo,Campeonato Brasileiro Série A,27
