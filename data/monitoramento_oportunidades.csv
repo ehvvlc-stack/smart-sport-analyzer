@@ -271,4 +271,4 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713937-1,2026-09-13 14:06:32,19713937,Randers FC x Odense BK,6,1,0 x 0,BAIXA,Randers FC,56.4,12.8,50.0,50.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
 19713937-2,2026-09-13 14:11:33,19713937,Randers FC x Odense BK,11,2,0 x 0,BAIXA,Odense BK,60.8,21.6,50.0,77.0,1.0,AO_VIVO,,,,ALTA,100.0,,0
 19713937-3,2026-09-13 14:16:33,19713937,Randers FC x Odense BK,16,3,0 x 0,BAIXA,Odense BK,61.0,22.0,50.0,78.0,1.0,AO_VIVO,,,,ALTA,100.0,,0
-19713937-4,2026-09-13 14:31:32,19713937,Randers FC x Odense BK,23,4,0 x 1,PÓS_GOL,Odense BK,61.0,22.0,50.0,59.0,2.0,AO_VIVO,,,,ALTA,100.0,,3
+19713937-4,2026-09-13 14:36:32,19713937,Randers FC x Odense BK,23,4,0 x 1,PÓS_GOL,Odense BK,63.0,26.0,50.0,60.0,5.0,AO_VIVO,,,,ALTA,100.0,,3
