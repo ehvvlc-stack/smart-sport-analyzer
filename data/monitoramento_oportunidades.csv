@@ -295,3 +295,4 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713933-9,2026-09-14 18:11:32,19713933,FC Midtjylland x Brøndby IF,46,9,2 x 0,BAIXA,FC Midtjylland,57.5,15.0,50.0,48.0,2.0,AO_VIVO,,,,ALTA,100.0,,7
 19713933-10,2026-09-14 18:21:32,19713933,FC Midtjylland x Brøndby IF,53,10,2 x 0,BAIXA,FC Midtjylland,59.4,18.8,50.0,47.0,2.0,AO_VIVO,,,,ALTA,100.0,,8
 19713933-12,2026-09-14 18:26:32,19713933,FC Midtjylland x Brøndby IF,64,12,2 x 0,BAIXA,FC Midtjylland,59.0,18.0,50.0,47.0,2.0,AO_VIVO,,,,ALTA,100.0,,9
+19713933-13,2026-09-14 18:31:32,19713933,FC Midtjylland x Brøndby IF,69,13,2 x 1,PÓS_GOL,FC Midtjylland,58.6,17.2,50.0,46.0,3.0,AO_VIVO,,,,ALTA,100.0,,11
