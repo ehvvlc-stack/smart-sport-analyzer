@@ -291,4 +291,4 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713929-18,2026-09-13 18:11:32,19713929,Nordsjælland x AGF,90,18,2 x 0,PÓS_GOL,AGF,50.8,1.6,50.0,48.0,2.0,FINALIZADO,2026-09-13 18:16:32,2 x 0,ULTIMO_OBSERVADO,ALTA,100.0,,18
 19713933-0,2026-09-14 17:16:32,19713933,FC Midtjylland x Brøndby IF,1,0,1 x 0,PÓS_GOL,FC Midtjylland,65.3,30.6,50.0,63.0,1.0,AO_VIVO,,,,ALTA,100.0,,1
 19713933-4,2026-09-14 17:36:32,19713933,FC Midtjylland x Brøndby IF,24,4,2 x 0,PÓS_GOL,FC Midtjylland,60.8,21.6,50.0,53.0,2.0,AO_VIVO,,,,ALTA,100.0,,4
-19713933-7,2026-09-14 17:46:32,19713933,FC Midtjylland x Brøndby IF,37,7,2 x 0,BAIXA,FC Midtjylland,59.4,18.8,50.0,52.0,2.0,AO_VIVO,,,,ALTA,100.0,,5
+19713933-7,2026-09-14 17:51:32,19713933,FC Midtjylland x Brøndby IF,37,7,2 x 0,BAIXA,FC Midtjylland,57.7,15.4,50.0,49.0,2.0,AO_VIVO,,,,ALTA,100.0,,5
