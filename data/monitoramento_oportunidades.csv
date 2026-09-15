@@ -318,3 +318,6 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19722810-11,2026-09-15 20:06:32,19722810,Falkirk x Hearts,57,11,1 x 1,BAIXA,Hearts,52.6,5.2,50.0,58.0,2.0,AO_VIVO,,,,ALTA,100.0,,8
 19722809-11,2026-09-15 20:06:32,19722809,Hibernian x Kilmarnock,56,11,0 x 1,BAIXA,Kilmarnock,52.7,5.4,50.0,41.0,2.0,AO_VIVO,,,,ALTA,100.0,,7
 19722808-12,2026-09-15 20:06:32,19722808,Motherwell x Aberdeen,63,12,0 x 2,BAIXA,Motherwell,60.5,21.0,50.0,67.0,2.0,AO_VIVO,,,,ALTA,100.0,,9
+19722809-13,2026-09-15 20:11:32,19722809,Hibernian x Kilmarnock,67,13,0 x 1,BAIXA,Kilmarnock,51.0,2.0,50.0,42.0,1.0,AO_VIVO,,,,ALTA,100.0,,10
+19722810-13,2026-09-15 20:11:32,19722810,Falkirk x Hearts,68,13,2 x 1,PÓS_GOL,Hearts,53.5,7.0,50.0,58.0,2.0,AO_VIVO,,,,ALTA,100.0,,10
+19722808-13,2026-09-15 20:11:32,19722808,Motherwell x Aberdeen,68,13,0 x 2,BAIXA,Motherwell,60.2,20.4,50.0,67.0,2.0,AO_VIVO,,,,ALTA,100.0,,12
