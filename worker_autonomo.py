@@ -10,19 +10,26 @@ import requests
 
 SPORTMONKS_TOKEN = os.getenv("SPORTMONKS_TOKEN", "").strip()
 APIFOOTBALL_KEY = os.getenv("APIFOOTBALL_KEY", "").strip()
+APIFOOTBALL_ATIVA = os.getenv(
+    "APIFOOTBALL_ATIVA", "0"
+).strip().lower() in {"1", "true", "sim", "yes", "on"}
 FOOTBALL_DATA_TOKEN = os.getenv("FOOTBALL_DATA_TOKEN", "").strip()
 APIFOOTBALL_INTERVALO_SEGUNDOS = int(
-    os.getenv("APIFOOTBALL_INTERVALO_SEGUNDOS", "2400")
+    os.getenv("APIFOOTBALL_INTERVALO_SEGUNDOS", "300")
 )
 APIFOOTBALL_CONFIRMACAO_SEGUNDOS = int(
     os.getenv("APIFOOTBALL_CONFIRMACAO_SEGUNDOS", "300")
 )
 APIFOOTBALL_RESERVA_DIA = int(
-    os.getenv("APIFOOTBALL_RESERVA_DIA", "10")
+    os.getenv("APIFOOTBALL_RESERVA_DIA", "500")
 )
 APIFOOTBALL_MAX_JOGOS = int(
-    os.getenv("APIFOOTBALL_MAX_JOGOS", "1")
+    os.getenv("APIFOOTBALL_MAX_JOGOS", "20")
 )
+APIFOOTBALL_PAUSA_BLOQUEIO_SEGUNDOS = int(
+    os.getenv("APIFOOTBALL_PAUSA_BLOQUEIO_SEGUNDOS", "21600")
+)
+APIFOOTBALL_PAUSADA_ATE = 0.0
 APIFOOTBALL_LIGAS = {
     item.strip()
     for item in os.getenv("APIFOOTBALL_LIGAS", "").split(",")
@@ -339,8 +346,13 @@ def apifootball_headers():
 
 
 def apifootball_get(endpoint, params=None):
-    if not APIFOOTBALL_KEY:
+    global APIFOOTBALL_PAUSADA_ATE
+
+    if not APIFOOTBALL_ATIVA or not APIFOOTBALL_KEY:
         return None, 0
+
+    if time.time() < APIFOOTBALL_PAUSADA_ATE:
+        return None, -1
 
     url = (
         "https://v3.football.api-sports.io/"
@@ -368,6 +380,18 @@ def apifootball_get(endpoint, params=None):
             log(
                 f"API-Football status {r.status_code}: {r.text[:500]}"
             )
+            if r.status_code in {401, 403}:
+                APIFOOTBALL_PAUSADA_ATE = (
+                    time.time() + APIFOOTBALL_PAUSA_BLOQUEIO_SEGUNDOS
+                )
+                enviar_alerta_telegram(
+                    "🛑 API-Football pausada automaticamente\n\n"
+                    f"A API respondeu com status {r.status_code}. "
+                    "O worker continuará usando as outras fontes e não fará "
+                    "novas chamadas à API-Football durante a pausa de segurança."
+                )
+            elif r.status_code == 429:
+                APIFOOTBALL_PAUSADA_ATE = time.time() + 3600
             return None, restante
 
         return r.json(), restante
@@ -1597,8 +1621,15 @@ def processar_jogo_af(jogo, df, restante, prioridade=0.0, motivo_prioridade=""):
 
 
 def ciclo_apifootball():
-    if not APIFOOTBALL_KEY:
+    if not APIFOOTBALL_ATIVA or not APIFOOTBALL_KEY:
         return APIFOOTBALL_INTERVALO_SEGUNDOS
+    if time.time() < APIFOOTBALL_PAUSADA_ATE:
+        restante_pausa = max(1, int(APIFOOTBALL_PAUSADA_ATE - time.time()))
+        log(
+            "API-Football: pausa automática de segurança ativa por mais "
+            f"{restante_pausa // 60} minuto(s)"
+        )
+        return min(APIFOOTBALL_INTERVALO_SEGUNDOS, restante_pausa)
     dados, restante = apifootball_get("fixtures", {"live": "all"})
     if dados is None:
         sentinela_registrar(
@@ -2812,7 +2843,8 @@ def main():
 
     log(
         "Coletor híbrido iniciado: "
-        "SportMonks + API-Football experimental"
+        "SportMonks + API-Football Pro controlada "
+        f"({'ATIVA' if APIFOOTBALL_ATIVA and APIFOOTBALL_KEY else 'DESATIVADA'})"
     )
 
     proxima_api_football = 0.0
@@ -2838,6 +2870,8 @@ def main():
         agora = time.time()
 
         if (
+            APIFOOTBALL_ATIVA
+            and
             APIFOOTBALL_KEY
             and agora >= proxima_api_football
         ):
