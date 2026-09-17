@@ -7589,6 +7589,8 @@ def construir_auditoria_sinais(df_monitoramento, df_validacao_af=None):
     colunas_saida = [
         "data_hora", "fixture_id", "jogo", "liga", "minuto", "placar",
         "time_destaque", "indice_destaque", "dna_pressao", "dna_score",
+        "novos_chutes_gol", "novos_escanteios", "novas_finalizacoes",
+        "elegivel_v2_sombra", "motivo_v2_sombra",
         "decisao", "explicacao", "etapa_confirmacao",
         "curva_pressao", "variacao_indice",
         "resultado_5_min", "resultado_10_min",
@@ -7605,6 +7607,8 @@ def construir_auditoria_sinais(df_monitoramento, df_validacao_af=None):
         "time_destaque", "indice_destaque", "dna_pressao", "dna_score",
         "dna_motivos", "nivel_pressao", "qualidade_coleta",
         "elegivel_telegram", "motivo_bloqueio", "rastreamento_id",
+        "novos_chutes_gol", "novos_escanteios", "novas_finalizacoes",
+        "elegivel_v2_sombra", "motivo_v2_sombra",
         "rastreamento_origem_minuto", "rastreamento_etapa",
         "curva_pressao", "variacao_indice",
     ]:
@@ -7715,6 +7719,11 @@ def construir_auditoria_sinais(df_monitoramento, df_validacao_af=None):
             "indice_destaque": candidato["indice_destaque"],
             "dna_pressao": candidato["dna_pressao"],
             "dna_score": candidato["dna_score"],
+            "novos_chutes_gol": candidato["novos_chutes_gol"],
+            "novos_escanteios": candidato["novos_escanteios"],
+            "novas_finalizacoes": candidato["novas_finalizacoes"],
+            "elegivel_v2_sombra": candidato["elegivel_v2_sombra"],
+            "motivo_v2_sombra": candidato["motivo_v2_sombra"],
             "decisao": decisao,
             "explicacao": explicacao,
             "etapa_confirmacao": leitura_curva["rastreamento_etapa"],
@@ -7816,6 +7825,11 @@ def construir_auditoria_sinais(df_monitoramento, df_validacao_af=None):
             "indice_destaque": alerta.get("indice_alerta", ""),
             "dna_pressao": dna,
             "dna_score": dna_score,
+            "novos_chutes_gol": snapshot.get("novos_chutes_gol", ""),
+            "novos_escanteios": snapshot.get("novos_escanteios", ""),
+            "novas_finalizacoes": snapshot.get("novas_finalizacoes", ""),
+            "elegivel_v2_sombra": snapshot.get("elegivel_v2_sombra", ""),
+            "motivo_v2_sombra": snapshot.get("motivo_v2_sombra", ""),
             "decisao": "✅ ENVIADO",
             "explicacao": (
                 f"Alerta confirmado no registro do Telegram. DNA {dna} "
@@ -9382,6 +9396,8 @@ with aba_validacao:
             "indice_destaque", "diferenca", "dna_pressao", "dna_score",
             "dna_motivos", "acoes_recentes_destaque", "situacao_placar",
             "elegivel_telegram", "motivo_bloqueio", "quota_restante",
+            "novos_chutes_gol", "novos_escanteios", "novas_finalizacoes",
+            "elegivel_v2_sombra", "motivo_v2_sombra",
             "rastreamento_id", "rastreamento_origem_minuto",
             "rastreamento_etapa",
             "curva_pressao", "variacao_indice",
@@ -9405,12 +9421,14 @@ with aba_validacao:
         estereis = df_dna["dna_pressao"].astype(str).eq("ESTÉRIL").sum()
         altas = df_dna["nivel_pressao"].astype(str).eq("ALTA").sum()
         elegiveis = df_dna["elegivel_telegram"].astype(str).eq("SIM").sum()
+        elegiveis_v2 = df_dna["elegivel_v2_sombra"].astype(str).eq("SIM").sum()
 
-        m1, m2, m3, m4 = st.columns(4)
+        m1, m2, m3, m4, m5 = st.columns(5)
         m1.metric("Jogos observados", jogos_unicos)
         m2.metric("Snapshots", len(df_dna))
         m3.metric("DNA perigoso", int(perigosos))
         m4.metric("Elegíveis Telegram", int(elegiveis))
+        m5.metric("V2 sombra", int(elegiveis_v2))
 
         st.caption(
             f"Pressões ALTA registradas para estudo: {int(altas)}. "
@@ -9443,7 +9461,8 @@ with aba_validacao:
             "nivel_pressao", "time_destaque", "indice_destaque",
             "dna_pressao", "dna_score", "dna_motivos",
             "situacao_placar", "qualidade_coleta", "elegivel_telegram",
-            "motivo_bloqueio",
+            "motivo_bloqueio", "novos_chutes_gol", "novos_escanteios",
+            "novas_finalizacoes", "elegivel_v2_sombra", "motivo_v2_sombra",
         ]
         tabela_dna = tabela_dna.sort_values(
             ["data_ordem", "minuto_num"], ascending=False
@@ -9670,7 +9689,9 @@ with aba_validacao:
             colunas_auditoria = [
                 "data_hora", "jogo", "liga", "minuto", "placar",
                 "time_destaque", "indice_destaque", "dna_pressao",
-                "dna_score", "decisao", "explicacao",
+                "dna_score", "novos_chutes_gol", "novos_escanteios",
+                "novas_finalizacoes", "elegivel_v2_sombra",
+                "motivo_v2_sombra", "decisao", "explicacao",
                 "etapa_confirmacao", "curva_pressao", "variacao_indice",
                 "resultado_5_min", "resultado_10_min",
                 "resultado_gol", "time_gol",
