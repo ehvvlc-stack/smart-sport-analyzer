@@ -9727,6 +9727,88 @@ with aba_validacao:
                 f"{meta_validacao} alertas enviados concluíram a janela de "
                 f"10 minutos. Faltam {faltam_validacao}."
             )
+
+            st.write("### ⏱️ Desempenho por faixa de minuto")
+            st.caption(
+                "Mostra em quais momentos da partida os alertas enviados "
+                "tiveram gol nos 10 minutos seguintes. O V2 aparece apenas "
+                "como comparação silenciosa."
+            )
+            auditoria_minutos = df_auditoria.copy()
+            auditoria_minutos["minuto_num"] = pd.to_numeric(
+                auditoria_minutos["minuto"], errors="coerce"
+            )
+            auditoria_minutos["Faixa"] = pd.cut(
+                auditoria_minutos["minuto_num"],
+                bins=[0, 30, 45, 60, 75, 90, 200],
+                labels=[
+                    "1–30", "31–45", "46–60",
+                    "61–75", "76–90", "90+",
+                ],
+                include_lowest=True,
+            )
+            resumo_minutos = []
+            for faixa in auditoria_minutos["Faixa"].cat.categories:
+                grupo_faixa = auditoria_minutos[
+                    auditoria_minutos["Faixa"].eq(faixa)
+                ]
+                enviados_faixa = grupo_faixa[
+                    grupo_faixa["decisao"].eq("✅ ENVIADO")
+                ]
+                concluidos_faixa = enviados_faixa[
+                    ~enviados_faixa["resultado_10_min"].eq("⏳ SEM JANELA")
+                ]
+                gols_faixa = int(
+                    concluidos_faixa["resultado_10_min"].eq("🟢 GOL").sum()
+                )
+                v2_faixa = int(
+                    grupo_faixa["elegivel_v2_sombra"]
+                    .fillna("")
+                    .astype(str)
+                    .str.strip()
+                    .str.upper()
+                    .eq("SIM")
+                    .sum()
+                )
+                resumo_minutos.append({
+                    "Faixa de minuto": str(faixa),
+                    "Casos auditados": len(grupo_faixa),
+                    "Enviados V1": len(enviados_faixa),
+                    "Janelas concluídas": len(concluidos_faixa),
+                    "Gols em 10 min": gols_faixa,
+                    "Gol em 10 min (%)": round(
+                        gols_faixa / len(concluidos_faixa) * 100, 1
+                    ) if len(concluidos_faixa) else None,
+                    "Aprovados V2": v2_faixa,
+                })
+            df_resumo_minutos = pd.DataFrame(resumo_minutos)
+            st.dataframe(
+                df_resumo_minutos,
+                width="stretch",
+                hide_index=True,
+            )
+
+            faixas_maduras = df_resumo_minutos[
+                df_resumo_minutos["Janelas concluídas"].ge(5)
+                & df_resumo_minutos["Gol em 10 min (%)"].notna()
+            ]
+            if faixas_maduras.empty:
+                st.info(
+                    "Ainda não há uma faixa com pelo menos 5 alertas "
+                    "concluídos. O painel evitará apontar um melhor período "
+                    "antes de existir uma amostra mínima."
+                )
+            else:
+                melhor_faixa = faixas_maduras.sort_values(
+                    ["Gol em 10 min (%)", "Janelas concluídas"],
+                    ascending=False,
+                ).iloc[0]
+                st.info(
+                    f"Melhor faixa provisória: {melhor_faixa['Faixa de minuto']} "
+                    f"com {melhor_faixa['Gol em 10 min (%)']:.1f}% de gols "
+                    f"em {int(melhor_faixa['Janelas concluídas'])} janelas "
+                    "concluídas. Resultado ainda experimental."
+                )
             if int(concluidos_10.sum()) < 10:
                 st.warning(
                     "A amostra concluída ainda é pequena. Os percentuais são "
