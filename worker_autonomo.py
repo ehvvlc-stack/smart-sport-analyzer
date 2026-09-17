@@ -2779,6 +2779,9 @@ def montar_relatorio_diario(agora_local):
         ),
         "data_hora_alerta", data_local, fuso,
     )
+    validacoes_af_geral = ler_csv_github_generico(
+        APIFOOTBALL_VALIDACAO_PATH, COLUNAS_VALIDACAO_APIFOOTBALL
+    )
 
     jogos = (
         monitor_dia["fixture_id"].astype(str).nunique()
@@ -2813,6 +2816,62 @@ def montar_relatorio_diario(agora_local):
     taxa = f"{gols / concluidos * 100:.1f}%" if concluidos else "aguardando amostra"
     melhor_liga = melhor_liga_diaria(monitor_dia)
 
+    _, concluidos_geral, gols_geral = resumo_resultados_diarios(
+        validacoes_af_geral
+    )
+    meta_validacao = 50
+    faltam_validacao = max(0, meta_validacao - concluidos_geral)
+    taxa_geral = (
+        f"{gols_geral / concluidos_geral * 100:.1f}%"
+        if concluidos_geral else "aguardando amostra"
+    )
+
+    resultados_autoria = validacoes_af_geral.get(
+        "resultado_gol",
+        pd.Series(index=validacoes_af_geral.index, dtype=object),
+    ).fillna("").astype(str).str.strip().str.upper()
+    gols_destaque = int(resultados_autoria.eq("TIME_DESTAQUE").sum())
+    gols_adversario = int(resultados_autoria.eq("ADVERSARIO").sum())
+    sem_gol_autoria = int(resultados_autoria.eq("SEM_GOL").sum())
+
+    v2_status = monitor_dia.get(
+        "elegivel_v2_sombra",
+        pd.Series(index=monitor_dia.index, dtype=object),
+    ).fillna("").astype(str).str.strip().str.upper()
+    monitor_v2 = monitor_dia[
+        v2_status.isin(["SIM", "NÃO", "NAO"])
+    ].copy()
+    if not monitor_v2.empty:
+        ids_v2 = monitor_v2.get(
+            "rastreamento_id",
+            pd.Series(index=monitor_v2.index, dtype=object),
+        ).fillna("").astype(str).str.strip()
+        chaves_fallback = (
+            monitor_v2.get(
+                "fixture_id",
+                pd.Series(index=monitor_v2.index, dtype=object),
+            ).fillna("").astype(str)
+            + "|"
+            + monitor_v2.get(
+                "minuto",
+                pd.Series(index=monitor_v2.index, dtype=object),
+            ).fillna("").astype(str)
+        )
+        monitor_v2["chave_resumo_v2"] = ids_v2.where(
+            ~ids_v2.str.lower().isin(["", "nan", "none"]),
+            chaves_fallback,
+        )
+        monitor_v2 = monitor_v2.drop_duplicates(
+            "chave_resumo_v2", keep="first"
+        )
+    v2_avaliados = len(monitor_v2)
+    v2_aprovados = int(
+        monitor_v2.get(
+            "elegivel_v2_sombra",
+            pd.Series(index=monitor_v2.index, dtype=object),
+        ).fillna("").astype(str).str.strip().str.upper().eq("SIM").sum()
+    )
+
     return (
         "📊 RESUMO DIÁRIO — SMART SPORT\n\n"
         f"📅 {agora_local.strftime('%d/%m/%Y')}\n"
@@ -2824,8 +2883,17 @@ def montar_relatorio_diario(agora_local):
         f"🚨 Alertas registrados (duas fontes): {total_alertas}\n"
         f"🎯 Validações concluídas: {concluidos}\n"
         f"🥅 Gol em até 10 min: {gols}/{concluidos} ({taxa})\n"
+        f"🧪 V2 sombra hoje: {v2_aprovados}/{v2_avaliados} aprovado(s)\n"
         f"🏆 Melhor cobertura do dia: {melhor_liga}\n"
         f"🔋 Cota API-Football: {quota}\n\n"
+        f"📈 VALIDAÇÃO GERAL — API-FOOTBALL\n"
+        f"✅ Progresso: {concluidos_geral}/{meta_validacao} "
+        f"(faltam {faltam_validacao})\n"
+        f"⚽ Gol em 10 min: {gols_geral}/{concluidos_geral} "
+        f"({taxa_geral})\n"
+        f"🟢 Gol do time destacado: {gols_destaque}\n"
+        f"🔴 Gol do adversário: {gols_adversario}\n"
+        f"⚪ Nenhum gol com autoria concluída: {sem_gol_autoria}\n\n"
         "🤖 Worker funcionando normalmente.\n"
         "🧪 Resultados experimentais; nenhuma aposta é automática."
     )
