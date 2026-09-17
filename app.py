@@ -9619,6 +9619,114 @@ with aba_validacao:
                 width="stretch",
                 hide_index=True,
             )
+
+            st.write("### 🧪 Comparador automático: filtro atual x V2")
+            st.caption(
+                "Compara apenas registros produzidos depois da ativação do "
+                "V2. O V2 continua silencioso e nunca envia alertas."
+            )
+            v2_status = (
+                df_auditoria["elegivel_v2_sombra"]
+                .fillna("")
+                .astype(str)
+                .str.strip()
+                .str.upper()
+            )
+            base_comparador = df_auditoria[
+                v2_status.isin(["SIM", "NÃO", "NAO"])
+            ].copy()
+            base_comparador["v2_aprovado"] = (
+                base_comparador["elegivel_v2_sombra"]
+                .fillna("")
+                .astype(str)
+                .str.strip()
+                .str.upper()
+                .eq("SIM")
+            )
+            base_comparador["v1_aprovado"] = base_comparador[
+                "decisao"
+            ].eq("✅ ENVIADO")
+            base_comparador["janela_10_concluida"] = ~base_comparador[
+                "resultado_10_min"
+            ].eq("⏳ SEM JANELA")
+            base_comparador["gol_10"] = base_comparador[
+                "resultado_10_min"
+            ].eq("🟢 GOL")
+
+            if base_comparador.empty:
+                st.info(
+                    "O V2 foi ativado, mas ainda aguarda o primeiro registro "
+                    "comparável. A tabela será preenchida automaticamente."
+                )
+            else:
+                resumo_filtros = []
+                for nome_filtro, coluna_filtro in [
+                    ("Filtro atual (V1)", "v1_aprovado"),
+                    ("Filtro experimental V2", "v2_aprovado"),
+                ]:
+                    aprovados = base_comparador[
+                        base_comparador[coluna_filtro]
+                    ]
+                    concluidos = aprovados[
+                        aprovados["janela_10_concluida"]
+                    ]
+                    gols = int(concluidos["gol_10"].sum())
+                    resumo_filtros.append({
+                        "Filtro": nome_filtro,
+                        "Sinais aprovados": len(aprovados),
+                        "Janelas concluídas": len(concluidos),
+                        "Gols em 10 min": gols,
+                        "Gol em 10 min (%)": round(
+                            gols / len(concluidos) * 100, 1
+                        ) if len(concluidos) else None,
+                    })
+                st.dataframe(
+                    pd.DataFrame(resumo_filtros),
+                    width="stretch",
+                    hide_index=True,
+                )
+
+                evitados_v2 = base_comparador[
+                    base_comparador["v1_aprovado"]
+                    & ~base_comparador["v2_aprovado"]
+                ]
+                evitados_concluidos = evitados_v2[
+                    evitados_v2["janela_10_concluida"]
+                ]
+                gols_perdidos_v2 = int(
+                    evitados_concluidos["gol_10"].sum()
+                )
+                c1, c2, c3 = st.columns(3)
+                c1.metric("Alertas que o V2 evitaria", len(evitados_v2))
+                c2.metric(
+                    "Evitados já concluídos", len(evitados_concluidos)
+                )
+                c3.metric("Gols que o V2 perderia", gols_perdidos_v2)
+
+            enviados_concluidos_10 = int((
+                df_auditoria["decisao"].eq("✅ ENVIADO")
+                & concluidos_10
+            ).sum())
+            meta_validacao = 50
+            faltam_validacao = max(
+                0, meta_validacao - enviados_concluidos_10
+            )
+            progresso_validacao = min(
+                1.0, enviados_concluidos_10 / meta_validacao
+            )
+            if enviados_concluidos_10 < 25:
+                maturidade = "AMOSTRA INICIAL"
+            elif enviados_concluidos_10 < meta_validacao:
+                maturidade = "EM VALIDAÇÃO"
+            else:
+                maturidade = "AMOSTRA MÍNIMA ATINGIDA"
+            st.write("#### Maturidade da validação")
+            st.progress(progresso_validacao)
+            st.caption(
+                f"{maturidade}: {enviados_concluidos_10} de "
+                f"{meta_validacao} alertas enviados concluíram a janela de "
+                f"10 minutos. Faltam {faltam_validacao}."
+            )
             if int(concluidos_10.sum()) < 10:
                 st.warning(
                     "A amostra concluída ainda é pequena. Os percentuais são "
