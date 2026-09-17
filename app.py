@@ -7585,13 +7585,16 @@ def total_gols_placar_auditoria(placar):
         return None
 
 
-def construir_auditoria_sinais(df_monitoramento):
+def construir_auditoria_sinais(df_monitoramento, df_validacao_af=None):
     colunas_saida = [
         "data_hora", "fixture_id", "jogo", "liga", "minuto", "placar",
         "time_destaque", "indice_destaque", "dna_pressao", "dna_score",
         "decisao", "explicacao", "etapa_confirmacao",
         "curva_pressao", "variacao_indice",
         "resultado_5_min", "resultado_10_min",
+        "resultado_gol", "time_gol",
+        "gol_time_destaque_5_min", "gol_time_destaque_10_min",
+        "origem_registro",
     ]
     if df_monitoramento is None or df_monitoramento.empty:
         return pd.DataFrame(columns=colunas_saida)
@@ -7719,9 +7722,114 @@ def construir_auditoria_sinais(df_monitoramento):
             "variacao_indice": leitura_curva["variacao_indice"],
             "resultado_5_min": resultado_janela(5),
             "resultado_10_min": resultado_janela(10),
+            "resultado_gol": "",
+            "time_gol": "",
+            "gol_time_destaque_5_min": "",
+            "gol_time_destaque_10_min": "",
+            "origem_registro": "SNAPSHOT",
         })
 
-    return pd.DataFrame(linhas, columns=colunas_saida)
+    auditoria = pd.DataFrame(linhas, columns=colunas_saida)
+    if df_validacao_af is None or df_validacao_af.empty:
+        return auditoria
+
+    # Um sinal ENVIADO somente é real quando existe no arquivo que o worker
+    # grava antes de chamar o Telegram. Snapshots elegíveis não podem ser
+    # contados como mensagens enviadas.
+    auditoria = auditoria[~auditoria["decisao"].eq("✅ ENVIADO")].copy()
+    validacoes = df_validacao_af.copy()
+    for coluna in [
+        "id_alerta", "data_hora_alerta", "fixture_id", "jogo",
+        "minuto_alerta", "placar_alerta", "time_destaque",
+        "indice_alerta", "liga", "dna_pressao", "dna_score",
+        "dna_motivos", "gol_ate_5_min", "gol_ate_10_min",
+        "resultado_gol", "time_gol", "gol_time_destaque_5_min",
+        "gol_time_destaque_10_min",
+    ]:
+        if coluna not in validacoes.columns:
+            validacoes[coluna] = ""
+
+    def resultado_validacao(valor):
+        texto = str(valor).strip().upper()
+        if texto == "SIM":
+            return "🟢 GOL"
+        if texto in {"NÃO", "NAO"}:
+            return "⚪ SEM GOL"
+        return "⏳ SEM JANELA"
+
+    alertas_reais = []
+    for _, alerta in validacoes.iterrows():
+        id_alerta = str(alerta.get("id_alerta", "")).strip()
+        if not id_alerta or id_alerta.lower() in {"nan", "none"}:
+            continue
+        fixture_id = str(alerta.get("fixture_id", ""))
+        minuto_alerta = pd.to_numeric(
+            pd.Series([alerta.get("minuto_alerta", "")]), errors="coerce"
+        ).iloc[0]
+        correspondentes = base[
+            base["fixture_id"].astype(str).eq(fixture_id)
+        ].copy()
+        if not correspondentes.empty and not pd.isna(minuto_alerta):
+            correspondentes["distancia_alerta"] = (
+                correspondentes["minuto_num"] - float(minuto_alerta)
+            ).abs()
+            snapshot = correspondentes.sort_values(
+                ["distancia_alerta", "data_ordem"]
+            ).iloc[0]
+        else:
+            snapshot = pd.Series(dtype="object")
+
+        def valor_alerta(nome_alerta, nome_snapshot=""):
+            valor = alerta.get(nome_alerta, "")
+            if str(valor).strip().lower() not in {"", "nan", "none"}:
+                return valor
+            return snapshot.get(nome_snapshot or nome_alerta, "")
+
+        dna = valor_alerta("dna_pressao")
+        dna_score = valor_alerta("dna_score")
+        motivos = valor_alerta("dna_motivos")
+        alertas_reais.append({
+            "data_hora": alerta.get("data_hora_alerta", ""),
+            "fixture_id": alerta.get("fixture_id", ""),
+            "jogo": valor_alerta("jogo"),
+            "liga": valor_alerta("liga"),
+            "minuto": alerta.get("minuto_alerta", ""),
+            "placar": alerta.get("placar_alerta", ""),
+            "time_destaque": alerta.get("time_destaque", ""),
+            "indice_destaque": alerta.get("indice_alerta", ""),
+            "dna_pressao": dna,
+            "dna_score": dna_score,
+            "decisao": "✅ ENVIADO",
+            "explicacao": (
+                f"Alerta confirmado no registro do Telegram. DNA {dna} "
+                f"({dna_score}). {motivos}"
+            ).strip(),
+            "etapa_confirmacao": snapshot.get("rastreamento_etapa", ""),
+            "curva_pressao": snapshot.get("curva_pressao", ""),
+            "variacao_indice": snapshot.get("variacao_indice", ""),
+            "resultado_5_min": resultado_validacao(
+                alerta.get("gol_ate_5_min", "")
+            ),
+            "resultado_10_min": resultado_validacao(
+                alerta.get("gol_ate_10_min", "")
+            ),
+            "resultado_gol": alerta.get("resultado_gol", ""),
+            "time_gol": alerta.get("time_gol", ""),
+            "gol_time_destaque_5_min": alerta.get(
+                "gol_time_destaque_5_min", ""
+            ),
+            "gol_time_destaque_10_min": alerta.get(
+                "gol_time_destaque_10_min", ""
+            ),
+            "origem_registro": "TELEGRAM",
+        })
+
+    if alertas_reais:
+        auditoria = pd.concat(
+            [auditoria, pd.DataFrame(alertas_reais, columns=colunas_saida)],
+            ignore_index=True,
+        )
+    return auditoria
 
 
 with aba_validacao:
@@ -9239,6 +9347,9 @@ with aba_validacao:
     df_dna = baixar_csv_github_caminho(
         "data/monitoramento_apifootball.csv"
     )
+    df_validacao_af = baixar_csv_github_caminho(
+        "data/validacao_apifootball.csv"
+    )
 
     if df_dna is None or df_dna.empty:
         st.info(
@@ -9423,7 +9534,9 @@ with aba_validacao:
             "novas requisições e o Modo Sombra nunca envia alertas."
         )
 
-        df_auditoria = construir_auditoria_sinais(df_dna)
+        df_auditoria = construir_auditoria_sinais(
+            df_dna, df_validacao_af
+        )
         if df_auditoria.empty:
             st.info(
                 "Ainda não existem pressões ALTA ou quase sinais suficientes "
@@ -9541,6 +9654,9 @@ with aba_validacao:
                 "dna_score", "decisao", "explicacao",
                 "etapa_confirmacao", "curva_pressao", "variacao_indice",
                 "resultado_5_min", "resultado_10_min",
+                "resultado_gol", "time_gol",
+                "gol_time_destaque_5_min", "gol_time_destaque_10_min",
+                "origem_registro",
             ]
             st.dataframe(
                 tabela_auditoria[colunas_auditoria],
