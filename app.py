@@ -9894,6 +9894,105 @@ with aba_validacao:
                         f"{int(melhor_liga_resultado['Janelas concluídas'])} "
                         "janelas concluídas. Resultado ainda experimental."
                     )
+
+            st.write("### ⚽ Quem marcou depois do alerta?")
+            st.caption(
+                "Considera somente alertas realmente enviados e cuja "
+                "janela de 10 minutos já possui identificação do resultado. "
+                "Assim, um gol do adversário não é contado como acerto do "
+                "time destacado pelo sistema."
+            )
+            enviados_atribuicao = df_auditoria[
+                df_auditoria["decisao"].eq("✅ ENVIADO")
+            ].copy()
+            enviados_atribuicao["resultado_atribuido"] = (
+                enviados_atribuicao["resultado_gol"]
+                .fillna("")
+                .astype(str)
+                .str.strip()
+                .str.upper()
+            )
+            resultados_concluidos = enviados_atribuicao[
+                enviados_atribuicao["resultado_atribuido"].isin([
+                    "TIME_DESTAQUE", "ADVERSARIO", "SEM_GOL",
+                ])
+            ].copy()
+
+            gols_destaque = int(
+                resultados_concluidos["resultado_atribuido"]
+                .eq("TIME_DESTAQUE")
+                .sum()
+            )
+            gols_adversario = int(
+                resultados_concluidos["resultado_atribuido"]
+                .eq("ADVERSARIO")
+                .sum()
+            )
+            sem_gol_atribuido = int(
+                resultados_concluidos["resultado_atribuido"]
+                .eq("SEM_GOL")
+                .sum()
+            )
+            total_atribuido = len(resultados_concluidos)
+            total_gols_atribuidos = gols_destaque + gols_adversario
+
+            q1, q2, q3, q4 = st.columns(4)
+            q1.metric("Janelas identificadas", total_atribuido)
+            q2.metric("Gol do time destacado", gols_destaque)
+            q3.metric("Gol do adversário", gols_adversario)
+            q4.metric("Nenhum gol", sem_gol_atribuido)
+
+            resumo_autoria_gol = pd.DataFrame([
+                {
+                    "Resultado em até 10 min": "🟢 TIME DESTACADO",
+                    "Casos": gols_destaque,
+                    "Percentual das janelas (%)": round(
+                        gols_destaque / total_atribuido * 100, 1
+                    ) if total_atribuido else None,
+                },
+                {
+                    "Resultado em até 10 min": "🔴 ADVERSÁRIO",
+                    "Casos": gols_adversario,
+                    "Percentual das janelas (%)": round(
+                        gols_adversario / total_atribuido * 100, 1
+                    ) if total_atribuido else None,
+                },
+                {
+                    "Resultado em até 10 min": "⚪ NENHUM GOL",
+                    "Casos": sem_gol_atribuido,
+                    "Percentual das janelas (%)": round(
+                        sem_gol_atribuido / total_atribuido * 100, 1
+                    ) if total_atribuido else None,
+                },
+            ])
+            st.dataframe(
+                resumo_autoria_gol,
+                width="stretch",
+                hide_index=True,
+            )
+
+            if total_atribuido == 0:
+                st.info(
+                    "Ainda não existem alertas enviados com autoria do gol "
+                    "concluída. Os novos registros preencherão este quadro "
+                    "automaticamente."
+                )
+            elif total_gols_atribuidos:
+                acerto_autoria = round(
+                    gols_destaque / total_gols_atribuidos * 100, 1
+                )
+                st.info(
+                    f"Quando houve gol, o time destacado marcou em "
+                    f"{acerto_autoria:.1f}% dos casos "
+                    f"({gols_destaque} de {total_gols_atribuidos}). "
+                    "Esse indicador mede a direção do sinal, não lucro nem "
+                    "garantia de aposta."
+                )
+            else:
+                st.info(
+                    "As janelas identificadas ainda não tiveram gol. "
+                    "Continue a coleta antes de avaliar a direção dos sinais."
+                )
             if int(concluidos_10.sum()) < 10:
                 st.warning(
                     "A amostra concluída ainda é pequena. Os percentuais são "
