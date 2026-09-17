@@ -589,9 +589,14 @@ COLUNAS_APIFOOTBALL = [
     "dna_score",
     "dna_motivos",
     "acoes_recentes_destaque",
+    "novos_chutes_gol",
+    "novos_escanteios",
+    "novas_finalizacoes",
     "situacao_placar",
     "elegivel_telegram",
     "motivo_bloqueio",
+    "elegivel_v2_sombra",
+    "motivo_v2_sombra",
     "prioridade_coleta",
     "motivo_prioridade",
     "rastreamento_id",
@@ -1080,7 +1085,10 @@ def ultimo_snapshot_af(df, fixture_id, minuto):
 
 def diagnosticar_dna_pressao(atual, anterior, lado, minuto, gols_casa, gols_fora):
     if anterior is None:
-        return "EM_FORMAÇÃO", 0.0, "Aguardando o segundo snapshot", 0.0, "INDEFINIDA"
+        return (
+            "EM_FORMAÇÃO", 0.0, "Aguardando o segundo snapshot", 0.0,
+            "INDEFINIDA", 0.0, 0.0, 0.0,
+        )
 
     minuto_anterior = int(numero_af(anterior.get("minuto"), -1))
     intervalo = int(minuto) - minuto_anterior
@@ -1088,7 +1096,7 @@ def diagnosticar_dna_pressao(atual, anterior, lado, minuto, gols_casa, gols_fora
         return (
             "EM_FORMAÇÃO", 0.0,
             f"Janela inválida: {intervalo} minutos entre snapshots",
-            0.0, "INDEFINIDA",
+            0.0, "INDEFINIDA", 0.0, 0.0, 0.0,
         )
 
     sufixo = "casa" if lado == "casa" else "fora"
@@ -1143,7 +1151,16 @@ def diagnosticar_dna_pressao(atual, anterior, lado, minuto, gols_casa, gols_fora
         tipo = "EM_CONSTRUÇÃO"
         motivos.append("volume ofensivo ainda limitado")
 
-    return tipo, round(score, 1), "; ".join(motivos), round(acoes, 1), situacao
+    return (
+        tipo,
+        round(score, 1),
+        "; ".join(motivos),
+        round(acoes, 1),
+        situacao,
+        round(novos_sog, 1),
+        round(novos_corners, 1),
+        round(novos_chutes, 1),
+    )
 
 
 def placar_partes_af(valor):
@@ -1540,7 +1557,16 @@ def processar_jogo_af(jogo, df, restante, prioridade=0.0, motivo_prioridade=""):
     if ultimo_gol_af is not None and 0 <= int(minuto) - ultimo_gol_af <= 3:
         nivel = "PÓS_GOL"
     lado_destaque = "casa" if combinado_h >= combinado_a else "fora"
-    dna_tipo, dna_score, dna_motivos, acoes_recentes, situacao_placar = (
+    (
+        dna_tipo,
+        dna_score,
+        dna_motivos,
+        acoes_recentes,
+        situacao_placar,
+        novos_chutes_gol,
+        novos_escanteios,
+        novas_finalizacoes,
+    ) = (
         diagnosticar_dna_pressao(
             base,
             anterior,
@@ -1562,6 +1588,14 @@ def processar_jogo_af(jogo, df, restante, prioridade=0.0, motivo_prioridade=""):
     if numero_af(dna_score) < 60:
         motivos_bloqueio.append("DNA score abaixo de 60")
     elegivel_telegram = not motivos_bloqueio
+
+    # O V2 é apenas uma experiência silenciosa. Ele reaproveita a mesma
+    # leitura do filtro atual e acrescenta continuidade ofensiva: pelo menos
+    # quatro novas finalizações na janela. Nunca envia mensagens ao Telegram.
+    motivos_v2 = list(motivos_bloqueio)
+    if numero_af(novas_finalizacoes) < 4:
+        motivos_v2.append("menos de 4 novas finalizações")
+    elegivel_v2_sombra = not motivos_v2
     linha = {
         "data_hora": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "fixture_id": fixture_id, "liga": league.get("name", ""),
@@ -1580,9 +1614,14 @@ def processar_jogo_af(jogo, df, restante, prioridade=0.0, motivo_prioridade=""):
         "dna_score": dna_score,
         "dna_motivos": dna_motivos,
         "acoes_recentes_destaque": acoes_recentes,
+        "novos_chutes_gol": novos_chutes_gol,
+        "novos_escanteios": novos_escanteios,
+        "novas_finalizacoes": novas_finalizacoes,
         "situacao_placar": situacao_placar,
         "elegivel_telegram": "SIM" if elegivel_telegram else "NÃO",
         "motivo_bloqueio": "; ".join(motivos_bloqueio),
+        "elegivel_v2_sombra": "SIM" if elegivel_v2_sombra else "NÃO",
+        "motivo_v2_sombra": "; ".join(motivos_v2),
         "prioridade_coleta": prioridade,
         "motivo_prioridade": motivo_prioridade,
         "rastreamento_id": "",
@@ -1664,6 +1703,7 @@ def processar_jogo_af(jogo, df, restante, prioridade=0.0, motivo_prioridade=""):
         f"API-Football: {linha['jogo']} min {minuto} • "
         f"pressão {nivel} • DNA {dna_tipo} • dados {qualidade} • "
         f"quota {linha['quota_restante']} • "
+        f"V2 sombra {'APROVADO' if elegivel_v2_sombra else 'bloqueado'} • "
         f"confirmação {linha['rastreamento_etapa'] or 'inativa'} • "
         f"curva {linha['curva_pressao'] or 'sem leitura'}"
     )
