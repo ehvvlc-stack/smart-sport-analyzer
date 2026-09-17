@@ -9809,6 +9809,91 @@ with aba_validacao:
                     f"em {int(melhor_faixa['Janelas concluídas'])} janelas "
                     "concluídas. Resultado ainda experimental."
                 )
+
+            st.write("### 🏟️ Desempenho dos alertas por liga")
+            st.caption(
+                "Este quadro mede gols após os alertas enviados. Ele é "
+                "diferente do ranking técnico, que avalia somente a qualidade "
+                "e a continuidade dos dados fornecidos pela API."
+            )
+            enviados_por_liga = df_auditoria[
+                df_auditoria["decisao"].eq("✅ ENVIADO")
+            ].copy()
+            enviados_por_liga["liga_analise"] = (
+                enviados_por_liga["liga"]
+                .fillna("")
+                .astype(str)
+                .str.strip()
+                .replace({"": "SEM LIGA", "nan": "SEM LIGA"})
+            )
+            resumo_ligas_resultado = []
+            for liga_nome, grupo_liga in enviados_por_liga.groupby(
+                "liga_analise"
+            ):
+                concluidos_liga = grupo_liga[
+                    ~grupo_liga["resultado_10_min"].eq("⏳ SEM JANELA")
+                ]
+                gols_liga = int(
+                    concluidos_liga["resultado_10_min"].eq("🟢 GOL").sum()
+                )
+                quantidade_concluida = len(concluidos_liga)
+                if quantidade_concluida < 5:
+                    status_amostra = "AMOSTRA INICIAL"
+                elif quantidade_concluida < 10:
+                    status_amostra = "EM VALIDAÇÃO"
+                else:
+                    status_amostra = "AMOSTRA COMPARÁVEL"
+                resumo_ligas_resultado.append({
+                    "Liga": liga_nome,
+                    "Enviados V1": len(grupo_liga),
+                    "Janelas concluídas": quantidade_concluida,
+                    "Gols em 10 min": gols_liga,
+                    "Gol em 10 min (%)": round(
+                        gols_liga / quantidade_concluida * 100, 1
+                    ) if quantidade_concluida else None,
+                    "Maturidade": status_amostra,
+                })
+
+            if not resumo_ligas_resultado:
+                st.info(
+                    "Ainda não existem alertas enviados com liga identificada."
+                )
+            else:
+                df_resultado_ligas = pd.DataFrame(
+                    resumo_ligas_resultado
+                ).sort_values(
+                    ["Janelas concluídas", "Gol em 10 min (%)", "Enviados V1"],
+                    ascending=[False, False, False],
+                    na_position="last",
+                )
+                st.dataframe(
+                    df_resultado_ligas,
+                    width="stretch",
+                    hide_index=True,
+                )
+                ligas_maduras_resultado = df_resultado_ligas[
+                    df_resultado_ligas["Janelas concluídas"].ge(5)
+                    & df_resultado_ligas["Gol em 10 min (%)"].notna()
+                ]
+                if ligas_maduras_resultado.empty:
+                    st.info(
+                        "Nenhuma liga possui ainda 5 alertas concluídos. "
+                        "O sistema aguardará essa amostra antes de destacar "
+                        "um campeonato."
+                    )
+                else:
+                    melhor_liga_resultado = ligas_maduras_resultado.sort_values(
+                        ["Gol em 10 min (%)", "Janelas concluídas"],
+                        ascending=False,
+                    ).iloc[0]
+                    st.info(
+                        f"Melhor liga provisória: "
+                        f"{melhor_liga_resultado['Liga']} com "
+                        f"{melhor_liga_resultado['Gol em 10 min (%)']:.1f}% "
+                        f"de gols em "
+                        f"{int(melhor_liga_resultado['Janelas concluídas'])} "
+                        "janelas concluídas. Resultado ainda experimental."
+                    )
             if int(concluidos_10.sum()) < 10:
                 st.warning(
                     "A amostra concluída ainda é pequena. Os percentuais são "
