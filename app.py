@@ -7605,7 +7605,7 @@ def construir_auditoria_sinais(df_monitoramento, df_validacao_af=None):
         "time_destaque", "indice_destaque", "dna_pressao", "dna_score",
         "dna_motivos", "nivel_pressao", "qualidade_coleta",
         "elegivel_telegram", "motivo_bloqueio", "rastreamento_id",
-        "rastreamento_etapa",
+        "rastreamento_origem_minuto", "rastreamento_etapa",
         "curva_pressao", "variacao_indice",
     ]:
         if coluna not in base.columns:
@@ -7779,6 +7779,23 @@ def construir_auditoria_sinais(df_monitoramento, df_validacao_af=None):
         else:
             snapshot = pd.Series(dtype="object")
 
+        # A curva exibida no alerta real deve ter começado no próprio minuto
+        # do alerta. Isso impede herdar, por exemplo, "GOL APÓS O SINAL" de
+        # um rastreamento anterior do mesmo jogo.
+        leitura_curva_alerta = pd.Series(dtype="object")
+        if not correspondentes.empty and not pd.isna(minuto_alerta):
+            origens = pd.to_numeric(
+                correspondentes["rastreamento_origem_minuto"], errors="coerce"
+            )
+            curvas_do_alerta = correspondentes[
+                origens.eq(float(minuto_alerta))
+                & correspondentes["minuto_num"].ge(float(minuto_alerta))
+            ].copy()
+            if not curvas_do_alerta.empty:
+                leitura_curva_alerta = curvas_do_alerta.sort_values(
+                    ["minuto_num", "data_ordem"]
+                ).iloc[-1]
+
         def valor_alerta(nome_alerta, nome_snapshot=""):
             valor = alerta.get(nome_alerta, "")
             if str(valor).strip().lower() not in {"", "nan", "none"}:
@@ -7804,9 +7821,11 @@ def construir_auditoria_sinais(df_monitoramento, df_validacao_af=None):
                 f"Alerta confirmado no registro do Telegram. DNA {dna} "
                 f"({dna_score}). {motivos}"
             ).strip(),
-            "etapa_confirmacao": snapshot.get("rastreamento_etapa", ""),
-            "curva_pressao": snapshot.get("curva_pressao", ""),
-            "variacao_indice": snapshot.get("variacao_indice", ""),
+            "etapa_confirmacao": alerta.get(
+                "status", leitura_curva_alerta.get("rastreamento_etapa", "")
+            ),
+            "curva_pressao": leitura_curva_alerta.get("curva_pressao", ""),
+            "variacao_indice": leitura_curva_alerta.get("variacao_indice", ""),
             "resultado_5_min": resultado_validacao(
                 alerta.get("gol_ate_5_min", "")
             ),
