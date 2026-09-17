@@ -9993,6 +9993,83 @@ with aba_validacao:
                     "As janelas identificadas ainda não tiveram gol. "
                     "Continue a coleta antes de avaliar a direção dos sinais."
                 )
+
+            st.write("### 🔬 Acertos x alertas sem gol")
+            st.caption(
+                "Compara os dados existentes no momento do alerta. As "
+                "diferenças são apenas pistas provisórias e não mudam o "
+                "filtro automaticamente."
+            )
+            base_comparacao_resultado = resultados_concluidos[
+                resultados_concluidos["resultado_atribuido"].isin([
+                    "TIME_DESTAQUE", "SEM_GOL",
+                ])
+            ].copy()
+
+            indicadores_comparacao = [
+                ("Minuto do alerta", "minuto"),
+                ("Índice de destaque", "indice_destaque"),
+                ("DNA score", "dna_score"),
+                ("Novos chutes no gol", "novos_chutes_gol"),
+                ("Novos escanteios", "novos_escanteios"),
+                ("Novas finalizações", "novas_finalizacoes"),
+            ]
+            linhas_comparacao = []
+            grupo_acerto = base_comparacao_resultado[
+                base_comparacao_resultado["resultado_atribuido"]
+                .eq("TIME_DESTAQUE")
+            ]
+            grupo_sem_gol = base_comparacao_resultado[
+                base_comparacao_resultado["resultado_atribuido"]
+                .eq("SEM_GOL")
+            ]
+            for nome_indicador, coluna_indicador in indicadores_comparacao:
+                valores_acerto = pd.to_numeric(
+                    grupo_acerto[coluna_indicador], errors="coerce"
+                ).dropna()
+                valores_sem_gol = pd.to_numeric(
+                    grupo_sem_gol[coluna_indicador], errors="coerce"
+                ).dropna()
+                media_acerto = (
+                    round(float(valores_acerto.mean()), 1)
+                    if not valores_acerto.empty else None
+                )
+                media_sem_gol = (
+                    round(float(valores_sem_gol.mean()), 1)
+                    if not valores_sem_gol.empty else None
+                )
+                diferenca_media = (
+                    round(media_acerto - media_sem_gol, 1)
+                    if media_acerto is not None
+                    and media_sem_gol is not None
+                    else None
+                )
+                linhas_comparacao.append({
+                    "Indicador no alerta": nome_indicador,
+                    "Média com gol do destaque": media_acerto,
+                    "Casos válidos com gol": len(valores_acerto),
+                    "Média sem gol": media_sem_gol,
+                    "Casos válidos sem gol": len(valores_sem_gol),
+                    "Diferença": diferenca_media,
+                })
+
+            st.dataframe(
+                pd.DataFrame(linhas_comparacao),
+                width="stretch",
+                hide_index=True,
+            )
+            if len(grupo_acerto) < 5:
+                st.warning(
+                    f"Há somente {len(grupo_acerto)} acerto(s) com autoria "
+                    "identificada. Ainda é cedo para transformar qualquer "
+                    "diferença desta tabela em uma nova regra."
+                )
+            else:
+                st.info(
+                    "A amostra já permite observar padrões preliminares, mas "
+                    "a decisão sobre novos limites deve aguardar a meta geral "
+                    "de validação."
+                )
             if int(concluidos_10.sum()) < 10:
                 st.warning(
                     "A amostra concluída ainda é pequena. Os percentuais são "
