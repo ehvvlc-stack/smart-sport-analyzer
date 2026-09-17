@@ -606,9 +606,11 @@ COLUNAS_VALIDACAO_APIFOOTBALL = [
     "id_alerta", "data_hora_alerta", "fixture_id", "jogo",
     "minuto_alerta", "placar_alerta", "time_destaque",
     "indice_alerta", "momento_10_min", "corners_alerta",
+    "liga", "nivel_pressao", "qualidade_coleta",
     "dna_pressao", "dna_score", "dna_motivos", "situacao_placar",
     "gol_ate_5_min", "gol_ate_10_min", "escanteio_ate_5_min",
-    "escanteio_ate_10_min", "status",
+    "escanteio_ate_10_min", "time_gol", "resultado_gol",
+    "gol_time_destaque_5_min", "gol_time_destaque_10_min", "status",
 ]
 
 
@@ -1144,6 +1146,37 @@ def diagnosticar_dna_pressao(atual, anterior, lado, minuto, gols_casa, gols_fora
     return tipo, round(score, 1), "; ".join(motivos), round(acoes, 1), situacao
 
 
+def placar_partes_af(valor):
+    try:
+        partes = str(valor).lower().replace("×", "x").split("x")
+        if len(partes) != 2:
+            return 0, 0
+        return int(numero_af(partes[0])), int(numero_af(partes[1]))
+    except Exception:
+        return 0, 0
+
+
+def resultado_gol_af(linha, placar_alerta):
+    casa_alerta, fora_alerta = placar_partes_af(placar_alerta)
+    casa_atual, fora_atual = placar_partes_af(linha.get("placar", "0 x 0"))
+    partes_jogo = str(linha.get("jogo", "")).split(" x ", 1)
+    casa = partes_jogo[0].strip() if partes_jogo else "Casa"
+    fora = partes_jogo[1].strip() if len(partes_jogo) > 1 else "Visitante"
+    destaque = str(linha.get("time_destaque", "")).strip()
+    gol_casa = casa_atual > casa_alerta
+    gol_fora = fora_atual > fora_alerta
+    if not gol_casa and not gol_fora:
+        return "SEM_GOL", "", False
+    if gol_casa and gol_fora:
+        return "AMBOS", f"{casa} / {fora}", True
+    time_gol = casa if gol_casa else fora
+    return (
+        "TIME_DESTAQUE" if time_gol == destaque else "ADVERSARIO",
+        time_gol,
+        time_gol == destaque,
+    )
+
+
 def atualizar_validacao_af(linha):
     df = ler_csv_github_generico(
         APIFOOTBALL_VALIDACAO_PATH, COLUNAS_VALIDACAO_APIFOOTBALL
@@ -1164,13 +1197,24 @@ def atualizar_validacao_af(linha):
         corners_alerta = numero_af(df.at[idx, "corners_alerta"])
         houve_gol = gols_atuais > gols_alerta
         houve_corner = corners_atuais > corners_alerta
+        resultado_gol, time_gol, marcou_destaque = resultado_gol_af(
+            linha, df.at[idx, "placar_alerta"]
+        )
         if 5 <= delta_min <= 10:
             df.at[idx, "gol_ate_5_min"] = "SIM" if houve_gol else "NÃO"
+            df.at[idx, "gol_time_destaque_5_min"] = (
+                "SIM" if houve_gol and marcou_destaque else "NÃO"
+            )
             df.at[idx, "escanteio_ate_5_min"] = "SIM" if houve_corner else "NÃO"
             mudou = True
         if delta_min >= 10:
             df.at[idx, "gol_ate_10_min"] = "SIM" if houve_gol else "NÃO"
+            df.at[idx, "gol_time_destaque_10_min"] = (
+                "SIM" if houve_gol and marcou_destaque else "NÃO"
+            )
             df.at[idx, "escanteio_ate_10_min"] = "SIM" if houve_corner else "NÃO"
+            df.at[idx, "resultado_gol"] = resultado_gol
+            df.at[idx, "time_gol"] = time_gol
             df.at[idx, "status"] = "CONCLUÍDO"
             mudou = True
     if mudou:
@@ -1203,12 +1247,18 @@ def registrar_alerta_af(linha):
         "indice_alerta": linha["indice_destaque"],
         "momento_10_min": max(linha["momento_casa"], linha["momento_fora"]),
         "corners_alerta": numero_af(linha["corners_casa"]) + numero_af(linha["corners_fora"]),
+        "liga": linha.get("liga", ""),
+        "nivel_pressao": linha.get("nivel_pressao", ""),
+        "qualidade_coleta": linha.get("qualidade_coleta", ""),
         "dna_pressao": linha["dna_pressao"],
         "dna_score": linha["dna_score"],
         "dna_motivos": linha["dna_motivos"],
         "situacao_placar": linha["situacao_placar"],
         "gol_ate_5_min": "PENDENTE", "gol_ate_10_min": "PENDENTE",
         "escanteio_ate_5_min": "PENDENTE", "escanteio_ate_10_min": "PENDENTE",
+        "time_gol": "", "resultado_gol": "PENDENTE",
+        "gol_time_destaque_5_min": "PENDENTE",
+        "gol_time_destaque_10_min": "PENDENTE",
         "status": "ACOMPANHANDO",
     })
     df = pd.concat([df, pd.DataFrame([registro])], ignore_index=True)
