@@ -332,4 +332,4 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19722808-17,2026-09-15 20:46:32,19722808,Motherwell x Aberdeen,87,17,0 x 4,PÓS_GOL,Motherwell,60.9,21.8,50.0,69.0,3.0,FINALIZADO,2026-09-15 20:51:32,0 x 4,ULTIMO_OBSERVADO,ALTA,100.0,,19
 19722809-18,2026-09-15 20:56:32,19722809,Hibernian x Kilmarnock,90,18,0 x 1,BAIXA,Hibernian,57.3,14.6,50.0,60.0,8.0,FINALIZADO,2026-09-15 21:01:33,0 x 1,ULTIMO_OBSERVADO,ALTA,100.0,,14
 19713923-1,2026-09-18 17:33:38,19713923,Lyngby Boldklub x Silkeborg IF,7,1,0 x 0,BAIXA,Lyngby Boldklub,54.1,8.2,50.0,47.0,3.0,AO_VIVO,,,,ALTA,100.0,,1
-19713923-7,2026-09-18 17:43:38,19713923,Lyngby Boldklub x Silkeborg IF,39,7,0 x 1,PÓS_GOL,Lyngby Boldklub,50.5,1.0,50.0,48.0,4.0,AO_VIVO,,,,ALTA,100.0,,3
+19713923-7,2026-09-18 17:48:38,19713923,Lyngby Boldklub x Silkeborg IF,39,7,0 x 1,PÓS_GOL,Lyngby Boldklub,51.2,2.4,50.0,51.0,4.0,AO_VIVO,,,,ALTA,100.0,,3
