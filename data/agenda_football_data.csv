@@ -1,5 +1,5 @@
 fixture_id,data_hora,status,casa_id,casa,fora_id,fora,competicao,rodada
-555011,2026-09-19T19:00:00Z,TIMED,1766,CA Mineiro,1772,Chapecoense AF,Campeonato Brasileiro Série A,28
+555011,2026-09-19T19:00:00Z,IN_PLAY,1766,CA Mineiro,1772,Chapecoense AF,Campeonato Brasileiro Série A,28
 555015,2026-09-19T20:00:00Z,TIMED,4364,Mirassol FC,1770,Botafogo FR,Campeonato Brasileiro Série A,28
 555016,2026-09-19T21:30:00Z,TIMED,4287,Clube do Remo,6685,Santos FC,Campeonato Brasileiro Série A,28
 555018,2026-09-19T23:30:00Z,TIMED,1780,CR Vasco da Gama,4241,Coritiba FBC,Campeonato Brasileiro Série A,28
