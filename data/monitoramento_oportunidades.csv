@@ -390,3 +390,5 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713927-2,2026-09-19 16:23:38,19713927,Odense BK x FC Midtjylland,13,2,0 x 1,PÓS_GOL,Odense BK,70.0,40.0,50.0,61.0,2.0,AO_VIVO,,,,ALTA,100.0,,3
 19713927-4,2026-09-19 16:33:38,19713927,Odense BK x FC Midtjylland,21,4,0 x 1,BAIXA,Odense BK,59.9,19.8,50.0,50.0,2.0,AO_VIVO,,,,ALTA,100.0,,4
 19713927-6,2026-09-19 16:43:38,19713927,Odense BK x FC Midtjylland,33,6,0 x 1,BAIXA,Odense BK,59.4,18.8,50.0,48.0,2.0,AO_VIVO,,,,ALTA,100.0,,5
+19713927-8,2026-09-19 16:48:38,19713927,Odense BK x FC Midtjylland,44,8,0 x 1,BAIXA,Odense BK,61.0,22.0,50.0,50.0,3.0,AO_VIVO,,,,ALTA,100.0,,6
+19722785-0,2026-09-19 16:48:38,19722785,Kilmarnock x Hearts,3,0,0 x 0,BAIXA,Kilmarnock,62.0,24.0,50.0,54.0,1.0,AO_VIVO,,,,ALTA,100.0,,0
