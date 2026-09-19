@@ -597,6 +597,8 @@ COLUNAS_APIFOOTBALL = [
     "motivo_bloqueio",
     "elegivel_v2_sombra",
     "motivo_v2_sombra",
+    "elegivel_v3_sombra",
+    "motivo_v3_sombra",
     "prioridade_coleta",
     "motivo_prioridade",
     "rastreamento_id",
@@ -1596,6 +1598,20 @@ def processar_jogo_af(jogo, df, restante, prioridade=0.0, motivo_prioridade=""):
     if numero_af(novas_finalizacoes) < 4:
         motivos_v2.append("menos de 4 novas finalizações")
     elegivel_v2_sombra = not motivos_v2
+
+    # O V3 Premium também é apenas uma experiência silenciosa. Entre os
+    # casos já aprovados pelo V1, aceita o padrão histórico mais promissor:
+    # minuto até 60 com índice ao menos 80, ou dois novos escanteios.
+    criterio_indice_v3 = (
+        int(minuto) <= 60 and max(combinado_h, combinado_a) >= 80
+    )
+    criterio_escanteios_v3 = numero_af(novos_escanteios) >= 2
+    motivos_v3 = list(motivos_bloqueio)
+    if not (criterio_indice_v3 or criterio_escanteios_v3):
+        motivos_v3.append(
+            "não cumpriu minuto até 60 com índice 80+ nem 2 novos escanteios"
+        )
+    elegivel_v3_sombra = not motivos_v3
     linha = {
         "data_hora": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "fixture_id": fixture_id, "liga": league.get("name", ""),
@@ -1622,6 +1638,8 @@ def processar_jogo_af(jogo, df, restante, prioridade=0.0, motivo_prioridade=""):
         "motivo_bloqueio": "; ".join(motivos_bloqueio),
         "elegivel_v2_sombra": "SIM" if elegivel_v2_sombra else "NÃO",
         "motivo_v2_sombra": "; ".join(motivos_v2),
+        "elegivel_v3_sombra": "SIM" if elegivel_v3_sombra else "NÃO",
+        "motivo_v3_sombra": "; ".join(motivos_v3),
         "prioridade_coleta": prioridade,
         "motivo_prioridade": motivo_prioridade,
         "rastreamento_id": "",
@@ -1704,6 +1722,7 @@ def processar_jogo_af(jogo, df, restante, prioridade=0.0, motivo_prioridade=""):
         f"pressão {nivel} • DNA {dna_tipo} • dados {qualidade} • "
         f"quota {linha['quota_restante']} • "
         f"V2 sombra {'APROVADO' if elegivel_v2_sombra else 'bloqueado'} • "
+        f"V3 Premium {'APROVADO' if elegivel_v3_sombra else 'bloqueado'} • "
         f"confirmação {linha['rastreamento_etapa'] or 'inativa'} • "
         f"curva {linha['curva_pressao'] or 'sem leitura'}"
     )
@@ -2872,6 +2891,44 @@ def montar_relatorio_diario(agora_local):
         ).fillna("").astype(str).str.strip().str.upper().eq("SIM").sum()
     )
 
+    v3_status = monitor_dia.get(
+        "elegivel_v3_sombra",
+        pd.Series(index=monitor_dia.index, dtype=object),
+    ).fillna("").astype(str).str.strip().str.upper()
+    monitor_v3 = monitor_dia[
+        v3_status.isin(["SIM", "NÃO", "NAO"])
+    ].copy()
+    if not monitor_v3.empty:
+        ids_v3 = monitor_v3.get(
+            "rastreamento_id",
+            pd.Series(index=monitor_v3.index, dtype=object),
+        ).fillna("").astype(str).str.strip()
+        chaves_v3 = (
+            monitor_v3.get(
+                "fixture_id",
+                pd.Series(index=monitor_v3.index, dtype=object),
+            ).fillna("").astype(str)
+            + "|"
+            + monitor_v3.get(
+                "minuto",
+                pd.Series(index=monitor_v3.index, dtype=object),
+            ).fillna("").astype(str)
+        )
+        monitor_v3["chave_resumo_v3"] = ids_v3.where(
+            ~ids_v3.str.lower().isin(["", "nan", "none"]),
+            chaves_v3,
+        )
+        monitor_v3 = monitor_v3.drop_duplicates(
+            "chave_resumo_v3", keep="first"
+        )
+    v3_avaliados = len(monitor_v3)
+    v3_aprovados = int(
+        monitor_v3.get(
+            "elegivel_v3_sombra",
+            pd.Series(index=monitor_v3.index, dtype=object),
+        ).fillna("").astype(str).str.strip().str.upper().eq("SIM").sum()
+    )
+
     return (
         "📊 RESUMO DIÁRIO — SMART SPORT\n\n"
         f"📅 {agora_local.strftime('%d/%m/%Y')}\n"
@@ -2884,6 +2941,7 @@ def montar_relatorio_diario(agora_local):
         f"🎯 Validações concluídas: {concluidos}\n"
         f"🥅 Gol em até 10 min: {gols}/{concluidos} ({taxa})\n"
         f"🧪 V2 sombra hoje: {v2_aprovados}/{v2_avaliados} aprovado(s)\n"
+        f"🧭 V3 Premium hoje: {v3_aprovados}/{v3_avaliados} aprovado(s)\n"
         f"🏆 Melhor cobertura do dia: {melhor_liga}\n"
         f"🔋 Cota API-Football: {quota}\n\n"
         f"📈 VALIDAÇÃO GERAL — API-FOOTBALL\n"
