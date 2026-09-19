@@ -340,3 +340,7 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713923-15,2026-09-18 18:43:38,19713923,Lyngby Boldklub x Silkeborg IF,78,15,0 x 3,BAIXA,Lyngby Boldklub,54.4,8.8,50.0,46.0,6.0,FINALIZADO,2026-09-18 19:13:39,0 x 4,ULTIMO_OBSERVADO,ALTA,100.0,,12
 19713923-17,2026-09-18 18:53:38,19713923,Lyngby Boldklub x Silkeborg IF,89,17,0 x 4,BAIXA,Lyngby Boldklub,54.1,8.2,50.0,46.0,6.0,FINALIZADO,2026-09-18 19:13:39,0 x 4,ULTIMO_OBSERVADO,ALTA,100.0,,18
 19713923-18,2026-09-18 19:08:38,19713923,Lyngby Boldklub x Silkeborg IF,90,18,0 x 4,BAIXA,Lyngby Boldklub,53.4,6.8,50.0,45.0,6.0,FINALIZADO,2026-09-18 19:13:39,0 x 4,ULTIMO_OBSERVADO,ALTA,100.0,,20
+19722787-0,2026-09-19 14:03:38,19722787,Dundee x Motherwell,3,0,0 x 0,BAIXA,Dundee,50.0,0.0,50.0,50.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
+19722783-0,2026-09-19 14:03:38,19722783,St. Mirren x Dundee United,3,0,0 x 0,BAIXA,St. Mirren,56.4,12.8,50.0,50.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
+19722786-0,2026-09-19 14:03:38,19722786,Hibernian x Aberdeen,3,0,0 x 0,BAIXA,Hibernian,61.1,22.2,50.0,50.0,1.0,AO_VIVO,,,,ALTA,100.0,,0
+19722784-0,2026-09-19 14:03:38,19722784,St. Johnstone x Falkirk,3,0,0 x 0,BAIXA,St. Johnstone,50.0,0.0,50.0,50.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
