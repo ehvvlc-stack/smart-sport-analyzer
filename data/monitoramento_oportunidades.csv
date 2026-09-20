@@ -411,3 +411,5 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19722782-0,2026-09-20 11:04:13,19722782,Celtic x Rangers,4,0,0 x 0,BAIXA,Rangers,54.7,9.4,50.0,71.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
 19722782-1,2026-09-20 11:29:13,19722782,Celtic x Rangers,5,1,0 x 0,BAIXA,Celtic,61.1,22.2,50.0,55.0,4.0,AO_VIVO,,,,ALTA,100.0,,2
 19722782-6,2026-09-20 11:59:13,19722782,Celtic x Rangers,33,6,0 x 1,PÓS_GOL,Celtic,55.7,11.4,50.0,56.0,3.0,AO_VIVO,,,,ALTA,100.0,,3
+19713925-0,2026-09-20 12:04:13,19713925,Sønderjyske Fodbold x Randers FC,4,0,0 x 0,BAIXA,Sønderjyske Fodbold,67.5,35.0,50.0,50.0,1.0,AO_VIVO,,,,ALTA,100.0,,0
+19722782-9,2026-09-20 12:04:13,19722782,Celtic x Rangers,46,9,0 x 1,BAIXA,Celtic,54.3,8.6,50.0,57.0,3.0,AO_VIVO,,,,ALTA,100.0,,4
