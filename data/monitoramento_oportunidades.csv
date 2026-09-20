@@ -430,3 +430,6 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713925-7,2026-09-20 12:44:14,19713925,Sønderjyske Fodbold x Randers FC,39,7,1 x 1,PÓS_GOL,Randers FC,56.4,12.8,50.0,66.0,1.0,AO_VIVO,,,,ALTA,100.0,,4
 19713921-7,2026-09-20 12:39:13,19713921,Brøndby IF x FC København,39,7,0 x 0,BAIXA,FC København,61.2,22.4,50.0,55.0,1.0,AO_VIVO,,,,ALTA,100.0,,0
 19713921-8,2026-09-20 12:44:14,19713921,Brøndby IF x FC København,44,8,0 x 0,BAIXA,FC København,61.0,22.0,50.0,54.0,1.0,AO_VIVO,,,,ALTA,100.0,,0
+19713925-9,2026-09-20 12:49:13,19713925,Sønderjyske Fodbold x Randers FC,45,9,2 x 1,PÓS_GOL,Randers FC,54.5,9.0,50.0,63.0,1.0,AO_VIVO,,,,ALTA,100.0,,6
+19713921-9,2026-09-20 12:49:13,19713921,Brøndby IF x FC København,49,9,0 x 0,BAIXA,FC København,58.1,16.2,50.0,54.0,2.0,AO_VIVO,,,,ALTA,100.0,,0
+19722782-17,2026-09-20 12:49:13,19722782,Celtic x Rangers,89,17,0 x 1,BAIXA,Celtic,53.4,6.8,50.0,56.0,4.0,AO_VIVO,,,,ALTA,100.0,,18
