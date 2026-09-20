@@ -4,6 +4,6 @@ fixture_id,data_hora,status,casa_id,casa,fora_id,fora,competicao,rodada
 555012,2026-09-20T19:00:00Z,FINISHED,1779,SC Corinthians Paulista,1765,Fluminense FC,Campeonato Brasileiro Série A,28
 555019,2026-09-20T19:00:00Z,FINISHED,1782,EC Vitória,1771,Cruzeiro EC,Campeonato Brasileiro Série A,28
 555013,2026-09-20T21:30:00Z,IN_PLAY,1783,CR Flamengo,4286,RB Bragantino,Campeonato Brasileiro Série A,28
-555010,2026-09-20T22:30:00Z,TIMED,1768,CA Paranaense,1777,EC Bahia,Campeonato Brasileiro Série A,28
+555010,2026-09-20T22:30:00Z,IN_PLAY,1768,CA Paranaense,1777,EC Bahia,Campeonato Brasileiro Série A,28
 554948,2026-10-02T23:00:00Z,TIMED,1776,São Paulo FC,6685,Santos FC,Campeonato Brasileiro Série A,21
 554940,2026-10-03T21:30:00Z,TIMED,1766,CA Mineiro,4286,RB Bragantino,Campeonato Brasileiro Série A,21
