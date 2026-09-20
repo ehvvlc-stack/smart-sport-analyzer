@@ -457,3 +457,4 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713917-16,2026-09-20 15:44:13,19713917,Horsens x AGF,84,16,0 x 2,BAIXA,Horsens,52.7,5.4,50.0,52.0,1.0,AO_VIVO,,,,ALTA,100.0,,14
 19713917-18,2026-09-20 16:04:14,19713917,Horsens x AGF,90,18,2 x 2,PÓS_GOL,Horsens,53.7,7.4,50.0,53.0,1.0,AO_VIVO,,,,ALTA,100.0,,19
 19713919-0,2026-09-20 16:04:14,19713919,Viborg FF x Nordsjælland,4,0,0 x 0,BAIXA,Viborg FF,50.0,0.0,50.0,50.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
+19713919-1,2026-09-20 16:09:13,19713919,Viborg FF x Nordsjælland,9,1,0 x 0,BAIXA,Nordsjælland,58.6,17.2,50.0,60.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
