@@ -463,3 +463,4 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713919-6,2026-09-20 16:39:14,19713919,Viborg FF x Nordsjælland,33,6,2 x 1,PÓS_GOL,Viborg FF,55.2,10.4,50.0,62.0,1.0,AO_VIVO,,,,ALTA,100.0,,5
 19713919-8,2026-09-20 17:04:13,19713919,Viborg FF x Nordsjælland,41,8,3 x 1,PÓS_GOL,Viborg FF,55.4,10.8,50.0,53.0,2.0,AO_VIVO,,,,ALTA,100.0,,6
 19713919-9,2026-09-20 17:24:14,19713919,Viborg FF x Nordsjælland,46,9,3 x 1,BAIXA,Viborg FF,52.7,5.4,50.0,53.0,1.0,AO_VIVO,,,,ALTA,100.0,,8
+19713919-13,2026-09-20 17:29:13,19713919,Viborg FF x Nordsjælland,66,13,3 x 1,BAIXA,Viborg FF,52.7,5.4,50.0,53.0,1.0,AO_VIVO,,,,ALTA,100.0,,9
