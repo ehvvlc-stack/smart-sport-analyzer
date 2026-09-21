@@ -9692,6 +9692,69 @@ with aba_validacao:
                 hide_index=True,
             )
 
+            st.write("### 🩺 Integridade da nova coleta V2/V3")
+            st.caption(
+                "Acompanha somente os alertas reais gravados com as decisões "
+                "do V2 e do V3. A meta inicial é concluir 30 janelas de 10 minutos."
+            )
+            enviados_reais = df_auditoria[
+                df_auditoria["decisao"].eq("✅ ENVIADO")
+                & df_auditoria["origem_registro"].eq("TELEGRAM")
+            ].copy()
+            status_v2_integridade = (
+                enviados_reais["elegivel_v2_sombra"].fillna("")
+                .astype(str).str.strip().str.upper()
+            )
+            status_v3_integridade = (
+                enviados_reais["elegivel_v3_sombra"].fillna("")
+                .astype(str).str.strip().str.upper()
+            )
+            status_validos = {"SIM", "NÃO", "NAO"}
+            completos_v2_v3 = (
+                status_v2_integridade.isin(status_validos)
+                & status_v3_integridade.isin(status_validos)
+            )
+            nova_coleta = enviados_reais[completos_v2_v3].copy()
+            nova_coleta_concluida = nova_coleta[
+                ~nova_coleta["resultado_10_min"].eq("⏳ SEM JANELA")
+            ]
+            total_nova_coleta = len(nova_coleta)
+            total_concluido_nova_coleta = len(nova_coleta_concluida)
+            faltam_nova_coleta = max(0, 30 - total_concluido_nova_coleta)
+
+            i1, i2, i3, i4 = st.columns(4)
+            i1.metric("Alertas completos V2/V3", total_nova_coleta)
+            i2.metric("Janelas de 10 min concluídas", total_concluido_nova_coleta)
+            i3.metric("Faltam para analisar", faltam_nova_coleta)
+            i4.metric("Meta inicial", 30)
+            st.progress(min(1.0, total_concluido_nova_coleta / 30))
+
+            if total_nova_coleta:
+                primeira_coleta = pd.to_datetime(
+                    nova_coleta["data_hora"], errors="coerce"
+                ).min()
+                datas_enviados = pd.to_datetime(
+                    enviados_reais["data_hora"], errors="coerce"
+                )
+                faltantes_depois_correcao = enviados_reais[
+                    datas_enviados.ge(primeira_coleta) & ~completos_v2_v3
+                ]
+                if faltantes_depois_correcao.empty:
+                    st.success(
+                        "Coleta íntegra: os novos alertas estão guardando "
+                        "corretamente as decisões do V2 e do V3."
+                    )
+                else:
+                    st.error(
+                        f"Atenção: {len(faltantes_depois_correcao)} alerta(s) "
+                        "novo(s) ficaram sem decisão completa do V2/V3."
+                    )
+            else:
+                st.info(
+                    "Aguardando o primeiro novo alerta após a correção. "
+                    "Os registros históricos vazios não são contados como erro."
+                )
+
             st.write("### 🧪 Comparador automático: filtro atual x V2")
             st.caption(
                 "Compara apenas registros produzidos depois da ativação do "
