@@ -7651,6 +7651,8 @@ def construir_auditoria_sinais(df_monitoramento, df_validacao_af=None):
         "novos_chutes_gol", "novos_escanteios", "novas_finalizacoes",
         "elegivel_v2_sombra", "motivo_v2_sombra",
         "elegivel_v3_sombra", "motivo_v3_sombra",
+        "versao_experimento", "versao_filtro_v1",
+        "versao_filtro_v2", "versao_filtro_v3",
         "decisao", "explicacao", "etapa_confirmacao",
         "curva_pressao", "variacao_indice",
         "resultado_5_min", "resultado_10_min",
@@ -7670,6 +7672,8 @@ def construir_auditoria_sinais(df_monitoramento, df_validacao_af=None):
         "novos_chutes_gol", "novos_escanteios", "novas_finalizacoes",
         "elegivel_v2_sombra", "motivo_v2_sombra",
         "elegivel_v3_sombra", "motivo_v3_sombra",
+        "versao_experimento", "versao_filtro_v1",
+        "versao_filtro_v2", "versao_filtro_v3",
         "rastreamento_origem_minuto", "rastreamento_etapa",
         "curva_pressao", "variacao_indice",
     ]:
@@ -7787,6 +7791,10 @@ def construir_auditoria_sinais(df_monitoramento, df_validacao_af=None):
             "motivo_v2_sombra": candidato["motivo_v2_sombra"],
             "elegivel_v3_sombra": candidato["elegivel_v3_sombra"],
             "motivo_v3_sombra": candidato["motivo_v3_sombra"],
+            "versao_experimento": candidato["versao_experimento"],
+            "versao_filtro_v1": candidato["versao_filtro_v1"],
+            "versao_filtro_v2": candidato["versao_filtro_v2"],
+            "versao_filtro_v3": candidato["versao_filtro_v3"],
             "decisao": decisao,
             "explicacao": explicacao,
             "etapa_confirmacao": leitura_curva["rastreamento_etapa"],
@@ -7818,6 +7826,8 @@ def construir_auditoria_sinais(df_monitoramento, df_validacao_af=None):
         "novos_chutes_gol", "novos_escanteios", "novas_finalizacoes",
         "elegivel_v2_sombra", "motivo_v2_sombra",
         "elegivel_v3_sombra", "motivo_v3_sombra",
+        "versao_experimento", "versao_filtro_v1",
+        "versao_filtro_v2", "versao_filtro_v3",
         "resultado_gol", "time_gol", "gol_time_destaque_5_min",
         "gol_time_destaque_10_min",
     ]:
@@ -7898,6 +7908,10 @@ def construir_auditoria_sinais(df_monitoramento, df_validacao_af=None):
             "motivo_v2_sombra": valor_alerta("motivo_v2_sombra"),
             "elegivel_v3_sombra": valor_alerta("elegivel_v3_sombra"),
             "motivo_v3_sombra": valor_alerta("motivo_v3_sombra"),
+            "versao_experimento": valor_alerta("versao_experimento"),
+            "versao_filtro_v1": valor_alerta("versao_filtro_v1"),
+            "versao_filtro_v2": valor_alerta("versao_filtro_v2"),
+            "versao_filtro_v3": valor_alerta("versao_filtro_v3"),
             "decisao": "✅ ENVIADO",
             "explicacao": (
                 f"Alerta confirmado no registro do Telegram. DNA {dna} "
@@ -9709,10 +9723,15 @@ with aba_validacao:
                 enviados_reais["elegivel_v3_sombra"].fillna("")
                 .astype(str).str.strip().str.upper()
             )
+            versao_integridade = (
+                enviados_reais["versao_experimento"].fillna("")
+                .astype(str).str.strip()
+            )
             status_validos = {"SIM", "NÃO", "NAO"}
             completos_v2_v3 = (
                 status_v2_integridade.isin(status_validos)
                 & status_v3_integridade.isin(status_validos)
+                & versao_integridade.ne("")
             )
             nova_coleta = enviados_reais[completos_v2_v3].copy()
             nova_coleta_concluida = nova_coleta[
@@ -9730,6 +9749,22 @@ with aba_validacao:
             st.progress(min(1.0, total_concluido_nova_coleta / 30))
 
             if total_nova_coleta:
+                versoes_ativas = (
+                    nova_coleta[
+                        ["versao_experimento", "versao_filtro_v1",
+                         "versao_filtro_v2", "versao_filtro_v3"]
+                    ]
+                    .fillna("")
+                    .drop_duplicates()
+                    .rename(columns={
+                        "versao_experimento": "Experimento",
+                        "versao_filtro_v1": "Versão V1",
+                        "versao_filtro_v2": "Versão V2",
+                        "versao_filtro_v3": "Versão V3",
+                    })
+                )
+                st.write("**Versões presentes na nova amostra**")
+                st.dataframe(versoes_ativas, width="stretch", hide_index=True)
                 primeira_coleta = pd.to_datetime(
                     nova_coleta["data_hora"], errors="coerce"
                 ).min()
