@@ -43,6 +43,12 @@ APIFOOTBALL_VALIDACAO_PATH = os.getenv(
     "APIFOOTBALL_VALIDACAO_PATH",
     "data/validacao_apifootball.csv"
 ).strip()
+# Identificação imutável das regras usadas nesta etapa da validação.
+# Ao alterar qualquer critério no futuro, crie novos nomes de versão.
+VERSAO_EXPERIMENTO = "EXP-2026-09-21-01"
+VERSAO_FILTRO_V1 = "V1-ESCUDO-DNA60"
+VERSAO_FILTRO_V2 = "V2-FINALIZACOES4"
+VERSAO_FILTRO_V3 = "V3-MIN60-IND80-OU-ESC2"
 RELATORIO_DIARIO_ATIVO = os.getenv("RELATORIO_DIARIO_ATIVO", "1").strip() == "1"
 RELATORIO_DIARIO_HORA = int(os.getenv("RELATORIO_DIARIO_HORA", "20"))
 RELATORIO_DIARIO_MINUTO = int(os.getenv("RELATORIO_DIARIO_MINUTO", "0"))
@@ -618,6 +624,8 @@ COLUNAS_VALIDACAO_APIFOOTBALL = [
     "novos_chutes_gol", "novos_escanteios", "novas_finalizacoes",
     "elegivel_v2_sombra", "motivo_v2_sombra",
     "elegivel_v3_sombra", "motivo_v3_sombra",
+    "versao_experimento", "versao_filtro_v1",
+    "versao_filtro_v2", "versao_filtro_v3",
     "gol_ate_5_min", "gol_ate_10_min", "escanteio_ate_5_min",
     "escanteio_ate_10_min", "time_gol", "resultado_gol",
     "gol_time_destaque_5_min", "gol_time_destaque_10_min", "status",
@@ -1283,6 +1291,10 @@ def registrar_alerta_af(linha):
         "motivo_v2_sombra": linha.get("motivo_v2_sombra", ""),
         "elegivel_v3_sombra": linha.get("elegivel_v3_sombra", ""),
         "motivo_v3_sombra": linha.get("motivo_v3_sombra", ""),
+        "versao_experimento": VERSAO_EXPERIMENTO,
+        "versao_filtro_v1": VERSAO_FILTRO_V1,
+        "versao_filtro_v2": VERSAO_FILTRO_V2,
+        "versao_filtro_v3": VERSAO_FILTRO_V3,
         "gol_ate_5_min": "PENDENTE", "gol_ate_10_min": "PENDENTE",
         "escanteio_ate_5_min": "PENDENTE", "escanteio_ate_10_min": "PENDENTE",
         "time_gol": "", "resultado_gol": "PENDENTE",
