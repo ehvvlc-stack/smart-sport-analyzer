@@ -1254,6 +1254,33 @@ def atualizar_validacao_af(linha):
         )
 
 
+def verificar_integridade_experimento(registro):
+    campos_obrigatorios = {
+        "elegivel_v2_sombra": registro.get("elegivel_v2_sombra", ""),
+        "elegivel_v3_sombra": registro.get("elegivel_v3_sombra", ""),
+        "versao_experimento": registro.get("versao_experimento", ""),
+        "versao_filtro_v1": registro.get("versao_filtro_v1", ""),
+        "versao_filtro_v2": registro.get("versao_filtro_v2", ""),
+        "versao_filtro_v3": registro.get("versao_filtro_v3", ""),
+    }
+    faltantes = [
+        nome for nome, valor in campos_obrigatorios.items()
+        if str(valor).strip().lower() in {"", "nan", "none"}
+    ]
+    if not faltantes:
+        return True
+    detalhe = ", ".join(faltantes)
+    log(f"Integridade V2/V3 incompleta: {detalhe}")
+    enviar_alerta_telegram(
+        "🚨 INTEGRIDADE V2/V3 — REGISTRO INCOMPLETO\n\n"
+        f"⚽ Jogo: {registro.get('jogo', 'não identificado')}\n"
+        f"🆔 Fixture: {registro.get('fixture_id', '')}\n"
+        f"❌ Campos ausentes: {detalhe}\n\n"
+        "O worker continuará ativo, mas este alerta deve ser conferido."
+    )
+    return False
+
+
 def registrar_alerta_af(linha):
     df = ler_csv_github_generico(
         APIFOOTBALL_VALIDACAO_PATH, COLUNAS_VALIDACAO_APIFOOTBALL
@@ -1302,10 +1329,19 @@ def registrar_alerta_af(linha):
         "gol_time_destaque_10_min": "PENDENTE",
         "status": "ACOMPANHANDO",
     })
+    verificar_integridade_experimento(registro)
     df = pd.concat([df, pd.DataFrame([registro])], ignore_index=True)
     if not salvar_csv_github_generico(
         APIFOOTBALL_VALIDACAO_PATH, df, "Registra alerta API-Football"
     ):
+        enviar_alerta_telegram(
+            "🚨 INTEGRIDADE V2/V3 — FALHA AO SALVAR\n\n"
+            f"⚽ Jogo: {registro.get('jogo', 'não identificado')}\n"
+            f"🆔 Fixture: {registro.get('fixture_id', '')}\n"
+            "❌ O registro definitivo do alerta não foi salvo no GitHub.\n\n"
+            "O worker continuará ativo, mas este registro precisa ser "
+            "conferido no painel."
+        )
         return False
     enviar_alerta_telegram(
         "🚨 PRESSÃO ALTA — API-FOOTBALL\n\n"
