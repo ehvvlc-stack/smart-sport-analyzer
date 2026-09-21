@@ -122,9 +122,11 @@ except Exception:
     GITHUB_TOKEN = ""
 
 try:
-    GITHUB_REPO = st.secrets.get("GITHUB_REPO", "")
+    GITHUB_REPO = st.secrets.get(
+        "GITHUB_REPO", "ehvvlc-stack/smart-sport-analyzer"
+    )
 except Exception:
-    GITHUB_REPO = ""
+    GITHUB_REPO = "ehvvlc-stack/smart-sport-analyzer"
 
 try:
     GITHUB_BRANCH = st.secrets.get("GITHUB_BRANCH", "main")
@@ -2342,7 +2344,25 @@ def baixar_validacao_github():
         conteudo_b64 = payload.get("content", "")
 
         if not conteudo_b64:
-            return None
+            # Arquivos maiores deixam de vir em base64 pela API de conteúdo.
+            # Solicita então o conteúdo bruto, mantendo suporte a repositório
+            # privado por meio do mesmo token.
+            resposta_bruta = requests.get(
+                url,
+                headers={
+                    **headers,
+                    "Accept": "application/vnd.github.raw+json",
+                },
+                params=params,
+                timeout=30,
+            )
+            if resposta_bruta.status_code != 200:
+                return None
+            from io import StringIO
+            return pd.read_csv(
+                StringIO(resposta_bruta.content.decode("utf-8-sig")),
+                dtype=object,
+            )
 
         import base64
         from io import StringIO
@@ -2362,11 +2382,35 @@ def baixar_validacao_github():
 
 def baixar_csv_github_caminho(caminho):
     """Lê um CSV arbitrário do mesmo repositório usado pelo worker."""
-    if not persistencia_github_ativa():
+    if not GITHUB_REPO:
+        return None
+    caminho_limpo = str(caminho).lstrip("/")
+
+    # Primeira opção: leitura pública direta. Ela não depende do token local,
+    # evita o limite de 1 MB da API de conteúdo e funciona para o repositório
+    # público usado pelo projeto.
+    url_bruta = (
+        f"https://raw.githubusercontent.com/{GITHUB_REPO}/"
+        f"{GITHUB_BRANCH}/{caminho_limpo}"
+    )
+    try:
+        resposta_bruta = requests.get(url_bruta, timeout=30)
+        if resposta_bruta.status_code == 200 and resposta_bruta.content:
+            from io import StringIO
+            return pd.read_csv(
+                StringIO(resposta_bruta.content.decode("utf-8-sig")),
+                dtype=object,
+            )
+    except Exception:
+        pass
+
+    # Segunda opção: API autenticada, necessária se o repositório passar a
+    # ser privado no futuro.
+    if not GITHUB_TOKEN:
         return None
     url = (
         f"https://api.github.com/repos/{GITHUB_REPO}/contents/"
-        f"{str(caminho).lstrip('/')}"
+        f"{caminho_limpo}"
     )
     headers = {
         "Authorization": f"Bearer {GITHUB_TOKEN}",
@@ -2384,7 +2428,22 @@ def baixar_csv_github_caminho(caminho):
             return None
         conteudo = resposta.json().get("content", "")
         if not conteudo:
-            return None
+            resposta_bruta = requests.get(
+                url,
+                headers={
+                    **headers,
+                    "Accept": "application/vnd.github.raw+json",
+                },
+                params={"ref": GITHUB_BRANCH},
+                timeout=30,
+            )
+            if resposta_bruta.status_code != 200:
+                return None
+            from io import StringIO
+            return pd.read_csv(
+                StringIO(resposta_bruta.content.decode("utf-8-sig")),
+                dtype=object,
+            )
         import base64
         from io import StringIO
         texto = base64.b64decode(conteudo).decode("utf-8-sig")
@@ -7591,6 +7650,7 @@ def construir_auditoria_sinais(df_monitoramento, df_validacao_af=None):
         "time_destaque", "indice_destaque", "dna_pressao", "dna_score",
         "novos_chutes_gol", "novos_escanteios", "novas_finalizacoes",
         "elegivel_v2_sombra", "motivo_v2_sombra",
+        "elegivel_v3_sombra", "motivo_v3_sombra",
         "decisao", "explicacao", "etapa_confirmacao",
         "curva_pressao", "variacao_indice",
         "resultado_5_min", "resultado_10_min",
@@ -7609,6 +7669,7 @@ def construir_auditoria_sinais(df_monitoramento, df_validacao_af=None):
         "elegivel_telegram", "motivo_bloqueio", "rastreamento_id",
         "novos_chutes_gol", "novos_escanteios", "novas_finalizacoes",
         "elegivel_v2_sombra", "motivo_v2_sombra",
+        "elegivel_v3_sombra", "motivo_v3_sombra",
         "rastreamento_origem_minuto", "rastreamento_etapa",
         "curva_pressao", "variacao_indice",
     ]:
@@ -7724,6 +7785,8 @@ def construir_auditoria_sinais(df_monitoramento, df_validacao_af=None):
             "novas_finalizacoes": candidato["novas_finalizacoes"],
             "elegivel_v2_sombra": candidato["elegivel_v2_sombra"],
             "motivo_v2_sombra": candidato["motivo_v2_sombra"],
+            "elegivel_v3_sombra": candidato["elegivel_v3_sombra"],
+            "motivo_v3_sombra": candidato["motivo_v3_sombra"],
             "decisao": decisao,
             "explicacao": explicacao,
             "etapa_confirmacao": leitura_curva["rastreamento_etapa"],
@@ -7752,6 +7815,9 @@ def construir_auditoria_sinais(df_monitoramento, df_validacao_af=None):
         "minuto_alerta", "placar_alerta", "time_destaque",
         "indice_alerta", "liga", "dna_pressao", "dna_score",
         "dna_motivos", "gol_ate_5_min", "gol_ate_10_min",
+        "novos_chutes_gol", "novos_escanteios", "novas_finalizacoes",
+        "elegivel_v2_sombra", "motivo_v2_sombra",
+        "elegivel_v3_sombra", "motivo_v3_sombra",
         "resultado_gol", "time_gol", "gol_time_destaque_5_min",
         "gol_time_destaque_10_min",
     ]:
@@ -7825,11 +7891,13 @@ def construir_auditoria_sinais(df_monitoramento, df_validacao_af=None):
             "indice_destaque": alerta.get("indice_alerta", ""),
             "dna_pressao": dna,
             "dna_score": dna_score,
-            "novos_chutes_gol": snapshot.get("novos_chutes_gol", ""),
-            "novos_escanteios": snapshot.get("novos_escanteios", ""),
-            "novas_finalizacoes": snapshot.get("novas_finalizacoes", ""),
-            "elegivel_v2_sombra": snapshot.get("elegivel_v2_sombra", ""),
-            "motivo_v2_sombra": snapshot.get("motivo_v2_sombra", ""),
+            "novos_chutes_gol": valor_alerta("novos_chutes_gol"),
+            "novos_escanteios": valor_alerta("novos_escanteios"),
+            "novas_finalizacoes": valor_alerta("novas_finalizacoes"),
+            "elegivel_v2_sombra": valor_alerta("elegivel_v2_sombra"),
+            "motivo_v2_sombra": valor_alerta("motivo_v2_sombra"),
+            "elegivel_v3_sombra": valor_alerta("elegivel_v3_sombra"),
+            "motivo_v3_sombra": valor_alerta("motivo_v3_sombra"),
             "decisao": "✅ ENVIADO",
             "explicacao": (
                 f"Alerta confirmado no registro do Telegram. DNA {dna} "
@@ -9398,6 +9466,7 @@ with aba_validacao:
             "elegivel_telegram", "motivo_bloqueio", "quota_restante",
             "novos_chutes_gol", "novos_escanteios", "novas_finalizacoes",
             "elegivel_v2_sombra", "motivo_v2_sombra",
+            "elegivel_v3_sombra", "motivo_v3_sombra",
             "rastreamento_id", "rastreamento_origem_minuto",
             "rastreamento_etapa",
             "curva_pressao", "variacao_indice",
@@ -9422,13 +9491,15 @@ with aba_validacao:
         altas = df_dna["nivel_pressao"].astype(str).eq("ALTA").sum()
         elegiveis = df_dna["elegivel_telegram"].astype(str).eq("SIM").sum()
         elegiveis_v2 = df_dna["elegivel_v2_sombra"].astype(str).eq("SIM").sum()
+        elegiveis_v3 = df_dna["elegivel_v3_sombra"].astype(str).eq("SIM").sum()
 
-        m1, m2, m3, m4, m5 = st.columns(5)
+        m1, m2, m3, m4, m5, m6 = st.columns(6)
         m1.metric("Jogos observados", jogos_unicos)
         m2.metric("Snapshots", len(df_dna))
         m3.metric("DNA perigoso", int(perigosos))
         m4.metric("Elegíveis Telegram", int(elegiveis))
         m5.metric("V2 sombra", int(elegiveis_v2))
+        m6.metric("V3 Premium", int(elegiveis_v3))
 
         st.caption(
             f"Pressões ALTA registradas para estudo: {int(altas)}. "
@@ -9463,6 +9534,7 @@ with aba_validacao:
             "situacao_placar", "qualidade_coleta", "elegivel_telegram",
             "motivo_bloqueio", "novos_chutes_gol", "novos_escanteios",
             "novas_finalizacoes", "elegivel_v2_sombra", "motivo_v2_sombra",
+            "elegivel_v3_sombra", "motivo_v3_sombra",
         ]
         tabela_dna = tabela_dna.sort_values(
             ["data_ordem", "minuto_num"], ascending=False
@@ -9702,6 +9774,93 @@ with aba_validacao:
                     "Evitados já concluídos", len(evitados_concluidos)
                 )
                 c3.metric("Gols que o V2 perderia", gols_perdidos_v2)
+
+            st.write("### 🧭 V3 Premium: comparação silenciosa")
+            st.caption(
+                "O V3 aprova, entre os alertas do V1, casos até o minuto 60 "
+                "com índice 80+ ou com pelo menos 2 novos escanteios. A "
+                "comparação considera somente registros produzidos depois "
+                "da ativação do V3; ele não envia alertas."
+            )
+            v3_status = (
+                df_auditoria["elegivel_v3_sombra"]
+                .fillna("")
+                .astype(str)
+                .str.strip()
+                .str.upper()
+            )
+            base_comparador_v3 = df_auditoria[
+                v3_status.isin(["SIM", "NÃO", "NAO"])
+            ].copy()
+            if base_comparador_v3.empty:
+                st.info(
+                    "O V3 Premium aguarda o primeiro registro comparável. "
+                    "Esta seção será preenchida automaticamente."
+                )
+            else:
+                base_comparador_v3["v3_aprovado"] = (
+                    base_comparador_v3["elegivel_v3_sombra"]
+                    .fillna("")
+                    .astype(str)
+                    .str.strip()
+                    .str.upper()
+                    .eq("SIM")
+                )
+                base_comparador_v3["v1_aprovado"] = base_comparador_v3[
+                    "decisao"
+                ].eq("✅ ENVIADO")
+                base_comparador_v3["janela_10_concluida"] = (
+                    ~base_comparador_v3["resultado_10_min"].eq(
+                        "⏳ SEM JANELA"
+                    )
+                )
+                base_comparador_v3["gol_10"] = base_comparador_v3[
+                    "resultado_10_min"
+                ].eq("🟢 GOL")
+
+                resumo_v3 = []
+                for nome_filtro, coluna_filtro in [
+                    ("Filtro atual (V1)", "v1_aprovado"),
+                    ("Filtro Premium V3", "v3_aprovado"),
+                ]:
+                    aprovados = base_comparador_v3[
+                        base_comparador_v3[coluna_filtro]
+                    ]
+                    concluidos = aprovados[
+                        aprovados["janela_10_concluida"]
+                    ]
+                    gols = int(concluidos["gol_10"].sum())
+                    resumo_v3.append({
+                        "Filtro": nome_filtro,
+                        "Sinais aprovados": len(aprovados),
+                        "Janelas concluídas": len(concluidos),
+                        "Gols em 10 min": gols,
+                        "Gol em 10 min (%)": round(
+                            gols / len(concluidos) * 100, 1
+                        ) if len(concluidos) else None,
+                    })
+                st.dataframe(
+                    pd.DataFrame(resumo_v3),
+                    width="stretch",
+                    hide_index=True,
+                )
+
+                evitados_v3 = base_comparador_v3[
+                    base_comparador_v3["v1_aprovado"]
+                    & ~base_comparador_v3["v3_aprovado"]
+                ]
+                evitados_v3_concluidos = evitados_v3[
+                    evitados_v3["janela_10_concluida"]
+                ]
+                gols_perdidos_v3 = int(
+                    evitados_v3_concluidos["gol_10"].sum()
+                )
+                v31, v32, v33 = st.columns(3)
+                v31.metric("Alertas que o V3 evitaria", len(evitados_v3))
+                v32.metric(
+                    "Evitados já concluídos", len(evitados_v3_concluidos)
+                )
+                v33.metric("Gols que o V3 perderia", gols_perdidos_v3)
 
             enviados_concluidos_10 = int((
                 df_auditoria["decisao"].eq("✅ ENVIADO")
@@ -10142,7 +10301,8 @@ with aba_validacao:
                 "time_destaque", "indice_destaque", "dna_pressao",
                 "dna_score", "novos_chutes_gol", "novos_escanteios",
                 "novas_finalizacoes", "elegivel_v2_sombra",
-                "motivo_v2_sombra", "decisao", "explicacao",
+                "motivo_v2_sombra", "elegivel_v3_sombra",
+                "motivo_v3_sombra", "decisao", "explicacao",
                 "etapa_confirmacao", "curva_pressao", "variacao_indice",
                 "resultado_5_min", "resultado_10_min",
                 "resultado_gol", "time_gol",
