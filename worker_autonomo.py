@@ -431,8 +431,11 @@ def diagnosticar_mercados_odds_ao_vivo():
             mercados.append((mercado_id, nome))
 
     palavras = (
-        "next", "goal", "score", "team to score", "no goal",
-        "próximo", "proximo", "gol", "marcar",
+        "which team will score the",
+        "next goal",
+        "next team to score",
+        "last team to score",
+        "no goal",
     )
     candidatos = [
         (mercado_id, nome)
@@ -447,17 +450,20 @@ def diagnosticar_mercados_odds_ao_vivo():
     if candidatos:
         linhas = [
             f"• ID {mercado_id}: {nome}"
-            for mercado_id, nome in candidatos[:40]
+            for mercado_id, nome in candidatos
         ]
         for linha in linhas:
             log("Odds ao vivo candidato " + linha)
-        enviar_alerta_telegram(
-            "🔎 DIAGNÓSTICO DE ODDS AO VIVO\n\n"
-            "Mercados candidatos para próxima equipe a marcar:\n"
-            + "\n".join(linhas)
-            + "\n\nNenhuma aposta foi realizada. Envie esta mensagem "
-            "ao Chat para identificarmos o mercado correto."
-        )
+        for numero_parte, inicio in enumerate(range(0, len(linhas), 25), 1):
+            parte = linhas[inicio:inicio + 25]
+            enviar_alerta_telegram(
+                "🔎 DIAGNÓSTICO REFINADO DE ODDS AO VIVO "
+                f"— PARTE {numero_parte}\n\n"
+                "Mercados de ordem do próximo gol:\n"
+                + "\n".join(parte)
+                + "\n\nNenhuma aposta foi realizada. Envie todas as "
+                "partes ao Chat."
+            )
     else:
         amostra = [
             f"• ID {mercado_id}: {nome}"
