@@ -478,6 +478,104 @@ def diagnosticar_mercados_odds_ao_vivo():
         )
 
 
+def diagnosticar_amostra_odds_reais():
+    """Obtém uma amostra real dos mercados de ordem do gol em jogos ao vivo."""
+    if not APIFOOTBALL_ATIVA or not APIFOOTBALL_KEY:
+        return
+
+    dados, restante = apifootball_get("odds/live")
+    if not isinstance(dados, dict):
+        log("Amostra de odds reais: consulta indisponível")
+        return
+
+    ids_alvo = {73, 84, 85, 92, 109, 112, 127, 132, 139}
+    encontrados = []
+
+    def caminhar(objeto, contexto=None):
+        contexto = dict(contexto or {})
+        if isinstance(objeto, dict):
+            fixture = objeto.get("fixture")
+            if isinstance(fixture, dict) and fixture.get("id") is not None:
+                contexto["fixture_id"] = fixture.get("id")
+            elif objeto.get("fixture_id") is not None:
+                contexto["fixture_id"] = objeto.get("fixture_id")
+
+            teams = objeto.get("teams")
+            if isinstance(teams, dict):
+                home = teams.get("home", {}) or {}
+                away = teams.get("away", {}) or {}
+                if isinstance(home, dict):
+                    contexto["home"] = home.get("name", "")
+                if isinstance(away, dict):
+                    contexto["away"] = away.get("name", "")
+
+            try:
+                mercado_id = int(objeto.get("id"))
+            except Exception:
+                mercado_id = None
+            nome = str(objeto.get("name", "") or "")
+            valores = objeto.get("values")
+            if (
+                mercado_id in ids_alvo
+                and "which team will score" in nome.lower()
+                and isinstance(valores, list)
+            ):
+                encontrados.append({
+                    "fixture_id": contexto.get("fixture_id", ""),
+                    "home": contexto.get("home", ""),
+                    "away": contexto.get("away", ""),
+                    "id": mercado_id,
+                    "name": nome,
+                    "values": valores,
+                })
+            for valor in objeto.values():
+                caminhar(valor, contexto)
+        elif isinstance(objeto, list):
+            for item in objeto:
+                caminhar(item, contexto)
+
+    caminhar(dados.get("response", []) or [])
+    log(
+        f"Amostra de odds reais: {len(encontrados)} mercado(s) encontrado(s); "
+        f"quota {restante}"
+    )
+
+    if not encontrados:
+        enviar_alerta_telegram(
+            "📡 AMOSTRA REAL DE ODDS AO VIVO\n\n"
+            "A API não encontrou agora uma partida ao vivo oferecendo os "
+            "mercados testados. A coleta normal continua funcionando. "
+            "Repetiremos o teste durante uma janela com mais jogos."
+        )
+        return
+
+    linhas = []
+    for mercado in encontrados[:20]:
+        jogo = " x ".join(
+            parte for parte in [mercado["home"], mercado["away"]] if parte
+        ) or f"fixture {mercado['fixture_id']}"
+        opcoes = []
+        for valor in mercado["values"]:
+            if not isinstance(valor, dict):
+                continue
+            nome_opcao = valor.get("value", valor.get("name", "?"))
+            odd = valor.get("odd", valor.get("price", "?"))
+            suspensa = valor.get("suspended", "")
+            opcoes.append(f"{nome_opcao}={odd} suspensa={suspensa}")
+        linhas.append(
+            f"• {jogo} | ID {mercado['id']} | {mercado['name']} | "
+            + "; ".join(opcoes)
+        )
+
+    for numero_parte, inicio in enumerate(range(0, len(linhas), 8), 1):
+        enviar_alerta_telegram(
+            "📡 AMOSTRA REAL DE ODDS AO VIVO "
+            f"— PARTE {numero_parte}\n\n"
+            + "\n".join(linhas[inicio:inicio + 8])
+            + "\n\nNenhuma aposta foi realizada. Envie todas as partes ao Chat."
+        )
+
+
 def ler_csv_github_generico(caminho, colunas):
     url = (
         f"https://api.github.com/repos/"
@@ -3370,6 +3468,11 @@ def main():
         diagnosticar_mercados_odds_ao_vivo()
     except Exception as exc:
         log(f"Erro no diagnóstico de odds ao vivo: {exc}")
+
+    try:
+        diagnosticar_amostra_odds_reais()
+    except Exception as exc:
+        log(f"Erro na amostra de odds reais: {exc}")
 
     proxima_api_football = 0.0
 
