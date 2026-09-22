@@ -9915,6 +9915,127 @@ with aba_validacao:
                     hide_index=True,
                 )
 
+            st.write("### 💰 Laboratório financeiro do V4")
+            st.caption(
+                "Simulação educacional para medir valor estatístico. Não "
+                "realiza apostas e não altera as regras nem os registros do V4."
+            )
+            f1, f2, f3 = st.columns(3)
+            mercado_financeiro = f1.selectbox(
+                "Mercado simulado",
+                ["Time destacado", "Nenhum gol"],
+                key="mercado_financeiro_v4",
+            )
+            odd_financeira = f2.number_input(
+                "Odd decimal",
+                min_value=1.01,
+                max_value=100.0,
+                value=2.00,
+                step=0.01,
+                key="odd_financeira_v4",
+            )
+            valor_entrada = f3.number_input(
+                "Entrada simulada (R$)",
+                min_value=0.01,
+                max_value=100000.0,
+                value=10.00,
+                step=1.00,
+                key="valor_entrada_v4",
+            )
+
+            probabilidade_estimada = st.slider(
+                "Probabilidade estimada de acerto (%)",
+                min_value=0.0,
+                max_value=100.0,
+                value=50.0,
+                step=0.1,
+                key="probabilidade_financeira_v4",
+            )
+            ponto_equilibrio = 100 / odd_financeira
+            probabilidade_decimal = probabilidade_estimada / 100
+            valor_esperado = valor_entrada * (
+                probabilidade_decimal * odd_financeira - 1
+            )
+            vantagem_estimada = probabilidade_estimada - ponto_equilibrio
+
+            lf1, lf2, lf3, lf4 = st.columns(4)
+            lf1.metric("Taxa mínima de acerto", f"{ponto_equilibrio:.1f}%")
+            lf2.metric("Probabilidade informada", f"{probabilidade_estimada:.1f}%")
+            lf3.metric("Vantagem estimada", f"{vantagem_estimada:+.1f} p.p.")
+            lf4.metric("Valor esperado/entrada", f"R$ {valor_esperado:+.2f}")
+
+            if vantagem_estimada > 0:
+                st.success(
+                    f"Na simulação de {mercado_financeiro.lower()}, a odd "
+                    "está acima do ponto de equilíbrio. Isso ainda não "
+                    "garante lucro: precisamos confirmar a probabilidade "
+                    "com uma amostra suficiente."
+                )
+            elif vantagem_estimada < 0:
+                st.warning(
+                    "Na probabilidade informada, esta odd não alcança o "
+                    "ponto de equilíbrio e teria valor esperado negativo."
+                )
+            else:
+                st.info(
+                    "A probabilidade informada está exatamente no ponto de "
+                    "equilíbrio, antes de eventuais margens da casa."
+                )
+
+            if not base_v4.empty:
+                status_financeiro_v4 = (
+                    base_v4["status_proximo_gol"].fillna("").astype(str)
+                    .str.strip().str.upper()
+                )
+                resultado_financeiro_v4 = (
+                    base_v4["resultado_proximo_gol_v4"].fillna("").astype(str)
+                    .str.strip().str.upper()
+                )
+                concluidos_financeiros_v4 = status_financeiro_v4.isin(
+                    ["CONCLUÍDO_GOL", "CONCLUIDO_GOL",
+                     "CONCLUÍDO_SEM_GOL", "CONCLUIDO_SEM_GOL"]
+                )
+                amostra_financeira_v4 = base_v4[concluidos_financeiros_v4]
+                acertos_financeiros_v4 = int(
+                    (resultado_financeiro_v4.eq("ACERTO")
+                     & concluidos_financeiros_v4).sum()
+                )
+                total_financeiro_v4 = len(amostra_financeira_v4)
+                if total_financeiro_v4:
+                    erros_financeiros_v4 = (
+                        total_financeiro_v4 - acertos_financeiros_v4
+                    )
+                    lucro_simulado_v4 = (
+                        acertos_financeiros_v4
+                        * valor_entrada * (odd_financeira - 1)
+                        - erros_financeiros_v4 * valor_entrada
+                    )
+                    total_investido_v4 = total_financeiro_v4 * valor_entrada
+                    roi_simulado_v4 = (
+                        lucro_simulado_v4 / total_investido_v4 * 100
+                        if total_investido_v4 else 0
+                    )
+                    st.write("**Simulação sobre os resultados concluídos do V4**")
+                    sf1, sf2, sf3, sf4 = st.columns(4)
+                    sf1.metric("Entradas simuladas", total_financeiro_v4)
+                    sf2.metric("Acertos", acertos_financeiros_v4)
+                    sf3.metric("Lucro/prejuízo", f"R$ {lucro_simulado_v4:+.2f}")
+                    sf4.metric("ROI simulado", f"{roi_simulado_v4:+.1f}%")
+                    st.caption(
+                        "Esta projeção aplica a mesma odd a todos os casos. "
+                        "Ela é provisória até registrarmos a odd real de cada alerta."
+                    )
+                else:
+                    st.info(
+                        "O simulador está pronto. A projeção da amostra "
+                        "aparecerá quando o V4 concluir o primeiro caso."
+                    )
+            else:
+                st.info(
+                    "O simulador está pronto. A projeção da amostra aparecerá "
+                    "quando o V4 registrar e concluir o primeiro caso."
+                )
+
             st.write("### 🧪 Comparador automático: filtro atual x V2")
             st.caption(
                 "Compara apenas registros produzidos depois da ativação do "
