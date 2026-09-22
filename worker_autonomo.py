@@ -49,6 +49,7 @@ VERSAO_EXPERIMENTO = "EXP-2026-09-21-01"
 VERSAO_FILTRO_V1 = "V1-ESCUDO-DNA60"
 VERSAO_FILTRO_V2 = "V2-FINALIZACOES4"
 VERSAO_FILTRO_V3 = "V3-MIN60-IND80-OU-ESC2"
+VERSAO_FILTRO_V4 = "V4-PROXIMO-GOL-SOMBRA-01"
 RELATORIO_DIARIO_ATIVO = os.getenv("RELATORIO_DIARIO_ATIVO", "1").strip() == "1"
 RELATORIO_DIARIO_HORA = int(os.getenv("RELATORIO_DIARIO_HORA", "20"))
 RELATORIO_DIARIO_MINUTO = int(os.getenv("RELATORIO_DIARIO_MINUTO", "0"))
@@ -625,7 +626,10 @@ COLUNAS_VALIDACAO_APIFOOTBALL = [
     "elegivel_v2_sombra", "motivo_v2_sombra",
     "elegivel_v3_sombra", "motivo_v3_sombra",
     "versao_experimento", "versao_filtro_v1",
-    "versao_filtro_v2", "versao_filtro_v3",
+    "versao_filtro_v2", "versao_filtro_v3", "versao_filtro_v4",
+    "previsao_v4_proximo_gol", "motivo_v4_proximo_gol",
+    "status_proximo_gol", "time_proximo_gol", "minuto_proximo_gol",
+    "resultado_proximo_gol_v4", "odd_time_destaque", "odd_nenhum_gol",
     "gol_ate_5_min", "gol_ate_10_min", "escanteio_ate_5_min",
     "escanteio_ate_10_min", "time_gol", "resultado_gol",
     "gol_time_destaque_5_min", "gol_time_destaque_10_min", "status",
@@ -1207,6 +1211,45 @@ def resultado_gol_af(linha, placar_alerta):
     )
 
 
+def buscar_primeiro_gol_apos_alerta_af(fixture_id, minuto_alerta):
+    dados, _ = apifootball_get(
+        "fixtures/events", {"fixture": fixture_id, "type": "Goal"}
+    )
+    if not isinstance(dados, dict):
+        return "", ""
+    candidatos = []
+    for evento in dados.get("response", []) or []:
+        if str(evento.get("type", "")).strip().lower() != "goal":
+            continue
+        detalhe = str(evento.get("detail", "")).strip().lower()
+        if "missed" in detalhe:
+            continue
+        tempo = evento.get("time", {}) or {}
+        minuto = int(numero_af(tempo.get("elapsed", 0)))
+        extra = int(numero_af(tempo.get("extra", 0)))
+        if minuto <= int(numero_af(minuto_alerta)):
+            continue
+        time_nome = str((evento.get("team", {}) or {}).get("name", "")).strip()
+        if time_nome:
+            candidatos.append((minuto, extra, time_nome))
+    if not candidatos:
+        return "", ""
+    minuto, extra, time_nome = sorted(candidatos)[0]
+    minuto_texto = f"{minuto}+{extra}" if extra else str(minuto)
+    return time_nome, minuto_texto
+
+
+def resultado_previsao_v4(previsao, time_proximo, time_destaque):
+    previsao = str(previsao).strip().upper()
+    time_proximo = str(time_proximo).strip()
+    time_destaque = str(time_destaque).strip()
+    if previsao == "NENHUM_GOL":
+        return "ACERTO" if not time_proximo else "ERRO"
+    if previsao == "TIME_DESTAQUE":
+        return "ACERTO" if time_proximo == time_destaque else "ERRO"
+    return "NÃO AVALIADO"
+
+
 def atualizar_validacao_af(linha):
     df = ler_csv_github_generico(
         APIFOOTBALL_VALIDACAO_PATH, COLUNAS_VALIDACAO_APIFOOTBALL
@@ -1230,6 +1273,27 @@ def atualizar_validacao_af(linha):
         resultado_gol, time_gol, marcou_destaque = resultado_gol_af(
             linha, df.at[idx, "placar_alerta"]
         )
+        if (
+            str(df.at[idx, "status_proximo_gol"]).strip().upper()
+            == "ACOMPANHANDO"
+            and houve_gol
+        ):
+            time_proximo, minuto_proximo = buscar_primeiro_gol_apos_alerta_af(
+                linha["fixture_id"], minuto_alerta
+            )
+            if not time_proximo and resultado_gol not in {"AMBOS", "SEM_GOL"}:
+                time_proximo = time_gol
+                minuto_proximo = str(linha.get("minuto", ""))
+            if time_proximo:
+                df.at[idx, "time_proximo_gol"] = time_proximo
+                df.at[idx, "minuto_proximo_gol"] = minuto_proximo
+                df.at[idx, "status_proximo_gol"] = "CONCLUÍDO_GOL"
+                df.at[idx, "resultado_proximo_gol_v4"] = resultado_previsao_v4(
+                    df.at[idx, "previsao_v4_proximo_gol"],
+                    time_proximo,
+                    df.at[idx, "time_destaque"],
+                )
+                mudou = True
         if 5 <= delta_min <= 10:
             df.at[idx, "gol_ate_5_min"] = "SIM" if houve_gol else "NÃO"
             df.at[idx, "gol_time_destaque_5_min"] = (
@@ -1254,6 +1318,80 @@ def atualizar_validacao_af(linha):
         )
 
 
+def finalizar_v4_partidas_encerradas_af(fixture_ids_ativos):
+    df = ler_csv_github_generico(
+        APIFOOTBALL_VALIDACAO_PATH, COLUNAS_VALIDACAO_APIFOOTBALL
+    )
+    if df.empty:
+        return 0
+    pendentes = df[
+        df["status_proximo_gol"].astype(str).str.upper().eq("ACOMPANHANDO")
+        & ~df["fixture_id"].astype(str).isin(
+            {str(item) for item in fixture_ids_ativos if item is not None}
+        )
+    ]
+    if pendentes.empty:
+        return 0
+
+    alterou = False
+    concluidos = 0
+    fixture_ids = pendentes["fixture_id"].astype(str).drop_duplicates().tolist()[:5]
+    for fixture_id_texto in fixture_ids:
+        try:
+            fixture_id = int(float(fixture_id_texto))
+        except (TypeError, ValueError):
+            continue
+        dados, _ = apifootball_get("fixtures", {"id": fixture_id})
+        respostas = dados.get("response", []) if isinstance(dados, dict) else []
+        if not respostas:
+            continue
+        jogo = respostas[0]
+        status_curto = str(
+            ((jogo.get("fixture", {}) or {}).get("status", {}) or {}).get(
+                "short", ""
+            )
+        ).upper()
+        indices = pendentes.index[
+            pendentes["fixture_id"].astype(str).eq(fixture_id_texto)
+        ]
+        if status_curto in {"CANC", "ABD", "PST", "SUSP", "INT"}:
+            for idx in indices:
+                df.at[idx, "status_proximo_gol"] = "ANULADO"
+                df.at[idx, "resultado_proximo_gol_v4"] = "NÃO AVALIADO"
+                alterou = True
+                concluidos += 1
+            continue
+        if status_curto not in {"FT", "AET", "PEN"}:
+            continue
+        for idx in indices:
+            minuto_alerta = df.at[idx, "minuto_alerta"]
+            time_proximo, minuto_proximo = buscar_primeiro_gol_apos_alerta_af(
+                fixture_id, minuto_alerta
+            )
+            if time_proximo:
+                df.at[idx, "time_proximo_gol"] = time_proximo
+                df.at[idx, "minuto_proximo_gol"] = minuto_proximo
+                df.at[idx, "status_proximo_gol"] = "CONCLUÍDO_GOL"
+            else:
+                df.at[idx, "time_proximo_gol"] = "NENHUM_GOL"
+                df.at[idx, "minuto_proximo_gol"] = ""
+                df.at[idx, "status_proximo_gol"] = "CONCLUÍDO_SEM_GOL"
+            df.at[idx, "resultado_proximo_gol_v4"] = resultado_previsao_v4(
+                df.at[idx, "previsao_v4_proximo_gol"],
+                "" if not time_proximo else time_proximo,
+                df.at[idx, "time_destaque"],
+            )
+            alterou = True
+            concluidos += 1
+    if alterou:
+        salvar_csv_github_generico(
+            APIFOOTBALL_VALIDACAO_PATH,
+            df,
+            "Conclui mercado próximo gol V4",
+        )
+    return concluidos
+
+
 def verificar_integridade_experimento(registro):
     campos_obrigatorios = {
         "elegivel_v2_sombra": registro.get("elegivel_v2_sombra", ""),
@@ -1262,6 +1400,10 @@ def verificar_integridade_experimento(registro):
         "versao_filtro_v1": registro.get("versao_filtro_v1", ""),
         "versao_filtro_v2": registro.get("versao_filtro_v2", ""),
         "versao_filtro_v3": registro.get("versao_filtro_v3", ""),
+        "versao_filtro_v4": registro.get("versao_filtro_v4", ""),
+        "previsao_v4_proximo_gol": registro.get(
+            "previsao_v4_proximo_gol", ""
+        ),
     }
     faltantes = [
         nome for nome, valor in campos_obrigatorios.items()
@@ -1281,6 +1423,25 @@ def verificar_integridade_experimento(registro):
     return False
 
 
+def classificar_v4_proximo_gol(linha):
+    minuto = int(numero_af(linha.get("minuto", 0)))
+    indice = numero_af(linha.get("indice_destaque", 0))
+    chutes_gol = numero_af(linha.get("novos_chutes_gol", 0))
+    finalizacoes = numero_af(linha.get("novas_finalizacoes", 0))
+
+    # O V4 é apenas observacional. Em sinais tardios, pouca produção de
+    # finalizações pesa a favor de a partida terminar sem outro gol.
+    if minuto >= 70 and indice < 80 and chutes_gol < 2 and finalizacoes < 4:
+        return (
+            "NENHUM_GOL",
+            "sinal tardio; índice abaixo de 80; baixa conversão ofensiva recente",
+        )
+    return (
+        "TIME_DESTAQUE",
+        "pressão aprovada pelo V1; equipe destacada mantida como candidata",
+    )
+
+
 def registrar_alerta_af(linha):
     df = ler_csv_github_generico(
         APIFOOTBALL_VALIDACAO_PATH, COLUNAS_VALIDACAO_APIFOOTBALL
@@ -1292,6 +1453,7 @@ def registrar_alerta_af(linha):
     ).any():
         return False
     agora = datetime.now()
+    previsao_v4, motivo_v4 = classificar_v4_proximo_gol(linha)
     registro = {coluna: "" for coluna in COLUNAS_VALIDACAO_APIFOOTBALL}
     registro.update({
         "id_alerta": f"AF-{fixture_id}-{agora.strftime('%Y%m%d%H%M%S')}",
@@ -1322,6 +1484,15 @@ def registrar_alerta_af(linha):
         "versao_filtro_v1": VERSAO_FILTRO_V1,
         "versao_filtro_v2": VERSAO_FILTRO_V2,
         "versao_filtro_v3": VERSAO_FILTRO_V3,
+        "versao_filtro_v4": VERSAO_FILTRO_V4,
+        "previsao_v4_proximo_gol": previsao_v4,
+        "motivo_v4_proximo_gol": motivo_v4,
+        "status_proximo_gol": "ACOMPANHANDO",
+        "time_proximo_gol": "",
+        "minuto_proximo_gol": "",
+        "resultado_proximo_gol_v4": "PENDENTE",
+        "odd_time_destaque": "",
+        "odd_nenhum_gol": "",
         "gol_ate_5_min": "PENDENTE", "gol_ate_10_min": "PENDENTE",
         "escanteio_ate_5_min": "PENDENTE", "escanteio_ate_10_min": "PENDENTE",
         "time_gol": "", "resultado_gol": "PENDENTE",
@@ -1854,6 +2025,12 @@ def ciclo_apifootball():
     fixture_ids_ativos = {
         (jogo.get("fixture", {}) or {}).get("id") for jogo in jogos
     }
+    v4_concluidos = finalizar_v4_partidas_encerradas_af(fixture_ids_ativos)
+    if v4_concluidos:
+        log(
+            f"V4 próximo gol: {v4_concluidos} registro(s) concluído(s) "
+            "após o encerramento da partida"
+        )
     if ha_rastreamento_pendente_af(df, fixture_ids_ativos):
         log(
             "API-Football: confirmação pendente; próxima leitura em "
