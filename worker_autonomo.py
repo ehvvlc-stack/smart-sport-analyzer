@@ -49,7 +49,7 @@ VERSAO_EXPERIMENTO = "EXP-2026-09-21-01"
 VERSAO_FILTRO_V1 = "V1-ESCUDO-DNA60"
 VERSAO_FILTRO_V2 = "V2-FINALIZACOES4"
 VERSAO_FILTRO_V3 = "V3-MIN60-IND80-OU-ESC2"
-VERSAO_FILTRO_V4 = "V4-PROXIMO-GOL-DESFECHO-SEGURO-04"
+VERSAO_FILTRO_V4 = "V4-PROXIMO-GOL-FINALIZACAO-SEGURA-05"
 RELATORIO_DIARIO_ATIVO = os.getenv("RELATORIO_DIARIO_ATIVO", "1").strip() == "1"
 RELATORIO_DIARIO_HORA = int(os.getenv("RELATORIO_DIARIO_HORA", "20"))
 RELATORIO_DIARIO_MINUTO = int(os.getenv("RELATORIO_DIARIO_MINUTO", "0"))
@@ -2315,6 +2315,12 @@ def ciclo_apifootball():
         return APIFOOTBALL_INTERVALO_SEGUNDOS
     if not jogos:
         log(f"API-Football: 0 jogos ao vivo • quota restante {restante}")
+        v4_concluidos = finalizar_v4_partidas_encerradas_af(set())
+        if v4_concluidos:
+            log(
+                f"V4 próximo gol: {v4_concluidos} registro(s) concluído(s) "
+                "mesmo sem outros jogos ao vivo"
+            )
         return APIFOOTBALL_INTERVALO_SEGUNDOS
     df = ler_csv_github_generico(APIFOOTBALL_PATH, COLUNAS_APIFOOTBALL)
     processados = 0
