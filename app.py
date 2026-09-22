@@ -7653,6 +7653,11 @@ def construir_auditoria_sinais(df_monitoramento, df_validacao_af=None):
         "elegivel_v3_sombra", "motivo_v3_sombra",
         "versao_experimento", "versao_filtro_v1",
         "versao_filtro_v2", "versao_filtro_v3",
+        "versao_filtro_v4", "previsao_v4_proximo_gol",
+        "motivo_v4_proximo_gol", "status_proximo_gol",
+        "time_proximo_gol", "minuto_proximo_gol",
+        "resultado_proximo_gol_v4", "odd_time_destaque",
+        "odd_nenhum_gol",
         "decisao", "explicacao", "etapa_confirmacao",
         "curva_pressao", "variacao_indice",
         "resultado_5_min", "resultado_10_min",
@@ -7674,6 +7679,11 @@ def construir_auditoria_sinais(df_monitoramento, df_validacao_af=None):
         "elegivel_v3_sombra", "motivo_v3_sombra",
         "versao_experimento", "versao_filtro_v1",
         "versao_filtro_v2", "versao_filtro_v3",
+        "versao_filtro_v4", "previsao_v4_proximo_gol",
+        "motivo_v4_proximo_gol", "status_proximo_gol",
+        "time_proximo_gol", "minuto_proximo_gol",
+        "resultado_proximo_gol_v4", "odd_time_destaque",
+        "odd_nenhum_gol",
         "rastreamento_origem_minuto", "rastreamento_etapa",
         "curva_pressao", "variacao_indice",
     ]:
@@ -7795,6 +7805,17 @@ def construir_auditoria_sinais(df_monitoramento, df_validacao_af=None):
             "versao_filtro_v1": candidato["versao_filtro_v1"],
             "versao_filtro_v2": candidato["versao_filtro_v2"],
             "versao_filtro_v3": candidato["versao_filtro_v3"],
+            "versao_filtro_v4": candidato["versao_filtro_v4"],
+            "previsao_v4_proximo_gol": candidato["previsao_v4_proximo_gol"],
+            "motivo_v4_proximo_gol": candidato["motivo_v4_proximo_gol"],
+            "status_proximo_gol": candidato["status_proximo_gol"],
+            "time_proximo_gol": candidato["time_proximo_gol"],
+            "minuto_proximo_gol": candidato["minuto_proximo_gol"],
+            "resultado_proximo_gol_v4": candidato[
+                "resultado_proximo_gol_v4"
+            ],
+            "odd_time_destaque": candidato["odd_time_destaque"],
+            "odd_nenhum_gol": candidato["odd_nenhum_gol"],
             "decisao": decisao,
             "explicacao": explicacao,
             "etapa_confirmacao": leitura_curva["rastreamento_etapa"],
@@ -7828,6 +7849,11 @@ def construir_auditoria_sinais(df_monitoramento, df_validacao_af=None):
         "elegivel_v3_sombra", "motivo_v3_sombra",
         "versao_experimento", "versao_filtro_v1",
         "versao_filtro_v2", "versao_filtro_v3",
+        "versao_filtro_v4", "previsao_v4_proximo_gol",
+        "motivo_v4_proximo_gol", "status_proximo_gol",
+        "time_proximo_gol", "minuto_proximo_gol",
+        "resultado_proximo_gol_v4", "odd_time_destaque",
+        "odd_nenhum_gol",
         "resultado_gol", "time_gol", "gol_time_destaque_5_min",
         "gol_time_destaque_10_min",
     ]:
@@ -7912,6 +7938,21 @@ def construir_auditoria_sinais(df_monitoramento, df_validacao_af=None):
             "versao_filtro_v1": valor_alerta("versao_filtro_v1"),
             "versao_filtro_v2": valor_alerta("versao_filtro_v2"),
             "versao_filtro_v3": valor_alerta("versao_filtro_v3"),
+            "versao_filtro_v4": valor_alerta("versao_filtro_v4"),
+            "previsao_v4_proximo_gol": valor_alerta(
+                "previsao_v4_proximo_gol"
+            ),
+            "motivo_v4_proximo_gol": valor_alerta(
+                "motivo_v4_proximo_gol"
+            ),
+            "status_proximo_gol": valor_alerta("status_proximo_gol"),
+            "time_proximo_gol": valor_alerta("time_proximo_gol"),
+            "minuto_proximo_gol": valor_alerta("minuto_proximo_gol"),
+            "resultado_proximo_gol_v4": valor_alerta(
+                "resultado_proximo_gol_v4"
+            ),
+            "odd_time_destaque": valor_alerta("odd_time_destaque"),
+            "odd_nenhum_gol": valor_alerta("odd_nenhum_gol"),
             "decisao": "✅ ENVIADO",
             "explicacao": (
                 f"Alerta confirmado no registro do Telegram. DNA {dna} "
@@ -9752,7 +9793,8 @@ with aba_validacao:
                 versoes_ativas = (
                     nova_coleta[
                         ["versao_experimento", "versao_filtro_v1",
-                         "versao_filtro_v2", "versao_filtro_v3"]
+                         "versao_filtro_v2", "versao_filtro_v3",
+                         "versao_filtro_v4"]
                     ]
                     .fillna("")
                     .drop_duplicates()
@@ -9761,6 +9803,7 @@ with aba_validacao:
                         "versao_filtro_v1": "Versão V1",
                         "versao_filtro_v2": "Versão V2",
                         "versao_filtro_v3": "Versão V3",
+                        "versao_filtro_v4": "Versão V4",
                     })
                 )
                 st.write("**Versões presentes na nova amostra**")
@@ -9788,6 +9831,88 @@ with aba_validacao:
                 st.info(
                     "Aguardando o primeiro novo alerta após a correção. "
                     "Os registros históricos vazios não são contados como erro."
+                )
+
+            st.write("### 🎯 V4 silencioso: próxima equipe a marcar")
+            st.caption(
+                "Acompanha cada novo alerta até o primeiro gol posterior ou "
+                "até o encerramento da partida. O V4 é apenas uma simulação "
+                "e não envia apostas."
+            )
+            base_v4 = df_auditoria[
+                df_auditoria["decisao"].eq("✅ ENVIADO")
+                & df_auditoria["versao_filtro_v4"].fillna("").astype(str)
+                .str.strip().ne("")
+            ].copy()
+            if base_v4.empty:
+                st.info(
+                    "O V4 aguarda o primeiro novo alerta. Esta seção será "
+                    "preenchida automaticamente."
+                )
+            else:
+                status_v4 = (
+                    base_v4["status_proximo_gol"].fillna("").astype(str)
+                    .str.strip().str.upper()
+                )
+                resultado_v4 = (
+                    base_v4["resultado_proximo_gol_v4"].fillna("").astype(str)
+                    .str.strip().str.upper()
+                )
+                concluidos_v4 = status_v4.isin(
+                    ["CONCLUÍDO_GOL", "CONCLUIDO_GOL",
+                     "CONCLUÍDO_SEM_GOL", "CONCLUIDO_SEM_GOL"]
+                )
+                acertos_v4 = resultado_v4.eq("ACERTO") & concluidos_v4
+                sem_gol_v4 = (
+                    base_v4["time_proximo_gol"].fillna("").astype(str)
+                    .str.strip().str.upper().eq("NENHUM_GOL")
+                    & concluidos_v4
+                )
+                total_concluido_v4 = int(concluidos_v4.sum())
+                total_acertos_v4 = int(acertos_v4.sum())
+                taxa_v4 = (
+                    round(total_acertos_v4 / total_concluido_v4 * 100, 1)
+                    if total_concluido_v4 else None
+                )
+                q1, q2, q3, q4, q5 = st.columns(5)
+                q1.metric("Sinais V4", len(base_v4))
+                q2.metric("Aguardando desfecho", int((~concluidos_v4).sum()))
+                q3.metric("Concluídos", total_concluido_v4)
+                q4.metric("Acertos do V4", total_acertos_v4)
+                q5.metric(
+                    "Taxa de acerto",
+                    f"{taxa_v4:.1f}%" if taxa_v4 is not None else "—",
+                )
+                st.caption(
+                    f"Partidas concluídas sem outro gol: {int(sem_gol_v4.sum())}. "
+                    "As odds ainda ficam em branco até integrarmos uma fonte "
+                    "confiável ou o registro manual."
+                )
+                tabela_v4 = base_v4[[
+                    "data_hora", "jogo", "minuto", "time_destaque",
+                    "previsao_v4_proximo_gol", "motivo_v4_proximo_gol",
+                    "status_proximo_gol", "time_proximo_gol",
+                    "minuto_proximo_gol", "resultado_proximo_gol_v4",
+                    "odd_time_destaque", "odd_nenhum_gol",
+                ]].copy()
+                tabela_v4 = tabela_v4.rename(columns={
+                    "data_hora": "Data/hora",
+                    "jogo": "Jogo",
+                    "minuto": "Minuto do alerta",
+                    "time_destaque": "Time destacado",
+                    "previsao_v4_proximo_gol": "Previsão V4",
+                    "motivo_v4_proximo_gol": "Motivo",
+                    "status_proximo_gol": "Status",
+                    "time_proximo_gol": "Próximo gol",
+                    "minuto_proximo_gol": "Minuto do gol",
+                    "resultado_proximo_gol_v4": "Resultado V4",
+                    "odd_time_destaque": "Odd time",
+                    "odd_nenhum_gol": "Odd sem gol",
+                })
+                st.dataframe(
+                    tabela_v4.sort_values("Data/hora", ascending=False),
+                    width="stretch",
+                    hide_index=True,
                 )
 
             st.write("### 🧪 Comparador automático: filtro atual x V2")
