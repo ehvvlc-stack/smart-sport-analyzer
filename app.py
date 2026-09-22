@@ -7657,7 +7657,8 @@ def construir_auditoria_sinais(df_monitoramento, df_validacao_af=None):
         "motivo_v4_proximo_gol", "status_proximo_gol",
         "time_proximo_gol", "minuto_proximo_gol",
         "resultado_proximo_gol_v4", "odd_time_destaque",
-        "odd_nenhum_gol",
+        "odd_nenhum_gol", "status_captura_odds_v4",
+        "mercado_odds_v4", "data_hora_odds_v4", "odd_previsao_v4",
         "decisao", "explicacao", "etapa_confirmacao",
         "curva_pressao", "variacao_indice",
         "resultado_5_min", "resultado_10_min",
@@ -7683,7 +7684,8 @@ def construir_auditoria_sinais(df_monitoramento, df_validacao_af=None):
         "motivo_v4_proximo_gol", "status_proximo_gol",
         "time_proximo_gol", "minuto_proximo_gol",
         "resultado_proximo_gol_v4", "odd_time_destaque",
-        "odd_nenhum_gol",
+        "odd_nenhum_gol", "status_captura_odds_v4",
+        "mercado_odds_v4", "data_hora_odds_v4", "odd_previsao_v4",
         "rastreamento_origem_minuto", "rastreamento_etapa",
         "curva_pressao", "variacao_indice",
     ]:
@@ -7816,6 +7818,10 @@ def construir_auditoria_sinais(df_monitoramento, df_validacao_af=None):
             ],
             "odd_time_destaque": candidato["odd_time_destaque"],
             "odd_nenhum_gol": candidato["odd_nenhum_gol"],
+            "status_captura_odds_v4": candidato["status_captura_odds_v4"],
+            "mercado_odds_v4": candidato["mercado_odds_v4"],
+            "data_hora_odds_v4": candidato["data_hora_odds_v4"],
+            "odd_previsao_v4": candidato["odd_previsao_v4"],
             "decisao": decisao,
             "explicacao": explicacao,
             "etapa_confirmacao": leitura_curva["rastreamento_etapa"],
@@ -7953,6 +7959,12 @@ def construir_auditoria_sinais(df_monitoramento, df_validacao_af=None):
             ),
             "odd_time_destaque": valor_alerta("odd_time_destaque"),
             "odd_nenhum_gol": valor_alerta("odd_nenhum_gol"),
+            "status_captura_odds_v4": valor_alerta(
+                "status_captura_odds_v4"
+            ),
+            "mercado_odds_v4": valor_alerta("mercado_odds_v4"),
+            "data_hora_odds_v4": valor_alerta("data_hora_odds_v4"),
+            "odd_previsao_v4": valor_alerta("odd_previsao_v4"),
             "decisao": "✅ ENVIADO",
             "explicacao": (
                 f"Alerta confirmado no registro do Telegram. DNA {dna} "
@@ -10025,6 +10037,8 @@ with aba_validacao:
                     "data_hora", "jogo", "placar", "minuto",
                     "time_destaque", "previsao_v4_proximo_gol",
                     "odd_time_destaque", "odd_nenhum_gol",
+                    "odd_previsao_v4", "status_captura_odds_v4",
+                    "mercado_odds_v4", "data_hora_odds_v4",
                     "Situação da captura", "status_proximo_gol",
                     "resultado_proximo_gol_v4", "retorno_unidade",
                 ]].rename(columns={
@@ -10036,6 +10050,10 @@ with aba_validacao:
                     "previsao_v4_proximo_gol": "Previsão V4",
                     "odd_time_destaque": "Odd time",
                     "odd_nenhum_gol": "Odd sem gol",
+                    "odd_previsao_v4": "Odd escolhida pelo V4",
+                    "status_captura_odds_v4": "Diagnóstico técnico",
+                    "mercado_odds_v4": "ID do mercado",
+                    "data_hora_odds_v4": "Horário da consulta",
                     "status_proximo_gol": "Status",
                     "resultado_proximo_gol_v4": "Resultado",
                     "retorno_unidade": "Retorno (un.)",
