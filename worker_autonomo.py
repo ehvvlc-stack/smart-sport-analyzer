@@ -410,6 +410,68 @@ def apifootball_get(endpoint, params=None):
         return None, -1
 
 
+def diagnosticar_mercados_odds_ao_vivo():
+    """Localiza uma vez os IDs de mercados ao vivo relacionados a gols."""
+    if not APIFOOTBALL_ATIVA or not APIFOOTBALL_KEY:
+        return
+
+    dados, restante = apifootball_get("odds/live/bets")
+    if not isinstance(dados, dict):
+        log("Odds ao vivo: diagnóstico indisponível nesta inicialização")
+        return
+
+    resposta = dados.get("response", []) or []
+    mercados = []
+    for item in resposta:
+        if not isinstance(item, dict):
+            continue
+        mercado_id = item.get("id", "")
+        nome = str(item.get("name", "") or "").strip()
+        if nome:
+            mercados.append((mercado_id, nome))
+
+    palavras = (
+        "next", "goal", "score", "team to score", "no goal",
+        "próximo", "proximo", "gol", "marcar",
+    )
+    candidatos = [
+        (mercado_id, nome)
+        for mercado_id, nome in mercados
+        if any(palavra in nome.lower() for palavra in palavras)
+    ]
+
+    log(
+        f"Odds ao vivo: {len(mercados)} mercados recebidos; "
+        f"{len(candidatos)} candidato(s) de gol; quota {restante}"
+    )
+    if candidatos:
+        linhas = [
+            f"• ID {mercado_id}: {nome}"
+            for mercado_id, nome in candidatos[:40]
+        ]
+        for linha in linhas:
+            log("Odds ao vivo candidato " + linha)
+        enviar_alerta_telegram(
+            "🔎 DIAGNÓSTICO DE ODDS AO VIVO\n\n"
+            "Mercados candidatos para próxima equipe a marcar:\n"
+            + "\n".join(linhas)
+            + "\n\nNenhuma aposta foi realizada. Envie esta mensagem "
+            "ao Chat para identificarmos o mercado correto."
+        )
+    else:
+        amostra = [
+            f"• ID {mercado_id}: {nome}"
+            for mercado_id, nome in mercados[:20]
+        ]
+        enviar_alerta_telegram(
+            "🔎 DIAGNÓSTICO DE ODDS AO VIVO\n\n"
+            "Nenhum mercado de próximo gol foi localizado pelo nome. "
+            "Primeiros mercados recebidos:\n"
+            + ("\n".join(amostra) if amostra else "Nenhum mercado retornado.")
+            + "\n\nEnvie esta mensagem ao Chat."
+        )
+
+
 def ler_csv_github_generico(caminho, colunas):
     url = (
         f"https://api.github.com/repos/"
@@ -3297,6 +3359,11 @@ def main():
         "SportMonks + API-Football Pro controlada "
         f"({'ATIVA' if APIFOOTBALL_ATIVA and APIFOOTBALL_KEY else 'DESATIVADA'})"
     )
+
+    try:
+        diagnosticar_mercados_odds_ao_vivo()
+    except Exception as exc:
+        log(f"Erro no diagnóstico de odds ao vivo: {exc}")
 
     proxima_api_football = 0.0
 
