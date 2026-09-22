@@ -43,13 +43,13 @@ APIFOOTBALL_VALIDACAO_PATH = os.getenv(
     "APIFOOTBALL_VALIDACAO_PATH",
     "data/validacao_apifootball.csv"
 ).strip()
-# Identificação imutável das regras usadas nesta etapa da validação.
+# Identificação imutável das regras usadas nesta etapa da validação e das odds V4.
 # Ao alterar qualquer critério no futuro, crie novos nomes de versão.
 VERSAO_EXPERIMENTO = "EXP-2026-09-21-01"
 VERSAO_FILTRO_V1 = "V1-ESCUDO-DNA60"
 VERSAO_FILTRO_V2 = "V2-FINALIZACOES4"
 VERSAO_FILTRO_V3 = "V3-MIN60-IND80-OU-ESC2"
-VERSAO_FILTRO_V4 = "V4-PROXIMO-GOL-SOMBRA-01"
+VERSAO_FILTRO_V4 = "V4-PROXIMO-GOL-ODDS-02"
 RELATORIO_DIARIO_ATIVO = os.getenv("RELATORIO_DIARIO_ATIVO", "1").strip() == "1"
 RELATORIO_DIARIO_HORA = int(os.getenv("RELATORIO_DIARIO_HORA", "20"))
 RELATORIO_DIARIO_MINUTO = int(os.getenv("RELATORIO_DIARIO_MINUTO", "0"))
@@ -1608,6 +1608,108 @@ def classificar_v4_proximo_gol(linha):
     )
 
 
+MERCADOS_PROXIMO_GOL = {
+    0: [73],
+    1: [84, 85],
+    2: [92],
+    3: [109],
+    4: [112],
+    5: [127],
+    6: [132],
+    7: [139],
+    8: [140],
+    9: [141],
+    10: [142],
+    11: [143],
+    12: [163],
+}
+
+
+def capturar_odds_proximo_gol(linha):
+    """Captura odds abertas do time destacado e de nenhum novo gol."""
+    fixture_id = linha.get("fixture_id")
+    gols_casa, gols_fora = placar_partes_af(linha.get("placar", "0 x 0"))
+    ids_mercado = MERCADOS_PROXIMO_GOL.get(gols_casa + gols_fora, [])
+    if not fixture_id or not ids_mercado:
+        return "", "", "SEM_MERCADO"
+
+    partes_jogo = str(linha.get("jogo", "")).split(" x ", 1)
+    casa = partes_jogo[0].strip() if partes_jogo else ""
+    fora = partes_jogo[1].strip() if len(partes_jogo) > 1 else ""
+    destaque = str(linha.get("time_destaque", "")).strip().casefold()
+    if destaque == casa.casefold():
+        opcao_destaque = "1"
+    elif destaque == fora.casefold():
+        opcao_destaque = "2"
+    else:
+        log(f"Odds V4: time destacado não identificado em {linha.get('jogo', '')}")
+        return "", "", "TIME_NAO_IDENTIFICADO"
+
+    def suspenso(valor):
+        return str(valor).strip().lower() in {"1", "true", "yes", "sim", "on"}
+
+    for mercado_id in ids_mercado:
+        dados, restante = apifootball_get(
+            "odds/live", {"fixture": fixture_id, "bet": mercado_id}
+        )
+        if not isinstance(dados, dict):
+            continue
+
+        mercados = []
+
+        def caminhar(objeto, bloqueado=False):
+            if isinstance(objeto, dict):
+                bloqueado_atual = bloqueado or any(
+                    suspenso(objeto.get(chave, False))
+                    for chave in ("suspended", "blocked", "stopped")
+                )
+                try:
+                    id_atual = int(objeto.get("id"))
+                except Exception:
+                    id_atual = None
+                nome = str(objeto.get("name", "") or "")
+                valores = objeto.get("values")
+                if (
+                    id_atual == mercado_id
+                    and "which team will score" in nome.lower()
+                    and isinstance(valores, list)
+                ):
+                    mercados.append((valores, bloqueado_atual))
+                for valor in objeto.values():
+                    caminhar(valor, bloqueado_atual)
+            elif isinstance(objeto, list):
+                for item in objeto:
+                    caminhar(item, bloqueado)
+
+        caminhar(dados.get("response", []) or [])
+        for valores, mercado_bloqueado in mercados:
+            if mercado_bloqueado:
+                continue
+            opcoes = {}
+            for valor in valores:
+                if not isinstance(valor, dict) or suspenso(valor.get("suspended", False)):
+                    continue
+                nome_opcao = str(
+                    valor.get("value", valor.get("name", "")) or ""
+                ).strip()
+                odd = numero_af(valor.get("odd", valor.get("price", 0)))
+                if odd > 1:
+                    opcoes[nome_opcao.casefold()] = round(odd, 3)
+
+            odd_destaque = opcoes.get(opcao_destaque.casefold(), "")
+            odd_sem_gol = opcoes.get("no goal", "")
+            if odd_destaque != "" or odd_sem_gol != "":
+                log(
+                    f"Odds V4: fixture {fixture_id} mercado {mercado_id} "
+                    f"destaque={odd_destaque or '-'} sem_gol={odd_sem_gol or '-'} "
+                    f"quota {restante}"
+                )
+                return odd_destaque, odd_sem_gol, f"ABERTO_ID_{mercado_id}"
+
+    log(f"Odds V4: fixture {fixture_id} sem mercado aberto neste instante")
+    return "", "", "SUSPENSO_OU_INDISPONIVEL"
+
+
 def registrar_alerta_af(linha):
     df = ler_csv_github_generico(
         APIFOOTBALL_VALIDACAO_PATH, COLUNAS_VALIDACAO_APIFOOTBALL
@@ -1620,6 +1722,7 @@ def registrar_alerta_af(linha):
         return False
     agora = datetime.now()
     previsao_v4, motivo_v4 = classificar_v4_proximo_gol(linha)
+    odd_destaque, odd_sem_gol, status_odds = capturar_odds_proximo_gol(linha)
     registro = {coluna: "" for coluna in COLUNAS_VALIDACAO_APIFOOTBALL}
     registro.update({
         "id_alerta": f"AF-{fixture_id}-{agora.strftime('%Y%m%d%H%M%S')}",
@@ -1657,8 +1760,8 @@ def registrar_alerta_af(linha):
         "time_proximo_gol": "",
         "minuto_proximo_gol": "",
         "resultado_proximo_gol_v4": "PENDENTE",
-        "odd_time_destaque": "",
-        "odd_nenhum_gol": "",
+        "odd_time_destaque": odd_destaque,
+        "odd_nenhum_gol": odd_sem_gol,
         "gol_ate_5_min": "PENDENTE", "gol_ate_10_min": "PENDENTE",
         "escanteio_ate_5_min": "PENDENTE", "escanteio_ate_10_min": "PENDENTE",
         "time_gol": "", "resultado_gol": "PENDENTE",
@@ -1680,6 +1783,15 @@ def registrar_alerta_af(linha):
             "conferido no painel."
         )
         return False
+    bloco_odds = ""
+    if odd_destaque != "" or odd_sem_gol != "":
+        bloco_odds = (
+            "\n\n💰 ODDS OBSERVADAS NO ALERTA\n"
+            f"• Time destacado: {odd_destaque or 'indisponível'}\n"
+            f"• Nenhum novo gol: {odd_sem_gol or 'indisponível'}"
+        )
+    else:
+        log(f"Odds V4 não gravadas: {status_odds}")
     enviar_alerta_telegram(
         "🚨 PRESSÃO ALTA — API-FOOTBALL\n\n"
         f"⚽ {linha['jogo']}\n"
@@ -1690,7 +1802,8 @@ def registrar_alerta_af(linha):
         f"⚡ Momento recente: {max(linha['momento_casa'], linha['momento_fora']):.1f}%\n\n"
         f"🧬 DNA: {linha['dna_pressao']} ({numero_af(linha['dna_score']):.0f}/100)\n"
         f"🔎 {linha['dna_motivos']}\n"
-        f"🎯 Situação: {linha['situacao_placar']}\n\n"
+        f"🎯 Situação: {linha['situacao_placar']}"
+        f"{bloco_odds}\n\n"
         "🧪 Sinal estatístico em validação; nenhuma aposta é automática."
     )
     return True
@@ -3463,16 +3576,6 @@ def main():
         "SportMonks + API-Football Pro controlada "
         f"({'ATIVA' if APIFOOTBALL_ATIVA and APIFOOTBALL_KEY else 'DESATIVADA'})"
     )
-
-    try:
-        diagnosticar_mercados_odds_ao_vivo()
-    except Exception as exc:
-        log(f"Erro no diagnóstico de odds ao vivo: {exc}")
-
-    try:
-        diagnosticar_amostra_odds_reais()
-    except Exception as exc:
-        log(f"Erro na amostra de odds reais: {exc}")
 
     proxima_api_football = 0.0
 
