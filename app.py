@@ -9885,8 +9885,8 @@ with aba_validacao:
                 )
                 st.caption(
                     f"Partidas concluídas sem outro gol: {int(sem_gol_v4.sum())}. "
-                    "As odds ainda ficam em branco até integrarmos uma fonte "
-                    "confiável ou o registro manual."
+                    "As odds são registradas automaticamente quando o mercado "
+                    "correspondente está aberto no instante do alerta."
                 )
                 tabela_v4 = base_v4[[
                     "data_hora", "jogo", "minuto", "time_destaque",
@@ -9913,6 +9913,145 @@ with aba_validacao:
                     tabela_v4.sort_values("Data/hora", ascending=False),
                     width="stretch",
                     hide_index=True,
+                )
+
+            st.write("### 🔎 Auditoria das odds do V4")
+            st.caption(
+                "Confere a captura automática no instante do alerta e calcula "
+                "o retorno real simulado com entrada unitária. Mercados "
+                "suspensos ou indisponíveis permanecem sem odd e não entram "
+                "no resultado financeiro."
+            )
+            if base_v4.empty:
+                st.info(
+                    "A auditoria aguarda o primeiro alerta da versão V4 com odds."
+                )
+            else:
+                auditoria_odds_v4 = base_v4.copy()
+                auditoria_odds_v4["odd_time_num"] = pd.to_numeric(
+                    auditoria_odds_v4["odd_time_destaque"], errors="coerce"
+                )
+                auditoria_odds_v4["odd_sem_gol_num"] = pd.to_numeric(
+                    auditoria_odds_v4["odd_nenhum_gol"], errors="coerce"
+                )
+                previsao_odds_v4 = (
+                    auditoria_odds_v4["previsao_v4_proximo_gol"]
+                    .fillna("").astype(str).str.strip().str.upper()
+                )
+                auditoria_odds_v4["odd_previsao"] = (
+                    auditoria_odds_v4["odd_time_num"].where(
+                        previsao_odds_v4.eq("TIME_DESTAQUE"),
+                        auditoria_odds_v4["odd_sem_gol_num"],
+                    )
+                )
+                tem_odd_time = auditoria_odds_v4["odd_time_num"].gt(1)
+                tem_odd_sem_gol = auditoria_odds_v4["odd_sem_gol_num"].gt(1)
+                tem_alguma_odd = tem_odd_time | tem_odd_sem_gol
+                tem_duas_odds = tem_odd_time & tem_odd_sem_gol
+                tem_odd_previsao = auditoria_odds_v4["odd_previsao"].gt(1)
+
+                status_auditoria_v4 = (
+                    auditoria_odds_v4["status_proximo_gol"]
+                    .fillna("").astype(str).str.strip().str.upper()
+                )
+                resultado_auditoria_v4 = (
+                    auditoria_odds_v4["resultado_proximo_gol_v4"]
+                    .fillna("").astype(str).str.strip().str.upper()
+                )
+                concluido_auditoria_v4 = status_auditoria_v4.isin(
+                    ["CONCLUÍDO_GOL", "CONCLUIDO_GOL",
+                     "CONCLUÍDO_SEM_GOL", "CONCLUIDO_SEM_GOL"]
+                )
+                valido_financeiro_v4 = concluido_auditoria_v4 & tem_odd_previsao
+                auditoria_odds_v4["retorno_unidade"] = None
+                acerto_com_odd = valido_financeiro_v4 & resultado_auditoria_v4.eq(
+                    "ACERTO"
+                )
+                erro_com_odd = valido_financeiro_v4 & resultado_auditoria_v4.eq(
+                    "ERRO"
+                )
+                auditoria_odds_v4.loc[
+                    acerto_com_odd, "retorno_unidade"
+                ] = auditoria_odds_v4.loc[
+                    acerto_com_odd, "odd_previsao"
+                ] - 1
+                auditoria_odds_v4.loc[
+                    erro_com_odd, "retorno_unidade"
+                ] = -1.0
+
+                total_alertas_odds = len(auditoria_odds_v4)
+                odds_validas = int(tem_alguma_odd.sum())
+                mercados_completos = int(tem_duas_odds.sum())
+                sem_odds = total_alertas_odds - odds_validas
+                taxa_captura_odds = (
+                    odds_validas / total_alertas_odds * 100
+                    if total_alertas_odds else 0
+                )
+                retorno_series = pd.to_numeric(
+                    auditoria_odds_v4.loc[
+                        valido_financeiro_v4, "retorno_unidade"
+                    ],
+                    errors="coerce",
+                ).dropna()
+                lucro_unidades = float(retorno_series.sum()) if not retorno_series.empty else 0
+                roi_odds = (
+                    lucro_unidades / len(retorno_series) * 100
+                    if len(retorno_series) else None
+                )
+
+                ao1, ao2, ao3, ao4, ao5 = st.columns(5)
+                ao1.metric("Alertas verificados", total_alertas_odds)
+                ao2.metric("Com alguma odd", odds_validas)
+                ao3.metric("Com as duas odds", mercados_completos)
+                ao4.metric("Sem odd aberta", sem_odds)
+                ao5.metric("Taxa de captura", f"{taxa_captura_odds:.1f}%")
+
+                fo1, fo2, fo3 = st.columns(3)
+                fo1.metric("Resultados com odd", len(retorno_series))
+                fo2.metric("Lucro simulado", f"{lucro_unidades:+.2f} un.")
+                fo3.metric(
+                    "ROI com odds reais",
+                    f"{roi_odds:+.1f}%" if roi_odds is not None else "—",
+                )
+
+                auditoria_odds_v4["Situação da captura"] = "Sem odd aberta"
+                auditoria_odds_v4.loc[
+                    tem_alguma_odd, "Situação da captura"
+                ] = "Captura parcial"
+                auditoria_odds_v4.loc[
+                    tem_duas_odds, "Situação da captura"
+                ] = "Duas odds capturadas"
+                tabela_odds_v4 = auditoria_odds_v4[[
+                    "data_hora", "jogo", "placar", "minuto",
+                    "time_destaque", "previsao_v4_proximo_gol",
+                    "odd_time_destaque", "odd_nenhum_gol",
+                    "Situação da captura", "status_proximo_gol",
+                    "resultado_proximo_gol_v4", "retorno_unidade",
+                ]].rename(columns={
+                    "data_hora": "Data/hora",
+                    "jogo": "Jogo",
+                    "placar": "Placar",
+                    "minuto": "Minuto",
+                    "time_destaque": "Time destacado",
+                    "previsao_v4_proximo_gol": "Previsão V4",
+                    "odd_time_destaque": "Odd time",
+                    "odd_nenhum_gol": "Odd sem gol",
+                    "status_proximo_gol": "Status",
+                    "resultado_proximo_gol_v4": "Resultado",
+                    "retorno_unidade": "Retorno (un.)",
+                })
+                tabela_odds_v4["Data para ordem"] = pd.to_datetime(
+                    tabela_odds_v4["Data/hora"], errors="coerce"
+                )
+                tabela_odds_v4 = tabela_odds_v4.sort_values(
+                    "Data para ordem", ascending=False
+                ).drop(columns=["Data para ordem"])
+                st.dataframe(tabela_odds_v4, width="stretch", hide_index=True)
+                st.download_button(
+                    "⬇️ Baixar auditoria das odds do V4",
+                    data=tabela_odds_v4.to_csv(index=False).encode("utf-8-sig"),
+                    file_name="auditoria_odds_v4.csv",
+                    mime="text/csv",
                 )
 
             st.write("### 💰 Laboratório financeiro do V4")
