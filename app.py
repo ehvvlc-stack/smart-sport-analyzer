@@ -7656,7 +7656,7 @@ def construir_auditoria_sinais(df_monitoramento, df_validacao_af=None):
         "versao_filtro_v4", "previsao_v4_proximo_gol",
         "motivo_v4_proximo_gol", "status_proximo_gol",
         "time_proximo_gol", "minuto_proximo_gol",
-        "resultado_proximo_gol_v4", "odd_time_destaque",
+        "resultado_proximo_gol_v4", "odd_time_destaque", "odd_adversario",
         "odd_nenhum_gol", "status_captura_odds_v4",
         "mercado_odds_v4", "data_hora_odds_v4", "odd_previsao_v4",
         "decisao", "explicacao", "etapa_confirmacao",
@@ -7683,7 +7683,7 @@ def construir_auditoria_sinais(df_monitoramento, df_validacao_af=None):
         "versao_filtro_v4", "previsao_v4_proximo_gol",
         "motivo_v4_proximo_gol", "status_proximo_gol",
         "time_proximo_gol", "minuto_proximo_gol",
-        "resultado_proximo_gol_v4", "odd_time_destaque",
+        "resultado_proximo_gol_v4", "odd_time_destaque", "odd_adversario",
         "odd_nenhum_gol", "status_captura_odds_v4",
         "mercado_odds_v4", "data_hora_odds_v4", "odd_previsao_v4",
         "rastreamento_origem_minuto", "rastreamento_etapa",
@@ -7817,6 +7817,7 @@ def construir_auditoria_sinais(df_monitoramento, df_validacao_af=None):
                 "resultado_proximo_gol_v4"
             ],
             "odd_time_destaque": candidato["odd_time_destaque"],
+            "odd_adversario": candidato["odd_adversario"],
             "odd_nenhum_gol": candidato["odd_nenhum_gol"],
             "status_captura_odds_v4": candidato["status_captura_odds_v4"],
             "mercado_odds_v4": candidato["mercado_odds_v4"],
@@ -7958,6 +7959,7 @@ def construir_auditoria_sinais(df_monitoramento, df_validacao_af=None):
                 "resultado_proximo_gol_v4"
             ),
             "odd_time_destaque": valor_alerta("odd_time_destaque"),
+            "odd_adversario": valor_alerta("odd_adversario"),
             "odd_nenhum_gol": valor_alerta("odd_nenhum_gol"),
             "status_captura_odds_v4": valor_alerta(
                 "status_captura_odds_v4"
@@ -9943,6 +9945,9 @@ with aba_validacao:
                 auditoria_odds_v4["odd_time_num"] = pd.to_numeric(
                     auditoria_odds_v4["odd_time_destaque"], errors="coerce"
                 )
+                auditoria_odds_v4["odd_adversario_num"] = pd.to_numeric(
+                    auditoria_odds_v4["odd_adversario"], errors="coerce"
+                )
                 auditoria_odds_v4["odd_sem_gol_num"] = pd.to_numeric(
                     auditoria_odds_v4["odd_nenhum_gol"], errors="coerce"
                 )
@@ -9957,9 +9962,16 @@ with aba_validacao:
                     )
                 )
                 tem_odd_time = auditoria_odds_v4["odd_time_num"].gt(1)
+                tem_odd_adversario = auditoria_odds_v4[
+                    "odd_adversario_num"
+                ].gt(1)
                 tem_odd_sem_gol = auditoria_odds_v4["odd_sem_gol_num"].gt(1)
-                tem_alguma_odd = tem_odd_time | tem_odd_sem_gol
-                tem_duas_odds = tem_odd_time & tem_odd_sem_gol
+                tem_alguma_odd = (
+                    tem_odd_time | tem_odd_adversario | tem_odd_sem_gol
+                )
+                mercado_completo = (
+                    tem_odd_time & tem_odd_adversario & tem_odd_sem_gol
+                )
                 tem_odd_previsao = auditoria_odds_v4["odd_previsao"].gt(1)
 
                 status_auditoria_v4 = (
@@ -9993,7 +10005,7 @@ with aba_validacao:
 
                 total_alertas_odds = len(auditoria_odds_v4)
                 odds_validas = int(tem_alguma_odd.sum())
-                mercados_completos = int(tem_duas_odds.sum())
+                mercados_completos = int(mercado_completo.sum())
                 sem_odds = total_alertas_odds - odds_validas
                 taxa_captura_odds = (
                     odds_validas / total_alertas_odds * 100
@@ -10014,7 +10026,7 @@ with aba_validacao:
                 ao1, ao2, ao3, ao4, ao5 = st.columns(5)
                 ao1.metric("Alertas verificados", total_alertas_odds)
                 ao2.metric("Com alguma odd", odds_validas)
-                ao3.metric("Com as duas odds", mercados_completos)
+                ao3.metric("Mercado completo (3 odds)", mercados_completos)
                 ao4.metric("Sem odd aberta", sem_odds)
                 ao5.metric("Taxa de captura", f"{taxa_captura_odds:.1f}%")
 
@@ -10026,17 +10038,65 @@ with aba_validacao:
                     f"{roi_odds:+.1f}%" if roi_odds is not None else "—",
                 )
 
+                completos_odds_v4 = auditoria_odds_v4[mercado_completo].copy()
+                if not completos_odds_v4.empty:
+                    completos_odds_v4["prob_time_bruta"] = (
+                        100 / completos_odds_v4["odd_time_num"]
+                    )
+                    completos_odds_v4["prob_adversario_bruta"] = (
+                        100 / completos_odds_v4["odd_adversario_num"]
+                    )
+                    completos_odds_v4["prob_sem_gol_bruta"] = (
+                        100 / completos_odds_v4["odd_sem_gol_num"]
+                    )
+                    completos_odds_v4["soma_probabilidades"] = (
+                        completos_odds_v4["prob_time_bruta"]
+                        + completos_odds_v4["prob_adversario_bruta"]
+                        + completos_odds_v4["prob_sem_gol_bruta"]
+                    )
+                    completos_odds_v4["margem_casa"] = (
+                        completos_odds_v4["soma_probabilidades"] - 100
+                    )
+                    completos_odds_v4["prob_justa_time"] = (
+                        completos_odds_v4["prob_time_bruta"]
+                        / completos_odds_v4["soma_probabilidades"] * 100
+                    )
+                    completos_odds_v4["prob_justa_adversario"] = (
+                        completos_odds_v4["prob_adversario_bruta"]
+                        / completos_odds_v4["soma_probabilidades"] * 100
+                    )
+                    completos_odds_v4["prob_justa_sem_gol"] = (
+                        completos_odds_v4["prob_sem_gol_bruta"]
+                        / completos_odds_v4["soma_probabilidades"] * 100
+                    )
+                    margem_media_v4 = completos_odds_v4["margem_casa"].mean()
+                    st.write("**Leitura do mercado completo**")
+                    mc1, mc2, mc3, mc4 = st.columns(4)
+                    mc1.metric("Margem média da casa", f"{margem_media_v4:.1f}%")
+                    mc2.metric(
+                        "Prob. justa — destaque",
+                        f"{completos_odds_v4['prob_justa_time'].mean():.1f}%",
+                    )
+                    mc3.metric(
+                        "Prob. justa — adversário",
+                        f"{completos_odds_v4['prob_justa_adversario'].mean():.1f}%",
+                    )
+                    mc4.metric(
+                        "Prob. justa — sem gol",
+                        f"{completos_odds_v4['prob_justa_sem_gol'].mean():.1f}%",
+                    )
+
                 auditoria_odds_v4["Situação da captura"] = "Sem odd aberta"
                 auditoria_odds_v4.loc[
                     tem_alguma_odd, "Situação da captura"
                 ] = "Captura parcial"
                 auditoria_odds_v4.loc[
-                    tem_duas_odds, "Situação da captura"
-                ] = "Duas odds capturadas"
+                    mercado_completo, "Situação da captura"
+                ] = "Mercado completo"
                 tabela_odds_v4 = auditoria_odds_v4[[
                     "data_hora", "jogo", "placar", "minuto",
                     "time_destaque", "previsao_v4_proximo_gol",
-                    "odd_time_destaque", "odd_nenhum_gol",
+                    "odd_time_destaque", "odd_adversario", "odd_nenhum_gol",
                     "odd_previsao_v4", "status_captura_odds_v4",
                     "mercado_odds_v4", "data_hora_odds_v4",
                     "Situação da captura", "status_proximo_gol",
@@ -10049,6 +10109,7 @@ with aba_validacao:
                     "time_destaque": "Time destacado",
                     "previsao_v4_proximo_gol": "Previsão V4",
                     "odd_time_destaque": "Odd time",
+                    "odd_adversario": "Odd adversário",
                     "odd_nenhum_gol": "Odd sem gol",
                     "odd_previsao_v4": "Odd escolhida pelo V4",
                     "status_captura_odds_v4": "Diagnóstico técnico",
