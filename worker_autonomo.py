@@ -49,7 +49,7 @@ VERSAO_EXPERIMENTO = "EXP-2026-09-21-01"
 VERSAO_FILTRO_V1 = "V1-ESCUDO-DNA60"
 VERSAO_FILTRO_V2 = "V2-FINALIZACOES4"
 VERSAO_FILTRO_V3 = "V3-MIN60-IND80-OU-ESC2"
-VERSAO_FILTRO_V4 = "V4-PROXIMO-GOL-ODDS-COMPLETAS-03"
+VERSAO_FILTRO_V4 = "V4-PROXIMO-GOL-DESFECHO-SEGURO-04"
 RELATORIO_DIARIO_ATIVO = os.getenv("RELATORIO_DIARIO_ATIVO", "1").strip() == "1"
 RELATORIO_DIARIO_HORA = int(os.getenv("RELATORIO_DIARIO_HORA", "20"))
 RELATORIO_DIARIO_MINUTO = int(os.getenv("RELATORIO_DIARIO_MINUTO", "0"))
@@ -1380,7 +1380,9 @@ def resultado_gol_af(linha, placar_alerta):
     )
 
 
-def buscar_primeiro_gol_apos_alerta_af(fixture_id, minuto_alerta):
+def buscar_primeiro_gol_apos_alerta_af(
+    fixture_id, minuto_alerta, placar_alerta=""
+):
     dados, _ = apifootball_get(
         "fixtures/events", {"fixture": fixture_id, "type": "Goal"}
     )
@@ -1396,14 +1398,30 @@ def buscar_primeiro_gol_apos_alerta_af(fixture_id, minuto_alerta):
         tempo = evento.get("time", {}) or {}
         minuto = int(numero_af(tempo.get("elapsed", 0)))
         extra = int(numero_af(tempo.get("extra", 0)))
-        if minuto <= int(numero_af(minuto_alerta)):
-            continue
         time_nome = str((evento.get("team", {}) or {}).get("name", "")).strip()
         if time_nome:
             candidatos.append((minuto, extra, time_nome))
     if not candidatos:
         return "", ""
-    minuto, extra, time_nome = sorted(candidatos)[0]
+    candidatos = sorted(candidatos)
+
+    # O placar no instante do alerta informa quantos gols já aconteceram.
+    # Assim, se o alerta e o gol seguinte caírem no mesmo minuto oficial,
+    # selecionamos o evento correto pela ordem, sem confundi-lo com gol antigo.
+    casa_alerta, fora_alerta = placar_partes_af(placar_alerta)
+    gols_antes_alerta = casa_alerta + fora_alerta
+    if str(placar_alerta).strip():
+        if len(candidatos) <= gols_antes_alerta:
+            return "", ""
+        minuto, extra, time_nome = candidatos[gols_antes_alerta]
+    else:
+        candidatos_depois = [
+            item for item in candidatos
+            if item[0] > int(numero_af(minuto_alerta))
+        ]
+        if not candidatos_depois:
+            return "", ""
+        minuto, extra, time_nome = candidatos_depois[0]
     minuto_texto = f"{minuto}+{extra}" if extra else str(minuto)
     return time_nome, minuto_texto
 
@@ -1448,7 +1466,8 @@ def atualizar_validacao_af(linha):
             and houve_gol
         ):
             time_proximo, minuto_proximo = buscar_primeiro_gol_apos_alerta_af(
-                linha["fixture_id"], minuto_alerta
+                linha["fixture_id"], minuto_alerta,
+                df.at[idx, "placar_alerta"],
             )
             if not time_proximo and resultado_gol not in {"AMBOS", "SEM_GOL"}:
                 time_proximo = time_gol
@@ -1535,7 +1554,7 @@ def finalizar_v4_partidas_encerradas_af(fixture_ids_ativos):
         for idx in indices:
             minuto_alerta = df.at[idx, "minuto_alerta"]
             time_proximo, minuto_proximo = buscar_primeiro_gol_apos_alerta_af(
-                fixture_id, minuto_alerta
+                fixture_id, minuto_alerta, df.at[idx, "placar_alerta"]
             )
             if time_proximo:
                 df.at[idx, "time_proximo_gol"] = time_proximo
