@@ -1,1 +1,3 @@
-
+fixture_id,data_hora,status,casa_id,casa,fora_id,fora,competicao,rodada
+554948,2026-10-02T23:00:00Z,TIMED,1776,São Paulo FC,6685,Santos FC,Campeonato Brasileiro Série A,21
+554940,2026-10-03T21:30:00Z,TIMED,1766,CA Mineiro,4286,RB Bragantino,Campeonato Brasileiro Série A,21
