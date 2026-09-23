@@ -3570,6 +3570,76 @@ def montar_relatorio_diario(agora_local):
         ).fillna("").astype(str).str.strip().str.upper().eq("SIM").sum()
     )
 
+    # Resumo financeiro e de integridade do V4.1 silencioso.
+    versoes_v41 = validacoes_af_geral.get(
+        "versao_filtro_v41",
+        pd.Series(index=validacoes_af_geral.index, dtype=object),
+    ).fillna("").astype(str).str.strip()
+    base_v41 = validacoes_af_geral[versoes_v41.ne("")].copy()
+    elegibilidade_v41 = base_v41.get(
+        "elegivel_v41_sombra",
+        pd.Series(index=base_v41.index, dtype=object),
+    ).fillna("").astype(str).str.strip().str.upper()
+    resultados_v41 = base_v41.get(
+        "resultado_proximo_gol_v41",
+        pd.Series(index=base_v41.index, dtype=object),
+    ).fillna("").astype(str).str.strip().str.upper()
+    previsoes_v41 = base_v41.get(
+        "previsao_v41_proximo_gol",
+        pd.Series(index=base_v41.index, dtype=object),
+    ).fillna("").astype(str).str.strip().str.upper()
+    odds_v41 = pd.to_numeric(
+        base_v41.get(
+            "odd_previsao_v41",
+            pd.Series(index=base_v41.index, dtype=object),
+        ),
+        errors="coerce",
+    )
+    elegiveis_v41 = elegibilidade_v41.eq("SIM")
+    concluidos_v41 = elegiveis_v41 & resultados_v41.isin(["ACERTO", "ERRO"])
+    financeiros_v41 = concluidos_v41 & odds_v41.gt(1)
+    retornos_v41 = pd.Series(index=base_v41.index, dtype=float)
+    retornos_v41.loc[
+        financeiros_v41 & resultados_v41.eq("ACERTO")
+    ] = odds_v41.loc[
+        financeiros_v41 & resultados_v41.eq("ACERTO")
+    ] - 1
+    retornos_v41.loc[
+        financeiros_v41 & resultados_v41.eq("ERRO")
+    ] = -1.0
+    retornos_v41 = retornos_v41.dropna()
+    lucro_v41 = float(retornos_v41.sum()) if not retornos_v41.empty else 0.0
+    roi_v41 = (
+        lucro_v41 / len(retornos_v41) * 100
+        if len(retornos_v41) else None
+    )
+    acertos_v41 = int((financeiros_v41 & resultados_v41.eq("ACERTO")).sum())
+    erros_v41 = int((financeiros_v41 & resultados_v41.eq("ERRO")).sum())
+    repeticoes_v41 = int(elegibilidade_v41.eq("NÃO").sum())
+    time_v41 = int((elegiveis_v41 & previsoes_v41.eq("TIME_DESTAQUE")).sum())
+    sem_gol_v41 = int((elegiveis_v41 & previsoes_v41.eq("NENHUM_GOL")).sum())
+
+    datas_v41 = pd.to_datetime(
+        base_v41.get(
+            "data_hora_alerta",
+            pd.Series(index=base_v41.index, dtype=object),
+        ),
+        errors="coerce",
+    )
+    limite_pendente = pd.Timestamp.now() - pd.Timedelta(hours=3)
+    pendentes_antigos_v41 = int(
+        (
+            elegiveis_v41
+            & resultados_v41.eq("PENDENTE")
+            & datas_v41.lt(limite_pendente)
+        ).sum()
+    )
+    saude_v41 = (
+        f"ATENÇÃO: {pendentes_antigos_v41} pendente(s) há mais de 3h"
+        if pendentes_antigos_v41 else "coleta sem pendências antigas"
+    )
+    roi_v41_texto = f"{roi_v41:+.1f}%" if roi_v41 is not None else "aguardando"
+
     return (
         "📊 RESUMO DIÁRIO — SMART SPORT\n\n"
         f"📅 {agora_local.strftime('%d/%m/%Y')}\n"
@@ -3593,6 +3663,16 @@ def montar_relatorio_diario(agora_local):
         f"🟢 Gol do time destacado: {gols_destaque}\n"
         f"🔴 Gol do adversário: {gols_adversario}\n"
         f"⚪ Nenhum gol com autoria concluída: {sem_gol_autoria}\n\n"
+        "🧪 V4.1 SILENCIOSO — CALIBRAÇÃO\n"
+        f"📥 Novos alertas: {len(base_v41)}\n"
+        f"🎟 Simulações únicas: {int(elegiveis_v41.sum())}\n"
+        f"🛡 Repetições bloqueadas: {repeticoes_v41}\n"
+        f"🔥 Time destacado: {time_v41}\n"
+        f"⚪ Nenhum gol: {sem_gol_v41}\n"
+        f"✅ Acertos: {acertos_v41} | ❌ Erros: {erros_v41}\n"
+        f"💰 Lucro simulado: {lucro_v41:+.2f} un.\n"
+        f"📊 ROI V4.1: {roi_v41_texto}\n"
+        f"🩺 Integridade: {saude_v41}\n\n"
         "🤖 Worker funcionando normalmente.\n"
         "🧪 Resultados experimentais; nenhuma aposta é automática."
     )
