@@ -7659,6 +7659,9 @@ def construir_auditoria_sinais(df_monitoramento, df_validacao_af=None):
         "resultado_proximo_gol_v4", "odd_time_destaque", "odd_adversario",
         "odd_nenhum_gol", "status_captura_odds_v4",
         "mercado_odds_v4", "data_hora_odds_v4", "odd_previsao_v4",
+        "versao_filtro_v41", "elegivel_v41_sombra",
+        "previsao_v41_proximo_gol", "motivo_v41_proximo_gol",
+        "resultado_proximo_gol_v41", "odd_previsao_v41",
         "decisao", "explicacao", "etapa_confirmacao",
         "curva_pressao", "variacao_indice",
         "resultado_5_min", "resultado_10_min",
@@ -7686,6 +7689,9 @@ def construir_auditoria_sinais(df_monitoramento, df_validacao_af=None):
         "resultado_proximo_gol_v4", "odd_time_destaque", "odd_adversario",
         "odd_nenhum_gol", "status_captura_odds_v4",
         "mercado_odds_v4", "data_hora_odds_v4", "odd_previsao_v4",
+        "versao_filtro_v41", "elegivel_v41_sombra",
+        "previsao_v41_proximo_gol", "motivo_v41_proximo_gol",
+        "resultado_proximo_gol_v41", "odd_previsao_v41",
         "rastreamento_origem_minuto", "rastreamento_etapa",
         "curva_pressao", "variacao_indice",
     ]:
@@ -7823,6 +7829,16 @@ def construir_auditoria_sinais(df_monitoramento, df_validacao_af=None):
             "mercado_odds_v4": candidato["mercado_odds_v4"],
             "data_hora_odds_v4": candidato["data_hora_odds_v4"],
             "odd_previsao_v4": candidato["odd_previsao_v4"],
+            "versao_filtro_v41": candidato["versao_filtro_v41"],
+            "elegivel_v41_sombra": candidato["elegivel_v41_sombra"],
+            "previsao_v41_proximo_gol": candidato[
+                "previsao_v41_proximo_gol"
+            ],
+            "motivo_v41_proximo_gol": candidato["motivo_v41_proximo_gol"],
+            "resultado_proximo_gol_v41": candidato[
+                "resultado_proximo_gol_v41"
+            ],
+            "odd_previsao_v41": candidato["odd_previsao_v41"],
             "decisao": decisao,
             "explicacao": explicacao,
             "etapa_confirmacao": leitura_curva["rastreamento_etapa"],
@@ -7861,6 +7877,9 @@ def construir_auditoria_sinais(df_monitoramento, df_validacao_af=None):
         "time_proximo_gol", "minuto_proximo_gol",
         "resultado_proximo_gol_v4", "odd_time_destaque",
         "odd_nenhum_gol",
+        "versao_filtro_v41", "elegivel_v41_sombra",
+        "previsao_v41_proximo_gol", "motivo_v41_proximo_gol",
+        "resultado_proximo_gol_v41", "odd_previsao_v41",
         "resultado_gol", "time_gol", "gol_time_destaque_5_min",
         "gol_time_destaque_10_min",
     ]:
@@ -7967,6 +7986,18 @@ def construir_auditoria_sinais(df_monitoramento, df_validacao_af=None):
             "mercado_odds_v4": valor_alerta("mercado_odds_v4"),
             "data_hora_odds_v4": valor_alerta("data_hora_odds_v4"),
             "odd_previsao_v4": valor_alerta("odd_previsao_v4"),
+            "versao_filtro_v41": valor_alerta("versao_filtro_v41"),
+            "elegivel_v41_sombra": valor_alerta("elegivel_v41_sombra"),
+            "previsao_v41_proximo_gol": valor_alerta(
+                "previsao_v41_proximo_gol"
+            ),
+            "motivo_v41_proximo_gol": valor_alerta(
+                "motivo_v41_proximo_gol"
+            ),
+            "resultado_proximo_gol_v41": valor_alerta(
+                "resultado_proximo_gol_v41"
+            ),
+            "odd_previsao_v41": valor_alerta("odd_previsao_v41"),
             "decisao": "✅ ENVIADO",
             "explicacao": (
                 f"Alerta confirmado no registro do Telegram. DNA {dna} "
@@ -10132,6 +10163,95 @@ with aba_validacao:
                     file_name="auditoria_odds_v4.csv",
                     mime="text/csv",
                 )
+
+                st.write("### 🧪 V4.1 silencioso — primeira calibração")
+                st.caption(
+                    "Compara a nova regra sem alterar o V4: uma simulação por "
+                    "partida, time destacado até 75 minutos e nenhum gol após 75."
+                )
+                versao_v41 = (
+                    auditoria_odds_v4["versao_filtro_v41"]
+                    .fillna("").astype(str).str.strip()
+                )
+                base_v41 = auditoria_odds_v4[versao_v41.ne("")].copy()
+                if base_v41.empty:
+                    st.info(
+                        "O V4.1 aguarda o primeiro alerta produzido após sua ativação."
+                    )
+                else:
+                    elegivel_v41 = (
+                        base_v41["elegivel_v41_sombra"]
+                        .fillna("").astype(str).str.upper().eq("SIM")
+                    )
+                    resultado_v41 = (
+                        base_v41["resultado_proximo_gol_v41"]
+                        .fillna("").astype(str).str.upper()
+                    )
+                    odd_v41 = pd.to_numeric(
+                        base_v41["odd_previsao_v41"], errors="coerce"
+                    )
+                    concluido_v41 = resultado_v41.isin(["ACERTO", "ERRO"])
+                    financeiro_v41 = elegivel_v41 & concluido_v41 & odd_v41.gt(1)
+                    base_v41["retorno_v41"] = None
+                    acerto_v41 = financeiro_v41 & resultado_v41.eq("ACERTO")
+                    erro_v41 = financeiro_v41 & resultado_v41.eq("ERRO")
+                    base_v41.loc[acerto_v41, "retorno_v41"] = (
+                        odd_v41.loc[acerto_v41] - 1
+                    )
+                    base_v41.loc[erro_v41, "retorno_v41"] = -1.0
+                    retornos_v41 = pd.to_numeric(
+                        base_v41.loc[financeiro_v41, "retorno_v41"],
+                        errors="coerce",
+                    ).dropna()
+                    lucro_v41 = (
+                        float(retornos_v41.sum())
+                        if not retornos_v41.empty else 0.0
+                    )
+                    roi_v41 = (
+                        lucro_v41 / len(retornos_v41) * 100
+                        if len(retornos_v41) else None
+                    )
+                    v411, v412, v413, v414, v415 = st.columns(5)
+                    v411.metric("Novos alertas", len(base_v41))
+                    v412.metric("Simulações únicas", int(elegivel_v41.sum()))
+                    v413.metric("Repetições bloqueadas", int((~elegivel_v41).sum()))
+                    v414.metric("Resultados", len(retornos_v41))
+                    v415.metric(
+                        "ROI V4.1",
+                        f"{roi_v41:+.1f}%" if roi_v41 is not None else "—",
+                    )
+                    st.metric("Lucro simulado V4.1", f"{lucro_v41:+.2f} un.")
+
+                    tabela_v41 = base_v41[[
+                        "data_hora", "jogo", "placar", "minuto",
+                        "time_destaque", "elegivel_v41_sombra",
+                        "previsao_v41_proximo_gol", "motivo_v41_proximo_gol",
+                        "odd_previsao_v41", "status_proximo_gol",
+                        "resultado_proximo_gol_v41", "retorno_v41",
+                    ]].rename(columns={
+                        "data_hora": "Data/hora",
+                        "jogo": "Jogo",
+                        "placar": "Placar",
+                        "minuto": "Minuto",
+                        "time_destaque": "Time destacado",
+                        "elegivel_v41_sombra": "Elegível V4.1",
+                        "previsao_v41_proximo_gol": "Previsão V4.1",
+                        "motivo_v41_proximo_gol": "Motivo",
+                        "odd_previsao_v41": "Odd V4.1",
+                        "status_proximo_gol": "Status",
+                        "resultado_proximo_gol_v41": "Resultado V4.1",
+                        "retorno_v41": "Retorno (un.)",
+                    })
+                    st.dataframe(
+                        tabela_v41.sort_values("Data/hora", ascending=False),
+                        width="stretch", hide_index=True,
+                    )
+                    st.download_button(
+                        "⬇️ Baixar auditoria do V4.1",
+                        data=tabela_v41.to_csv(index=False).encode("utf-8-sig"),
+                        file_name="auditoria_v41_sombra.csv",
+                        mime="text/csv",
+                    )
 
             st.write("### 💰 Laboratório financeiro do V4")
             st.caption(
