@@ -50,6 +50,7 @@ VERSAO_FILTRO_V1 = "V1-ESCUDO-DNA60"
 VERSAO_FILTRO_V2 = "V2-FINALIZACOES4"
 VERSAO_FILTRO_V3 = "V3-MIN60-IND80-OU-ESC2"
 VERSAO_FILTRO_V4 = "V4-PROXIMO-GOL-FINALIZACAO-SEGURA-05"
+VERSAO_FILTRO_V41 = "V4.1-UM-SINAL-POR-JOGO-LIMITE75-01"
 RELATORIO_DIARIO_ATIVO = os.getenv("RELATORIO_DIARIO_ATIVO", "1").strip() == "1"
 RELATORIO_DIARIO_HORA = int(os.getenv("RELATORIO_DIARIO_HORA", "20"))
 RELATORIO_DIARIO_MINUTO = int(os.getenv("RELATORIO_DIARIO_MINUTO", "0"))
@@ -799,6 +800,9 @@ COLUNAS_VALIDACAO_APIFOOTBALL = [
     "odd_nenhum_gol",
     "status_captura_odds_v4", "mercado_odds_v4",
     "data_hora_odds_v4", "odd_previsao_v4",
+    "versao_filtro_v41", "elegivel_v41_sombra",
+    "previsao_v41_proximo_gol", "motivo_v41_proximo_gol",
+    "resultado_proximo_gol_v41", "odd_previsao_v41",
     "gol_ate_5_min", "gol_ate_10_min", "escanteio_ate_5_min",
     "escanteio_ate_10_min", "time_gol", "resultado_gol",
     "gol_time_destaque_5_min", "gol_time_destaque_10_min", "status",
@@ -1437,6 +1441,33 @@ def resultado_previsao_v4(previsao, time_proximo, time_destaque):
     return "NÃO AVALIADO"
 
 
+def classificar_v41_proximo_gol(linha, ja_existe_sinal_v41=False):
+    """Regra experimental posterior aos primeiros 20 resultados do V4.
+
+    Mantém no máximo uma simulação V4.1 por partida. Até o minuto 75,
+    acompanha o time destacado. Depois disso, testa NENHUM_GOL. O V4
+    original continua intacto para permitir comparação paralela.
+    """
+    if ja_existe_sinal_v41:
+        return (
+            "NÃO_ELEGÍVEL",
+            "partida já possui uma simulação V4.1; repetição bloqueada",
+            "NÃO",
+        )
+    minuto = int(numero_af(linha.get("minuto", 0)))
+    if minuto > 75:
+        return (
+            "NENHUM_GOL",
+            "sinal após o minuto 75; teste silencioso de encerramento sem gol",
+            "SIM",
+        )
+    return (
+        "TIME_DESTAQUE",
+        "primeiro sinal da partida até o minuto 75; equipe destacada",
+        "SIM",
+    )
+
+
 def atualizar_validacao_af(linha):
     df = ler_csv_github_generico(
         APIFOOTBALL_VALIDACAO_PATH, COLUNAS_VALIDACAO_APIFOOTBALL
@@ -1481,6 +1512,12 @@ def atualizar_validacao_af(linha):
                     time_proximo,
                     df.at[idx, "time_destaque"],
                 )
+                if str(df.at[idx, "elegivel_v41_sombra"]).upper() == "SIM":
+                    df.at[idx, "resultado_proximo_gol_v41"] = resultado_previsao_v4(
+                        df.at[idx, "previsao_v41_proximo_gol"],
+                        time_proximo,
+                        df.at[idx, "time_destaque"],
+                    )
                 mudou = True
         if 5 <= delta_min <= 10:
             df.at[idx, "gol_ate_5_min"] = "SIM" if houve_gol else "NÃO"
@@ -1546,6 +1583,8 @@ def finalizar_v4_partidas_encerradas_af(fixture_ids_ativos):
             for idx in indices:
                 df.at[idx, "status_proximo_gol"] = "ANULADO"
                 df.at[idx, "resultado_proximo_gol_v4"] = "NÃO AVALIADO"
+                if str(df.at[idx, "elegivel_v41_sombra"]).upper() == "SIM":
+                    df.at[idx, "resultado_proximo_gol_v41"] = "NÃO AVALIADO"
                 alterou = True
                 concluidos += 1
             continue
@@ -1569,6 +1608,12 @@ def finalizar_v4_partidas_encerradas_af(fixture_ids_ativos):
                 "" if not time_proximo else time_proximo,
                 df.at[idx, "time_destaque"],
             )
+            if str(df.at[idx, "elegivel_v41_sombra"]).upper() == "SIM":
+                df.at[idx, "resultado_proximo_gol_v41"] = resultado_previsao_v4(
+                    df.at[idx, "previsao_v41_proximo_gol"],
+                    "" if not time_proximo else time_proximo,
+                    df.at[idx, "time_destaque"],
+                )
             alterou = True
             concluidos += 1
     if alterou:
@@ -1591,6 +1636,11 @@ def verificar_integridade_experimento(registro):
         "versao_filtro_v4": registro.get("versao_filtro_v4", ""),
         "previsao_v4_proximo_gol": registro.get(
             "previsao_v4_proximo_gol", ""
+        ),
+        "versao_filtro_v41": registro.get("versao_filtro_v41", ""),
+        "elegivel_v41_sombra": registro.get("elegivel_v41_sombra", ""),
+        "previsao_v41_proximo_gol": registro.get(
+            "previsao_v41_proximo_gol", ""
         ),
     }
     faltantes = [
@@ -1757,6 +1807,15 @@ def registrar_alerta_af(linha):
         return False
     agora = datetime.now()
     previsao_v4, motivo_v4 = classificar_v4_proximo_gol(linha)
+    ja_existe_sinal_v41 = False
+    if not df.empty:
+        ja_existe_sinal_v41 = (
+            df["fixture_id"].astype(str).eq(str(fixture_id))
+            & df["elegivel_v41_sombra"].astype(str).str.upper().eq("SIM")
+        ).any()
+    previsao_v41, motivo_v41, elegivel_v41 = classificar_v41_proximo_gol(
+        linha, ja_existe_sinal_v41
+    )
     (
         odd_destaque, odd_adversario, odd_sem_gol, status_odds,
         mercado_odds, data_hora_odds,
@@ -1764,6 +1823,13 @@ def registrar_alerta_af(linha):
     odd_previsao = (
         odd_destaque if previsao_v4 == "TIME_DESTAQUE" else odd_sem_gol
     )
+    odd_previsao_v41 = ""
+    if elegivel_v41 == "SIM":
+        odd_previsao_v41 = (
+            odd_destaque
+            if previsao_v41 == "TIME_DESTAQUE"
+            else odd_sem_gol
+        )
     registro = {coluna: "" for coluna in COLUNAS_VALIDACAO_APIFOOTBALL}
     registro.update({
         "id_alerta": f"AF-{fixture_id}-{agora.strftime('%Y%m%d%H%M%S')}",
@@ -1808,6 +1874,14 @@ def registrar_alerta_af(linha):
         "mercado_odds_v4": mercado_odds,
         "data_hora_odds_v4": data_hora_odds,
         "odd_previsao_v4": odd_previsao,
+        "versao_filtro_v41": VERSAO_FILTRO_V41,
+        "elegivel_v41_sombra": elegivel_v41,
+        "previsao_v41_proximo_gol": previsao_v41,
+        "motivo_v41_proximo_gol": motivo_v41,
+        "resultado_proximo_gol_v41": (
+            "PENDENTE" if elegivel_v41 == "SIM" else "NÃO AVALIADO"
+        ),
+        "odd_previsao_v41": odd_previsao_v41,
         "gol_ate_5_min": "PENDENTE", "gol_ate_10_min": "PENDENTE",
         "escanteio_ate_5_min": "PENDENTE", "escanteio_ate_10_min": "PENDENTE",
         "time_gol": "", "resultado_gol": "PENDENTE",
