@@ -23,6 +23,21 @@ APIFOOTBALL_CONFIRMACAO_SEGUNDOS = int(
 APIFOOTBALL_RESERVA_DIA = int(
     os.getenv("APIFOOTBALL_RESERVA_DIA", "500")
 )
+APIFOOTBALL_ESCUDO_ECONOMIA = int(
+    os.getenv("APIFOOTBALL_ESCUDO_ECONOMIA", "2000")
+)
+APIFOOTBALL_ESCUDO_CRITICO = int(
+    os.getenv("APIFOOTBALL_ESCUDO_CRITICO", "1000")
+)
+APIFOOTBALL_INTERVALO_ECONOMIA = int(
+    os.getenv("APIFOOTBALL_INTERVALO_ECONOMIA", "600")
+)
+APIFOOTBALL_INTERVALO_CRITICO = int(
+    os.getenv("APIFOOTBALL_INTERVALO_CRITICO", "900")
+)
+APIFOOTBALL_INTERVALO_RESERVA = int(
+    os.getenv("APIFOOTBALL_INTERVALO_RESERVA", "1800")
+)
 APIFOOTBALL_MAX_JOGOS = int(
     os.getenv("APIFOOTBALL_MAX_JOGOS", "20")
 )
@@ -51,6 +66,9 @@ VERSAO_FILTRO_V2 = "V2-FINALIZACOES4"
 VERSAO_FILTRO_V3 = "V3-MIN60-IND80-OU-ESC2"
 VERSAO_FILTRO_V4 = "V4-PROXIMO-GOL-FINALIZACAO-SEGURA-05"
 VERSAO_FILTRO_V41 = "V4.1-UM-SINAL-POR-JOGO-LIMITE75-01"
+V41_PILOTO_TELEGRAM_ATIVO = os.getenv(
+    "V41_PILOTO_TELEGRAM_ATIVO", "0"
+).strip().lower() in {"1", "true", "sim", "yes", "on"}
 RELATORIO_DIARIO_ATIVO = os.getenv("RELATORIO_DIARIO_ATIVO", "1").strip() == "1"
 RELATORIO_DIARIO_HORA = int(os.getenv("RELATORIO_DIARIO_HORA", "20"))
 RELATORIO_DIARIO_MINUTO = int(os.getenv("RELATORIO_DIARIO_MINUTO", "0"))
@@ -77,6 +95,8 @@ ESTADO_SENTINELA = {
     "ultima_api_sucesso": time.time(),
     "inatividade_alertada": False,
     "cota_alertada_data": "",
+    "escudo_cota_data": "",
+    "escudo_cota_nivel": "NORMAL",
 }
 
 # Posição da fila rotativa usada para concluir registros do mercado de
@@ -247,6 +267,53 @@ def sentinela_verificar_cota(restante):
         "O sistema reduzirá a coleta antes de consumir a reserva."
     ):
         ESTADO_SENTINELA["cota_alertada_data"] = hoje
+
+
+def perfil_escudo_cota(restante):
+    """Define ritmo e volume sem alterar os critérios esportivos do V4.1."""
+    try:
+        restante = int(restante)
+    except (TypeError, ValueError):
+        return "NORMAL", APIFOOTBALL_MAX_JOGOS, APIFOOTBALL_INTERVALO_SEGUNDOS
+
+    if restante < 0:
+        return "NORMAL", APIFOOTBALL_MAX_JOGOS, APIFOOTBALL_INTERVALO_SEGUNDOS
+    if restante <= APIFOOTBALL_RESERVA_DIA:
+        return "RESERVA", 0, APIFOOTBALL_INTERVALO_RESERVA
+    if restante <= APIFOOTBALL_ESCUDO_CRITICO:
+        return (
+            "CRÍTICO",
+            min(APIFOOTBALL_MAX_JOGOS, 5),
+            APIFOOTBALL_INTERVALO_CRITICO,
+        )
+    if restante <= APIFOOTBALL_ESCUDO_ECONOMIA:
+        return (
+            "ECONOMIA",
+            min(APIFOOTBALL_MAX_JOGOS, 10),
+            APIFOOTBALL_INTERVALO_ECONOMIA,
+        )
+    return "NORMAL", APIFOOTBALL_MAX_JOGOS, APIFOOTBALL_INTERVALO_SEGUNDOS
+
+
+def avisar_escudo_cota(nivel, restante, limite_jogos, intervalo):
+    """Envia no máximo um aviso por mudança de nível em cada dia UTC."""
+    if nivel == "NORMAL":
+        return
+    hoje = datetime.now(timezone.utc).date().isoformat()
+    if ESTADO_SENTINELA["escudo_cota_data"] != hoje:
+        ESTADO_SENTINELA["escudo_cota_data"] = hoje
+        ESTADO_SENTINELA["escudo_cota_nivel"] = "NORMAL"
+    if ESTADO_SENTINELA["escudo_cota_nivel"] == nivel:
+        return
+    if enviar_alerta_telegram(
+        "🛡 ESCUDO DE CONSUMO — API-FOOTBALL\n\n"
+        f"Nível: {nivel}\n"
+        f"Cota restante: {restante}\n"
+        f"Máximo de jogos por rodada: {limite_jogos}\n"
+        f"Próximo intervalo mínimo: {intervalo // 60} minuto(s)\n\n"
+        "A estratégia V4.1 não foi alterada; apenas o ritmo da coleta foi protegido."
+    ):
+        ESTADO_SENTINELA["escudo_cota_nivel"] = nivel
 
 
 def sentinela_verificar_inatividade():
@@ -1981,6 +2048,25 @@ def registrar_alerta_af(linha):
         f"{bloco_odds}\n\n"
         "🧪 Sinal estatístico em validação; nenhuma aposta é automática."
     )
+    if (
+        V41_PILOTO_TELEGRAM_ATIVO
+        and elegivel_v41 == "SIM"
+        and previsao_v41 == "TIME_DESTAQUE"
+        and numero_af(odd_previsao_v41) > 1
+    ):
+        enviar_alerta_telegram(
+            "🧪 PILOTO REAL V4.1 — TESTE OPERACIONAL\n\n"
+            f"⚽ Jogo: {linha['jogo']}\n"
+            f"⏱ Minuto capturado: {int(numero_af(linha['minuto']))}'\n"
+            f"📍 Placar: {linha['placar']}\n"
+            f"🔥 Mercado observado: próximo gol — {linha['time_destaque']}\n"
+            f"💰 Odd capturada: {numero_af(odd_previsao_v41):.2f}\n"
+            f"📊 Índice de pressão: {numero_af(linha['indice_destaque']):.1f}%\n\n"
+            "💵 Stake máxima desta fase: R$ 1,00\n"
+            "⚠️ Confirme manualmente se o mercado e a odd continuam abertos.\n"
+            "🚫 Sem martingale, sem aposta automática e sem garantia de lucro.\n\n"
+            "Este aviso integra um microteste de execução com amostra ainda pequena."
+        )
     return True
 
 
@@ -2432,6 +2518,15 @@ def ciclo_apifootball():
         "api_football", True, "Consulta de jogos ao vivo concluída."
     )
     sentinela_verificar_cota(restante)
+    nivel_escudo, limite_jogos, intervalo_escudo = perfil_escudo_cota(restante)
+    avisar_escudo_cota(
+        nivel_escudo, restante, limite_jogos, intervalo_escudo
+    )
+    if nivel_escudo != "NORMAL":
+        log(
+            f"API-Football: escudo {nivel_escudo} • quota {restante} • "
+            f"máximo {limite_jogos} jogo(s) • intervalo {intervalo_escudo}s"
+        )
     jogos = dados.get("response", []) or []
     if APIFOOTBALL_LIGAS:
         jogos = [
@@ -2440,7 +2535,7 @@ def ciclo_apifootball():
         ]
     if restante >= 0 and restante <= APIFOOTBALL_RESERVA_DIA:
         log(f"API-Football: reserva diária atingida ({restante} restantes)")
-        return APIFOOTBALL_INTERVALO_SEGUNDOS
+        return intervalo_escudo
     if not jogos:
         log(f"API-Football: 0 jogos ao vivo • quota restante {restante}")
         v4_concluidos = finalizar_v4_partidas_encerradas_af(set())
@@ -2449,11 +2544,11 @@ def ciclo_apifootball():
                 f"V4 próximo gol: {v4_concluidos} registro(s) concluído(s) "
                 "mesmo sem outros jogos ao vivo"
             )
-        return APIFOOTBALL_INTERVALO_SEGUNDOS
+        return max(APIFOOTBALL_INTERVALO_SEGUNDOS, intervalo_escudo)
     df = ler_csv_github_generico(APIFOOTBALL_PATH, COLUNAS_APIFOOTBALL)
     processados = 0
     candidatos = priorizar_jogos_apifootball(jogos, df)
-    selecionados = candidatos[:max(1, APIFOOTBALL_MAX_JOGOS)]
+    selecionados = candidatos[:max(0, limite_jogos)]
     for prioridade, motivo_prioridade, jogo in selecionados:
         if restante >= 0 and restante <= APIFOOTBALL_RESERVA_DIA:
             break
@@ -2494,10 +2589,10 @@ def ciclo_apifootball():
     if ha_rastreamento_pendente_af(df, fixture_ids_ativos):
         log(
             "API-Football: confirmação pendente; próxima leitura em "
-            f"{APIFOOTBALL_CONFIRMACAO_SEGUNDOS} segundos"
+            f"{max(APIFOOTBALL_CONFIRMACAO_SEGUNDOS, intervalo_escudo)} segundos"
         )
-        return APIFOOTBALL_CONFIRMACAO_SEGUNDOS
-    return APIFOOTBALL_INTERVALO_SEGUNDOS
+        return max(APIFOOTBALL_CONFIRMACAO_SEGUNDOS, intervalo_escudo)
+    return max(APIFOOTBALL_INTERVALO_SEGUNDOS, intervalo_escudo)
 
 
 def identificar_times(jogo):
