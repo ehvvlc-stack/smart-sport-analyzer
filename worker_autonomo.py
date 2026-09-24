@@ -3652,7 +3652,12 @@ def montar_relatorio_diario(agora_local):
         "versao_filtro_v41",
         pd.Series(index=validacoes_af_geral.index, dtype=object),
     ).fillna("").astype(str).str.strip()
-    base_v41 = validacoes_af_geral[versoes_v41.ne("")].copy()
+    # Não mistura resultados de versões antigas com a regra atual. Isso é
+    # essencial porque cada alteração de filtro pode mudar completamente o
+    # desempenho observado.
+    base_v41 = validacoes_af_geral[
+        versoes_v41.eq(VERSAO_FILTRO_V41)
+    ].copy()
     elegibilidade_v41 = base_v41.get(
         "elegivel_v41_sombra",
         pd.Series(index=base_v41.index, dtype=object),
@@ -3703,6 +3708,28 @@ def montar_relatorio_diario(agora_local):
         ),
         errors="coerce",
     )
+    hoje_v41 = datas_v41.dt.date.eq(agora_local.date())
+    alertas_hoje_v41 = int(hoje_v41.sum())
+    simulacoes_hoje_v41 = int((hoje_v41 & elegiveis_v41).sum())
+    concluidos_hoje_v41 = int((hoje_v41 & concluidos_v41).sum())
+
+    tamanho_amostra_v41 = int(financeiros_v41.sum())
+    meta_inicial_v41 = 30
+    meta_comparavel_v41 = 50
+    if tamanho_amostra_v41 < meta_inicial_v41:
+        maturidade_v41 = (
+            f"COLETANDO: {tamanho_amostra_v41}/{meta_inicial_v41} "
+            "resultados com odds"
+        )
+    elif tamanho_amostra_v41 < meta_comparavel_v41:
+        maturidade_v41 = (
+            f"PRELIMINAR: {tamanho_amostra_v41}/{meta_comparavel_v41} "
+            "resultados com odds"
+        )
+    else:
+        maturidade_v41 = (
+            f"AMOSTRA COMPARÁVEL: {tamanho_amostra_v41} resultados com odds"
+        )
     limite_pendente = pd.Timestamp.now() - pd.Timedelta(hours=3)
     pendentes_antigos_v41 = int(
         (
@@ -3741,14 +3768,18 @@ def montar_relatorio_diario(agora_local):
         f"🔴 Gol do adversário: {gols_adversario}\n"
         f"⚪ Nenhum gol com autoria concluída: {sem_gol_autoria}\n\n"
         "🧪 V4.1 SILENCIOSO — CALIBRAÇÃO\n"
-        f"📥 Novos alertas: {len(base_v41)}\n"
-        f"🎟 Simulações únicas: {int(elegiveis_v41.sum())}\n"
+        f"📅 Hoje: {alertas_hoje_v41} alerta(s), "
+        f"{simulacoes_hoje_v41} simulação(ões), "
+        f"{concluidos_hoje_v41} concluída(s)\n"
+        f"📥 Alertas acumulados: {len(base_v41)}\n"
+        f"🎟 Simulações únicas acumuladas: {int(elegiveis_v41.sum())}\n"
         f"🛡 Repetições bloqueadas: {repeticoes_v41}\n"
         f"🔥 Time destacado: {time_v41}\n"
         f"⚪ Nenhum gol: {sem_gol_v41}\n"
         f"✅ Acertos: {acertos_v41} | ❌ Erros: {erros_v41}\n"
         f"💰 Lucro simulado: {lucro_v41:+.2f} un.\n"
         f"📊 ROI V4.1: {roi_v41_texto}\n"
+        f"📏 Maturidade: {maturidade_v41}\n"
         f"🩺 Integridade: {saude_v41}\n\n"
         "🤖 Worker funcionando normalmente.\n"
         "🧪 Resultados experimentais; nenhuma aposta é automática."
