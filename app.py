@@ -9965,7 +9965,8 @@ with aba_validacao:
                 "Confere a captura automática no instante do alerta e calcula "
                 "o retorno real simulado com entrada unitária. Mercados "
                 "suspensos ou indisponíveis permanecem sem odd e não entram "
-                "no resultado financeiro."
+                "no resultado financeiro. Esta seção reúne a V4 geral e não "
+                "deve ser usada para avaliar isoladamente a V4.1."
             )
             if base_v4.empty:
                 st.info(
@@ -10158,7 +10159,7 @@ with aba_validacao:
                 ).drop(columns=["Data para ordem"])
                 st.dataframe(tabela_odds_v4, width="stretch", hide_index=True)
                 st.download_button(
-                    "⬇️ Baixar auditoria das odds do V4",
+                    "⬇️ Baixar auditoria geral do V4",
                     data=tabela_odds_v4.to_csv(index=False).encode("utf-8-sig"),
                     file_name="auditoria_odds_v4.csv",
                     mime="text/csv",
@@ -10187,11 +10188,16 @@ with aba_validacao:
                         base_v41["resultado_proximo_gol_v41"]
                         .fillna("").astype(str).str.upper()
                     )
+                    previsao_v41 = (
+                        base_v41["previsao_v41_proximo_gol"]
+                        .fillna("").astype(str).str.upper()
+                    )
                     odd_v41 = pd.to_numeric(
                         base_v41["odd_previsao_v41"], errors="coerce"
                     )
                     concluido_v41 = resultado_v41.isin(["ACERTO", "ERRO"])
-                    financeiro_v41 = elegivel_v41 & concluido_v41 & odd_v41.gt(1)
+                    concluido_elegivel_v41 = elegivel_v41 & concluido_v41
+                    financeiro_v41 = concluido_elegivel_v41 & odd_v41.gt(1)
                     base_v41["retorno_v41"] = None
                     acerto_v41 = financeiro_v41 & resultado_v41.eq("ACERTO")
                     erro_v41 = financeiro_v41 & resultado_v41.eq("ERRO")
@@ -10211,16 +10217,69 @@ with aba_validacao:
                         lucro_v41 / len(retornos_v41) * 100
                         if len(retornos_v41) else None
                     )
+                    acertos_total_v41 = int(
+                        (concluido_elegivel_v41 & resultado_v41.eq("ACERTO")).sum()
+                    )
+                    erros_total_v41 = int(
+                        (concluido_elegivel_v41 & resultado_v41.eq("ERRO")).sum()
+                    )
+                    total_concluido_v41 = acertos_total_v41 + erros_total_v41
+                    pendentes_v41 = int(elegivel_v41.sum()) - total_concluido_v41
+                    taxa_acerto_v41 = (
+                        acertos_total_v41 / total_concluido_v41 * 100
+                        if total_concluido_v41 else None
+                    )
+
+                    # Acompanha separadamente o recorte TIME_DESTAQUE, que é a
+                    # hipótese principal da calibração e não deve ser misturada
+                    # com a previsão experimental NENHUM_GOL.
+                    financeiro_time_v41 = financeiro_v41 & previsao_v41.eq(
+                        "TIME_DESTAQUE"
+                    )
+                    retornos_time_v41 = pd.to_numeric(
+                        base_v41.loc[financeiro_time_v41, "retorno_v41"],
+                        errors="coerce",
+                    ).dropna()
+                    lucro_time_v41 = (
+                        float(retornos_time_v41.sum())
+                        if not retornos_time_v41.empty else 0.0
+                    )
+                    roi_time_v41 = (
+                        lucro_time_v41 / len(retornos_time_v41) * 100
+                        if len(retornos_time_v41) else None
+                    )
+
                     v411, v412, v413, v414, v415 = st.columns(5)
                     v411.metric("Novos alertas", len(base_v41))
                     v412.metric("Simulações únicas", int(elegivel_v41.sum()))
                     v413.metric("Repetições bloqueadas", int((~elegivel_v41).sum()))
-                    v414.metric("Resultados", len(retornos_v41))
-                    v415.metric(
-                        "ROI V4.1",
+                    v414.metric("Concluídas", total_concluido_v41)
+                    v415.metric("Pendentes", pendentes_v41)
+
+                    v416, v417, v418, v419, v420 = st.columns(5)
+                    v416.metric("Acertos", acertos_total_v41)
+                    v417.metric("Erros", erros_total_v41)
+                    v418.metric(
+                        "Taxa de acerto",
+                        f"{taxa_acerto_v41:.1f}%"
+                        if taxa_acerto_v41 is not None else "—",
+                    )
+                    v419.metric("Resultados com odd", len(retornos_v41))
+                    v420.metric(
+                        "ROI geral V4.1",
                         f"{roi_v41:+.1f}%" if roi_v41 is not None else "—",
                     )
-                    st.metric("Lucro simulado V4.1", f"{lucro_v41:+.2f} un.")
+
+                    v421, v422, v423 = st.columns(3)
+                    v421.metric("Lucro geral V4.1", f"{lucro_v41:+.2f} un.")
+                    v422.metric(
+                        "Lucro — time destacado", f"{lucro_time_v41:+.2f} un."
+                    )
+                    v423.metric(
+                        "ROI — time destacado",
+                        f"{roi_time_v41:+.1f}%"
+                        if roi_time_v41 is not None else "—",
+                    )
 
                     tabela_v41 = base_v41[[
                         "data_hora", "jogo", "placar", "minuto",
@@ -10247,7 +10306,7 @@ with aba_validacao:
                         width="stretch", hide_index=True,
                     )
                     st.download_button(
-                        "⬇️ Baixar auditoria do V4.1",
+                        "⬇️ Baixar auditoria exclusiva da V4.1",
                         data=tabela_v41.to_csv(index=False).encode("utf-8-sig"),
                         file_name="auditoria_v41_sombra.csv",
                         mime="text/csv",
