@@ -3695,6 +3695,29 @@ def montar_relatorio_diario(agora_local):
         lucro_v41 / len(retornos_v41) * 100
         if len(retornos_v41) else None
     )
+
+    # Exibe os dois mercados separadamente. O ROI geral pode esconder que um
+    # deles funciona melhor enquanto o outro reduz o resultado acumulado.
+    def resumo_financeiro_v41(nome_previsao):
+        mascara = financeiros_v41 & previsoes_v41.eq(nome_previsao)
+        retornos = pd.Series(index=base_v41.index, dtype=float)
+        retornos.loc[mascara & resultados_v41.eq("ACERTO")] = (
+            odds_v41.loc[mascara & resultados_v41.eq("ACERTO")] - 1
+        )
+        retornos.loc[mascara & resultados_v41.eq("ERRO")] = -1.0
+        retornos = retornos.dropna()
+        quantidade = len(retornos)
+        lucro = float(retornos.sum()) if quantidade else 0.0
+        roi = lucro / quantidade * 100 if quantidade else None
+        roi_texto = f"{roi:+.1f}%" if roi is not None else "aguardando"
+        return quantidade, lucro, roi_texto
+
+    n_time_v41, lucro_time_v41, roi_time_v41_texto = resumo_financeiro_v41(
+        "TIME_DESTAQUE"
+    )
+    n_sem_gol_v41, lucro_sem_gol_v41, roi_sem_gol_v41_texto = (
+        resumo_financeiro_v41("NENHUM_GOL")
+    )
     acertos_v41 = int((financeiros_v41 & resultados_v41.eq("ACERTO")).sum())
     erros_v41 = int((financeiros_v41 & resultados_v41.eq("ERRO")).sum())
     repeticoes_v41 = int(elegibilidade_v41.eq("NÃO").sum())
@@ -3779,6 +3802,10 @@ def montar_relatorio_diario(agora_local):
         f"✅ Acertos: {acertos_v41} | ❌ Erros: {erros_v41}\n"
         f"💰 Lucro simulado: {lucro_v41:+.2f} un.\n"
         f"📊 ROI V4.1: {roi_v41_texto}\n"
+        f"🔥 Time destacado: {n_time_v41} com odds | "
+        f"{lucro_time_v41:+.2f} un. | ROI {roi_time_v41_texto}\n"
+        f"⚪ Nenhum gol: {n_sem_gol_v41} com odds | "
+        f"{lucro_sem_gol_v41:+.2f} un. | ROI {roi_sem_gol_v41_texto}\n"
         f"📏 Maturidade: {maturidade_v41}\n"
         f"🩺 Integridade: {saude_v41}\n\n"
         "🤖 Worker funcionando normalmente.\n"
