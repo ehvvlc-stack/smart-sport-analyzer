@@ -78,6 +78,11 @@ ESTADO_SENTINELA = {
     "inatividade_alertada": False,
     "cota_alertada_data": "",
 }
+
+# Posição da fila rotativa usada para concluir registros do mercado de
+# próximo gol. Sem essa rotação, um fixture que não devolve dados pode ficar
+# permanentemente entre os cinco primeiros e impedir a revisão dos demais.
+V4_FINALIZACAO_CURSOR = 0
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "").strip()
 GITHUB_REPO = os.getenv("GITHUB_REPO", "ehvvlc-stack/smart-sport-analyzer").strip()
 GITHUB_BRANCH = os.getenv("GITHUB_BRANCH", "main").strip()
@@ -1544,6 +1549,8 @@ def atualizar_validacao_af(linha):
 
 
 def finalizar_v4_partidas_encerradas_af(fixture_ids_ativos):
+    global V4_FINALIZACAO_CURSOR
+
     df = ler_csv_github_generico(
         APIFOOTBALL_VALIDACAO_PATH, COLUNAS_VALIDACAO_APIFOOTBALL
     )
@@ -1560,15 +1567,44 @@ def finalizar_v4_partidas_encerradas_af(fixture_ids_ativos):
 
     alterou = False
     concluidos = 0
-    fixture_ids = pendentes["fixture_id"].astype(str).drop_duplicates().tolist()[:5]
+    fixture_ids_todos = (
+        pendentes["fixture_id"].astype(str).drop_duplicates().tolist()
+    )
+    total_fixtures = len(fixture_ids_todos)
+    limite_consultas = min(5, total_fixtures)
+    inicio = V4_FINALIZACAO_CURSOR % total_fixtures
+    fixture_ids = [
+        fixture_ids_todos[(inicio + deslocamento) % total_fixtures]
+        for deslocamento in range(limite_consultas)
+    ]
+    V4_FINALIZACAO_CURSOR = (
+        inicio + limite_consultas
+    ) % total_fixtures
+
+    log(
+        "V4 próximo gol: revisando "
+        f"{limite_consultas} de {total_fixtures} fixture(s) pendente(s); "
+        f"próxima posição da fila {V4_FINALIZACAO_CURSOR}"
+    )
     for fixture_id_texto in fixture_ids:
+        indices = pendentes.index[
+            pendentes["fixture_id"].astype(str).eq(fixture_id_texto)
+        ]
         try:
             fixture_id = int(float(fixture_id_texto))
         except (TypeError, ValueError):
+            log(
+                "V4 próximo gol: fixture inválido mantido para auditoria: "
+                f"{fixture_id_texto}"
+            )
             continue
         dados, _ = apifootball_get("fixtures", {"id": fixture_id})
         respostas = dados.get("response", []) if isinstance(dados, dict) else []
         if not respostas:
+            log(
+                "V4 próximo gol: fixture ainda sem resposta na API: "
+                f"{fixture_id}"
+            )
             continue
         jogo = respostas[0]
         status_curto = str(
@@ -1576,9 +1612,6 @@ def finalizar_v4_partidas_encerradas_af(fixture_ids_ativos):
                 "short", ""
             )
         ).upper()
-        indices = pendentes.index[
-            pendentes["fixture_id"].astype(str).eq(fixture_id_texto)
-        ]
         if status_curto in {"CANC", "ABD", "PST", "SUSP", "INT"}:
             for idx in indices:
                 df.at[idx, "status_proximo_gol"] = "ANULADO"
