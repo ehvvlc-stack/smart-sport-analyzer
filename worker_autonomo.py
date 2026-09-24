@@ -83,6 +83,11 @@ ESTADO_SENTINELA = {
 # próximo gol. Sem essa rotação, um fixture que não devolve dados pode ficar
 # permanentemente entre os cinco primeiros e impedir a revisão dos demais.
 V4_FINALIZACAO_CURSOR = 0
+# Registra se cada leitura do GitHub foi realmente concluída. Um DataFrame vazio
+# pode significar "arquivo sem registros" ou "falha de autenticação/rede"; o
+# relatório diário precisa distinguir essas situações para não publicar zeros
+# falsos.
+GITHUB_LEITURA_STATUS = {}
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "").strip()
 GITHUB_REPO = os.getenv("GITHUB_REPO", "ehvvlc-stack/smart-sport-analyzer").strip()
 GITHUB_BRANCH = os.getenv("GITHUB_BRANCH", "main").strip()
@@ -597,11 +602,19 @@ def ler_csv_github_generico(caminho, colunas):
         )
 
         if r.status_code == 404:
+            GITHUB_LEITURA_STATUS[caminho] = {
+                "ok": False,
+                "detalhe": "arquivo não encontrado (404)",
+            }
             return pd.DataFrame(
                 columns=colunas
             )
 
         if r.status_code != 200:
+            GITHUB_LEITURA_STATUS[caminho] = {
+                "ok": False,
+                "detalhe": f"HTTP {r.status_code}",
+            }
             log(
                 f"Falha ao ler {caminho}: "
                 f"{r.status_code}"
@@ -620,8 +633,16 @@ def ler_csv_github_generico(caminho, colunas):
     StringIO(texto),
     dtype=object
 )
+        GITHUB_LEITURA_STATUS[caminho] = {
+            "ok": True,
+            "detalhe": "leitura concluída",
+        }
 
     except Exception as exc:
+        GITHUB_LEITURA_STATUS[caminho] = {
+            "ok": False,
+            "detalhe": str(exc),
+        }
         log(
             f"Erro ao ler {caminho}: {exc}"
         )
@@ -3475,6 +3496,29 @@ def montar_relatorio_diario(agora_local):
     validacoes_af_geral = ler_csv_github_generico(
         APIFOOTBALL_VALIDACAO_PATH, COLUNAS_VALIDACAO_APIFOOTBALL
     )
+
+    # Nunca converte falha de leitura em estatísticas zeradas. Esses dois
+    # arquivos sustentam os indicadores da API-Football e da V4.1.
+    fontes_obrigatorias = [APIFOOTBALL_PATH, APIFOOTBALL_VALIDACAO_PATH]
+    fontes_indisponiveis = [
+        caminho for caminho in fontes_obrigatorias
+        if not GITHUB_LEITURA_STATUS.get(caminho, {}).get("ok", False)
+    ]
+    if fontes_indisponiveis:
+        detalhes = []
+        for caminho in fontes_indisponiveis:
+            motivo = GITHUB_LEITURA_STATUS.get(caminho, {}).get(
+                "detalhe", "falha não identificada"
+            )
+            detalhes.append(f"• {caminho}: {motivo}")
+        return (
+            "⚠️ RESUMO DIÁRIO INDISPONÍVEL — SMART SPORT\n\n"
+            f"📅 {agora_local.strftime('%d/%m/%Y')}\n"
+            "Não foi possível ler os dados necessários no GitHub. "
+            "Para evitar números falsos, o sistema não calculou o resumo.\n\n"
+            + "\n".join(detalhes)
+            + "\n\n🔄 A coleta continuará e será verificada nas próximas leituras."
+        )
 
     jogos = (
         monitor_dia["fixture_id"].astype(str).nunique()
