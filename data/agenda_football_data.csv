@@ -9,3 +9,5 @@ fixture_id,data_hora,status,casa_id,casa,fora_id,fora,competicao,rodada
 555023,2026-10-08T00:30:00Z,TIMED,1771,Cruzeiro EC,1776,São Paulo FC,Campeonato Brasileiro Série A,29
 555028,2026-10-08T22:30:00Z,TIMED,6685,Santos FC,1783,CR Flamengo,Campeonato Brasileiro Série A,29
 555020,2026-10-08T23:00:00Z,TIMED,1768,CA Paranaense,1766,CA Mineiro,Campeonato Brasileiro Série A,29
+555024,2026-10-09T00:30:00Z,TIMED,1765,Fluminense FC,4241,Coritiba FBC,Campeonato Brasileiro Série A,29
+555026,2026-10-09T00:30:00Z,TIMED,1769,SE Palmeiras,1777,EC Bahia,Campeonato Brasileiro Série A,29
