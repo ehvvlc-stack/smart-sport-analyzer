@@ -11,3 +11,5 @@ fixture_id,data_hora,status,casa_id,casa,fora_id,fora,competicao,rodada
 555020,2026-10-08T23:00:00Z,TIMED,1768,CA Paranaense,1766,CA Mineiro,Campeonato Brasileiro Série A,29
 555024,2026-10-09T00:30:00Z,TIMED,1765,Fluminense FC,4241,Coritiba FBC,Campeonato Brasileiro Série A,29
 555026,2026-10-09T00:30:00Z,TIMED,1769,SE Palmeiras,1777,EC Bahia,Campeonato Brasileiro Série A,29
+555039,2026-10-10T20:00:00Z,TIMED,1780,CR Vasco da Gama,4287,Clube do Remo,Campeonato Brasileiro Série A,30
+555038,2026-10-11T00:00:00Z,TIMED,1776,São Paulo FC,1782,EC Vitória,Campeonato Brasileiro Série A,30
