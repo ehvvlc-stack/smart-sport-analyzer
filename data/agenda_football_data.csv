@@ -18,3 +18,6 @@ fixture_id,data_hora,status,casa_id,casa,fora_id,fora,competicao,rodada
 555036,2026-10-11T20:30:00Z,TIMED,1767,Grêmio FBPA,6684,SC Internacional,Campeonato Brasileiro Série A,30
 555037,2026-10-11T20:30:00Z,TIMED,1769,SE Palmeiras,1779,SC Corinthians Paulista,Campeonato Brasileiro Série A,30
 555031,2026-10-11T22:30:00Z,TIMED,1777,EC Bahia,4364,Mirassol FC,Campeonato Brasileiro Série A,30
+555034,2026-10-12T19:00:00Z,TIMED,4241,Coritiba FBC,1770,Botafogo FR,Campeonato Brasileiro Série A,30
+555033,2026-10-12T22:30:00Z,TIMED,1772,Chapecoense AF,1768,CA Paranaense,Campeonato Brasileiro Série A,30
+555032,2026-10-13T00:00:00Z,TIMED,4286,RB Bragantino,1771,Cruzeiro EC,Campeonato Brasileiro Série A,30
