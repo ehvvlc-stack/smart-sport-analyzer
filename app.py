@@ -7668,6 +7668,9 @@ def construir_auditoria_sinais(df_monitoramento, df_validacao_af=None):
         "versao_filtro_v43", "elegivel_v43_sombra",
         "previsao_v43_proximo_gol", "motivo_v43_proximo_gol",
         "resultado_proximo_gol_v43", "odd_previsao_v43",
+        "versao_filtro_v44", "elegivel_v44_sombra",
+        "previsao_v44_proximo_gol", "motivo_v44_proximo_gol",
+        "resultado_proximo_gol_v44", "odd_previsao_v44",
         "snapshot_alerta_original",
         "decisao", "explicacao", "etapa_confirmacao",
         "curva_pressao", "variacao_indice",
@@ -7705,6 +7708,9 @@ def construir_auditoria_sinais(df_monitoramento, df_validacao_af=None):
         "versao_filtro_v43", "elegivel_v43_sombra",
         "previsao_v43_proximo_gol", "motivo_v43_proximo_gol",
         "resultado_proximo_gol_v43", "odd_previsao_v43",
+        "versao_filtro_v44", "elegivel_v44_sombra",
+        "previsao_v44_proximo_gol", "motivo_v44_proximo_gol",
+        "resultado_proximo_gol_v44", "odd_previsao_v44",
         "snapshot_alerta_original",
         "rastreamento_origem_minuto", "rastreamento_etapa",
         "curva_pressao", "variacao_indice",
@@ -7877,6 +7883,18 @@ def construir_auditoria_sinais(df_monitoramento, df_validacao_af=None):
                 "resultado_proximo_gol_v43"
             ],
             "odd_previsao_v43": candidato["odd_previsao_v43"],
+            "versao_filtro_v44": candidato["versao_filtro_v44"],
+            "elegivel_v44_sombra": candidato["elegivel_v44_sombra"],
+            "previsao_v44_proximo_gol": candidato[
+                "previsao_v44_proximo_gol"
+            ],
+            "motivo_v44_proximo_gol": candidato[
+                "motivo_v44_proximo_gol"
+            ],
+            "resultado_proximo_gol_v44": candidato[
+                "resultado_proximo_gol_v44"
+            ],
+            "odd_previsao_v44": candidato["odd_previsao_v44"],
             "snapshot_alerta_original": candidato[
                 "snapshot_alerta_original"
             ],
@@ -7927,6 +7945,9 @@ def construir_auditoria_sinais(df_monitoramento, df_validacao_af=None):
         "versao_filtro_v43", "elegivel_v43_sombra",
         "previsao_v43_proximo_gol", "motivo_v43_proximo_gol",
         "resultado_proximo_gol_v43", "odd_previsao_v43",
+        "versao_filtro_v44", "elegivel_v44_sombra",
+        "previsao_v44_proximo_gol", "motivo_v44_proximo_gol",
+        "resultado_proximo_gol_v44", "odd_previsao_v44",
         "snapshot_alerta_original",
         "resultado_gol", "time_gol", "gol_time_destaque_5_min",
         "gol_time_destaque_10_min",
@@ -8070,6 +8091,18 @@ def construir_auditoria_sinais(df_monitoramento, df_validacao_af=None):
                 "resultado_proximo_gol_v43"
             ),
             "odd_previsao_v43": valor_alerta("odd_previsao_v43"),
+            "versao_filtro_v44": valor_alerta("versao_filtro_v44"),
+            "elegivel_v44_sombra": valor_alerta("elegivel_v44_sombra"),
+            "previsao_v44_proximo_gol": valor_alerta(
+                "previsao_v44_proximo_gol"
+            ),
+            "motivo_v44_proximo_gol": valor_alerta(
+                "motivo_v44_proximo_gol"
+            ),
+            "resultado_proximo_gol_v44": valor_alerta(
+                "resultado_proximo_gol_v44"
+            ),
+            "odd_previsao_v44": valor_alerta("odd_previsao_v44"),
             "snapshot_alerta_original": valor_alerta(
                 "snapshot_alerta_original"
             ),
@@ -10680,6 +10713,155 @@ with aba_validacao:
                         "⬇️ Baixar auditoria exclusiva da V4.3",
                         data=tabela_v43.to_csv(index=False).encode("utf-8-sig"),
                         file_name="auditoria_v43_sombra.csv",
+                        mime="text/csv",
+                    )
+
+                st.write("### 🧪 V4.4 silencioso — V4.3 com odd abaixo de 2,00")
+                st.caption(
+                    "Acompanha somente a regra V4.4: até 60 minutos, índice "
+                    "70 ou maior, time destacado vencendo, odd válida abaixo "
+                    "de 2,00 e apenas uma simulação por partida. O piloto real "
+                    "permanece pausado."
+                )
+                versao_v44 = (
+                    auditoria_odds_v4["versao_filtro_v44"]
+                    .fillna("").astype(str).str.strip()
+                )
+                base_v44 = auditoria_odds_v4[versao_v44.ne("")].copy()
+                if base_v44.empty:
+                    st.info(
+                        "A V4.4 aguarda o primeiro alerta produzido após sua ativação."
+                    )
+                else:
+                    elegivel_v44 = (
+                        base_v44["elegivel_v44_sombra"]
+                        .fillna("").astype(str).str.strip().str.upper().eq("SIM")
+                    )
+                    resultado_v44 = (
+                        base_v44["resultado_proximo_gol_v44"]
+                        .fillna("").astype(str).str.strip().str.upper()
+                    )
+                    odd_v44 = pd.to_numeric(
+                        base_v44["odd_previsao_v44"], errors="coerce"
+                    )
+                    concluido_v44 = resultado_v44.isin(["ACERTO", "ERRO"])
+                    concluido_elegivel_v44 = elegivel_v44 & concluido_v44
+                    financeiro_v44 = concluido_elegivel_v44 & odd_v44.gt(1)
+
+                    base_v44["retorno_v44"] = None
+                    acerto_v44 = financeiro_v44 & resultado_v44.eq("ACERTO")
+                    erro_v44 = financeiro_v44 & resultado_v44.eq("ERRO")
+                    base_v44.loc[acerto_v44, "retorno_v44"] = (
+                        odd_v44.loc[acerto_v44] - 1
+                    )
+                    base_v44.loc[erro_v44, "retorno_v44"] = -1.0
+                    retornos_v44 = pd.to_numeric(
+                        base_v44.loc[financeiro_v44, "retorno_v44"],
+                        errors="coerce",
+                    ).dropna()
+                    lucro_v44 = (
+                        float(retornos_v44.sum())
+                        if not retornos_v44.empty else 0.0
+                    )
+                    roi_v44 = (
+                        lucro_v44 / len(retornos_v44) * 100
+                        if len(retornos_v44) else None
+                    )
+                    acertos_total_v44 = int(
+                        (concluido_elegivel_v44 & resultado_v44.eq("ACERTO")).sum()
+                    )
+                    erros_total_v44 = int(
+                        (concluido_elegivel_v44 & resultado_v44.eq("ERRO")).sum()
+                    )
+                    total_concluido_v44 = acertos_total_v44 + erros_total_v44
+                    total_elegivel_v44 = int(elegivel_v44.sum())
+                    pendentes_v44 = max(total_elegivel_v44 - total_concluido_v44, 0)
+                    taxa_acerto_v44 = (
+                        acertos_total_v44 / total_concluido_v44 * 100
+                        if total_concluido_v44 else None
+                    )
+                    motivo_v44 = (
+                        base_v44["motivo_v44_proximo_gol"]
+                        .fillna("").astype(str).str.lower()
+                    )
+                    repeticoes_v44 = int(motivo_v44.str.contains("repeti").sum())
+                    snapshots_v44 = (
+                        base_v44["snapshot_alerta_original"]
+                        .fillna("").astype(str).str.strip()
+                    )
+                    snapshots_integros_v44 = int(
+                        (elegivel_v44 & snapshots_v44.ne("")).sum()
+                    )
+
+                    z1, z2, z3, z4, z5 = st.columns(5)
+                    z1.metric("Registros V4.4", len(base_v44))
+                    z2.metric("Simulações únicas", total_elegivel_v44)
+                    z3.metric("Repetições bloqueadas", repeticoes_v44)
+                    z4.metric("Concluídas", total_concluido_v44)
+                    z5.metric("Pendentes", pendentes_v44)
+
+                    z6, z7, z8, z9, z10 = st.columns(5)
+                    z6.metric("Acertos", acertos_total_v44)
+                    z7.metric("Erros", erros_total_v44)
+                    z8.metric(
+                        "Taxa de acerto",
+                        f"{taxa_acerto_v44:.1f}%"
+                        if taxa_acerto_v44 is not None else "—",
+                    )
+                    z9.metric("Resultados com odd", len(retornos_v44))
+                    z10.metric(
+                        "ROI V4.4",
+                        f"{roi_v44:+.1f}%" if roi_v44 is not None else "—",
+                    )
+
+                    z11, z12, z13 = st.columns(3)
+                    z11.metric("Lucro simulado", f"{lucro_v44:+.2f} un.")
+                    z12.metric(
+                        "Snapshots íntegros",
+                        f"{snapshots_integros_v44}/{total_elegivel_v44}",
+                    )
+                    faltam_30_v44 = max(30 - total_concluido_v44, 0)
+                    faltam_50_v44 = max(50 - total_concluido_v44, 0)
+                    z13.metric("Faltam para 30", faltam_30_v44)
+
+                    st.progress(min(total_concluido_v44 / 50, 1.0))
+                    st.caption(
+                        f"Progresso da amostra: {total_concluido_v44}/50. "
+                        f"Faltam {faltam_30_v44} para a primeira análise e "
+                        f"{faltam_50_v44} para a amostra preferencial."
+                    )
+
+                    tabela_v44 = base_v44[[
+                        "data_hora", "jogo", "placar", "minuto",
+                        "time_destaque", "indice_destaque",
+                        "elegivel_v44_sombra", "previsao_v44_proximo_gol",
+                        "motivo_v44_proximo_gol", "odd_previsao_v44",
+                        "status_proximo_gol", "resultado_proximo_gol_v44",
+                        "retorno_v44", "snapshot_alerta_original",
+                    ]].rename(columns={
+                        "data_hora": "Data/hora",
+                        "jogo": "Jogo",
+                        "placar": "Placar",
+                        "minuto": "Minuto",
+                        "time_destaque": "Time destacado",
+                        "indice_destaque": "Índice",
+                        "elegivel_v44_sombra": "Elegível V4.4",
+                        "previsao_v44_proximo_gol": "Previsão V4.4",
+                        "motivo_v44_proximo_gol": "Motivo",
+                        "odd_previsao_v44": "Odd V4.4",
+                        "status_proximo_gol": "Status",
+                        "resultado_proximo_gol_v44": "Resultado V4.4",
+                        "retorno_v44": "Retorno (un.)",
+                        "snapshot_alerta_original": "Snapshot original",
+                    })
+                    st.dataframe(
+                        tabela_v44.sort_values("Data/hora", ascending=False),
+                        width="stretch", hide_index=True,
+                    )
+                    st.download_button(
+                        "⬇️ Baixar auditoria exclusiva da V4.4",
+                        data=tabela_v44.to_csv(index=False).encode("utf-8-sig"),
+                        file_name="auditoria_v44_sombra.csv",
                         mime="text/csv",
                     )
 
