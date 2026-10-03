@@ -68,6 +68,7 @@ VERSAO_FILTRO_V4 = "V4-PROXIMO-GOL-FINALIZACAO-SEGURA-05"
 VERSAO_FILTRO_V41 = "V4.1-UM-SINAL-POR-JOGO-LIMITE75-01"
 VERSAO_FILTRO_V42 = "V4.2-SILENCIOSO-MIN60-IND70-NAO-PERDENDO-01"
 VERSAO_FILTRO_V43 = "V4.3-SILENCIOSO-MIN60-IND70-VENCENDO-01"
+VERSAO_FILTRO_V44 = "V4.4-SILENCIOSO-MIN60-IND70-VENCENDO-ODD2-01"
 V41_PILOTO_TELEGRAM_ATIVO = os.getenv(
     "V41_PILOTO_TELEGRAM_ATIVO", "0"
 ).strip().lower() in {"1", "true", "sim", "yes", "on"}
@@ -904,6 +905,9 @@ COLUNAS_VALIDACAO_APIFOOTBALL = [
     "versao_filtro_v43", "elegivel_v43_sombra",
     "previsao_v43_proximo_gol", "motivo_v43_proximo_gol",
     "resultado_proximo_gol_v43", "odd_previsao_v43",
+    "versao_filtro_v44", "elegivel_v44_sombra",
+    "previsao_v44_proximo_gol", "motivo_v44_proximo_gol",
+    "resultado_proximo_gol_v44", "odd_previsao_v44",
     "snapshot_alerta_original",
     "gol_ate_5_min", "gol_ate_10_min", "escanteio_ate_5_min",
     "escanteio_ate_10_min", "time_gol", "resultado_gol",
@@ -1634,6 +1638,44 @@ def classificar_v43_proximo_gol(linha, ja_existe_sinal_v43=False):
     )
 
 
+def classificar_v44_proximo_gol(
+    linha, odd_destaque, ja_existe_sinal_v44=False
+):
+    """Teste silencioso criado após a auditoria de 30 sinais da V4.3.
+
+    Mantém integralmente os critérios da V4.3 e acrescenta somente uma
+    exigência: odd válida do time destacado abaixo de 2.00.
+    """
+    if ja_existe_sinal_v44:
+        return (
+            "NÃO_ELEGÍVEL",
+            "partida já possui uma simulação V4.4; repetição bloqueada",
+            "NÃO",
+        )
+    minuto = int(numero_af(linha.get("minuto", 0)))
+    indice = numero_af(linha.get("indice_destaque", 0))
+    situacao = str(linha.get("situacao_placar", "")).strip().upper()
+    odd = numero_af(odd_destaque)
+    bloqueios = []
+    if minuto > 60:
+        bloqueios.append("minuto acima de 60")
+    if indice < 70:
+        bloqueios.append("índice abaixo de 70")
+    if situacao != "VENCENDO":
+        bloqueios.append("time destacado não estava vencendo")
+    if odd <= 1:
+        bloqueios.append("odd do time destacado indisponível")
+    elif odd >= 2:
+        bloqueios.append("odd do time destacado igual ou acima de 2.00")
+    if bloqueios:
+        return "NÃO_ELEGÍVEL", "; ".join(bloqueios), "NÃO"
+    return (
+        "TIME_DESTAQUE",
+        "até minuto 60; índice 70+; time destacado vencendo; odd abaixo de 2.00",
+        "SIM",
+    )
+
+
 def atualizar_validacao_af(linha):
     df = ler_csv_github_generico(
         APIFOOTBALL_VALIDACAO_PATH, COLUNAS_VALIDACAO_APIFOOTBALL
@@ -1693,6 +1735,12 @@ def atualizar_validacao_af(linha):
                 if str(df.at[idx, "elegivel_v43_sombra"]).upper() == "SIM":
                     df.at[idx, "resultado_proximo_gol_v43"] = resultado_previsao_v4(
                         df.at[idx, "previsao_v43_proximo_gol"],
+                        time_proximo,
+                        df.at[idx, "time_destaque"],
+                    )
+                if str(df.at[idx, "elegivel_v44_sombra"]).upper() == "SIM":
+                    df.at[idx, "resultado_proximo_gol_v44"] = resultado_previsao_v4(
+                        df.at[idx, "previsao_v44_proximo_gol"],
                         time_proximo,
                         df.at[idx, "time_destaque"],
                     )
@@ -1795,6 +1843,8 @@ def finalizar_v4_partidas_encerradas_af(fixture_ids_ativos):
                     df.at[idx, "resultado_proximo_gol_v42"] = "NÃO AVALIADO"
                 if str(df.at[idx, "elegivel_v43_sombra"]).upper() == "SIM":
                     df.at[idx, "resultado_proximo_gol_v43"] = "NÃO AVALIADO"
+                if str(df.at[idx, "elegivel_v44_sombra"]).upper() == "SIM":
+                    df.at[idx, "resultado_proximo_gol_v44"] = "NÃO AVALIADO"
                 alterou = True
                 concluidos += 1
             continue
@@ -1836,6 +1886,12 @@ def finalizar_v4_partidas_encerradas_af(fixture_ids_ativos):
                     "" if not time_proximo else time_proximo,
                     df.at[idx, "time_destaque"],
                 )
+            if str(df.at[idx, "elegivel_v44_sombra"]).upper() == "SIM":
+                df.at[idx, "resultado_proximo_gol_v44"] = resultado_previsao_v4(
+                    df.at[idx, "previsao_v44_proximo_gol"],
+                    "" if not time_proximo else time_proximo,
+                    df.at[idx, "time_destaque"],
+                )
             alterou = True
             concluidos += 1
     if alterou:
@@ -1873,6 +1929,11 @@ def verificar_integridade_experimento(registro):
         "elegivel_v43_sombra": registro.get("elegivel_v43_sombra", ""),
         "previsao_v43_proximo_gol": registro.get(
             "previsao_v43_proximo_gol", ""
+        ),
+        "versao_filtro_v44": registro.get("versao_filtro_v44", ""),
+        "elegivel_v44_sombra": registro.get("elegivel_v44_sombra", ""),
+        "previsao_v44_proximo_gol": registro.get(
+            "previsao_v44_proximo_gol", ""
         ),
         "snapshot_alerta_original": registro.get(
             "snapshot_alerta_original", ""
@@ -2069,10 +2130,19 @@ def registrar_alerta_af(linha):
     previsao_v43, motivo_v43, elegivel_v43 = classificar_v43_proximo_gol(
         linha, ja_existe_sinal_v43
     )
+    ja_existe_sinal_v44 = False
+    if not df.empty and "elegivel_v44_sombra" in df.columns:
+        ja_existe_sinal_v44 = (
+            df["fixture_id"].astype(str).eq(str(fixture_id))
+            & df["elegivel_v44_sombra"].astype(str).str.upper().eq("SIM")
+        ).any()
     (
         odd_destaque, odd_adversario, odd_sem_gol, status_odds,
         mercado_odds, data_hora_odds,
     ) = capturar_odds_proximo_gol(linha)
+    previsao_v44, motivo_v44, elegivel_v44 = classificar_v44_proximo_gol(
+        linha, odd_destaque, ja_existe_sinal_v44
+    )
     odd_previsao = (
         odd_destaque if previsao_v4 == "TIME_DESTAQUE" else odd_sem_gol
     )
@@ -2085,6 +2155,7 @@ def registrar_alerta_af(linha):
         )
     odd_previsao_v42 = odd_destaque if elegivel_v42 == "SIM" else ""
     odd_previsao_v43 = odd_destaque if elegivel_v43 == "SIM" else ""
+    odd_previsao_v44 = odd_destaque if elegivel_v44 == "SIM" else ""
     snapshot_alerta_original = (
         f"{agora.strftime('%Y-%m-%d %H:%M:%S')}|{fixture_id}|"
         f"{linha['minuto']}|{linha['placar']}|{linha['time_destaque']}|"
@@ -2158,6 +2229,14 @@ def registrar_alerta_af(linha):
             "PENDENTE" if elegivel_v43 == "SIM" else "NÃO AVALIADO"
         ),
         "odd_previsao_v43": odd_previsao_v43,
+        "versao_filtro_v44": VERSAO_FILTRO_V44,
+        "elegivel_v44_sombra": elegivel_v44,
+        "previsao_v44_proximo_gol": previsao_v44,
+        "motivo_v44_proximo_gol": motivo_v44,
+        "resultado_proximo_gol_v44": (
+            "PENDENTE" if elegivel_v44 == "SIM" else "NÃO AVALIADO"
+        ),
+        "odd_previsao_v44": odd_previsao_v44,
         "snapshot_alerta_original": snapshot_alerta_original,
         "gol_ate_5_min": "PENDENTE", "gol_ate_10_min": "PENDENTE",
         "escanteio_ate_5_min": "PENDENTE", "escanteio_ate_10_min": "PENDENTE",
@@ -4172,6 +4251,7 @@ def main():
     log(
         f"V4.2 silencioso ativo: {VERSAO_FILTRO_V42}; "
         f"V4.3 silencioso ativo: {VERSAO_FILTRO_V43}; "
+        f"V4.4 silencioso ativo: {VERSAO_FILTRO_V44}; "
         f"piloto real V4.1 "
         f"{'ATIVO' if V41_PILOTO_TELEGRAM_ATIVO else 'PAUSADO'}"
     )
