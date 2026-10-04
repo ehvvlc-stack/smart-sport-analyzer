@@ -1,5 +1,4 @@
 fixture_id,data_hora,status,casa_id,casa,fora_id,fora,competicao,rodada
-554940,2026-10-03T21:30:00Z,FINISHED,1766,CA Mineiro,4286,RB Bragantino,Campeonato Brasileiro Série A,21
 555022,2026-10-07T22:30:00Z,TIMED,4286,RB Bragantino,4364,Mirassol FC,Campeonato Brasileiro Série A,29
 555025,2026-10-07T22:30:00Z,TIMED,6684,SC Internacional,1779,SC Corinthians Paulista,Campeonato Brasileiro Série A,29
 555027,2026-10-07T22:30:00Z,TIMED,4287,Clube do Remo,1767,Grêmio FBPA,Campeonato Brasileiro Série A,29
@@ -25,3 +24,7 @@ fixture_id,data_hora,status,casa_id,casa,fora_id,fora,competicao,rodada
 555041,2026-10-17T21:30:00Z,TIMED,1766,CA Mineiro,4241,Coritiba FBC,Campeonato Brasileiro Série A,31
 555040,2026-10-17T22:30:00Z,TIMED,1768,CA Paranaense,1769,SE Palmeiras,Campeonato Brasileiro Série A,31
 555049,2026-10-18T00:00:00Z,TIMED,1776,São Paulo FC,1780,CR Vasco da Gama,Campeonato Brasileiro Série A,31
+555045,2026-10-18T19:00:00Z,TIMED,1765,Fluminense FC,6685,Santos FC,Campeonato Brasileiro Série A,31
+555046,2026-10-18T19:00:00Z,TIMED,1767,Grêmio FBPA,1771,Cruzeiro EC,Campeonato Brasileiro Série A,31
+555042,2026-10-18T21:30:00Z,TIMED,1777,EC Bahia,1783,CR Flamengo,Campeonato Brasileiro Série A,31
+555048,2026-10-18T22:30:00Z,TIMED,4287,Clube do Remo,4286,RB Bragantino,Campeonato Brasileiro Série A,31
