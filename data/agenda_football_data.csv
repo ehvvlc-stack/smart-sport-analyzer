@@ -1,6 +1,4 @@
 fixture_id,data_hora,status,casa_id,casa,fora_id,fora,competicao,rodada
-555024,2026-10-09T00:30:00Z,FINISHED,1765,Fluminense FC,4241,Coritiba FBC,Campeonato Brasileiro Série A,29
-555026,2026-10-09T00:30:00Z,FINISHED,1769,SE Palmeiras,1777,EC Bahia,Campeonato Brasileiro Série A,29
 555039,2026-10-10T21:00:00Z,TIMED,1780,CR Vasco da Gama,4287,Clube do Remo,Campeonato Brasileiro Série A,30
 555038,2026-10-11T00:00:00Z,TIMED,1776,São Paulo FC,1782,EC Vitória,Campeonato Brasileiro Série A,30
 555030,2026-10-11T19:00:00Z,TIMED,1766,CA Mineiro,6685,Santos FC,Campeonato Brasileiro Série A,30
@@ -22,3 +20,9 @@ fixture_id,data_hora,status,casa_id,casa,fora_id,fora,competicao,rodada
 555048,2026-10-18T22:30:00Z,TIMED,4287,Clube do Remo,4286,RB Bragantino,Campeonato Brasileiro Série A,31
 555044,2026-10-19T23:00:00Z,TIMED,1779,SC Corinthians Paulista,1782,EC Vitória,Campeonato Brasileiro Série A,31
 555052,2026-10-23T23:00:00Z,TIMED,1771,Cruzeiro EC,4287,Clube do Remo,Campeonato Brasileiro Série A,32
+555054,2026-10-24T19:30:00Z,TIMED,6684,SC Internacional,1770,Botafogo FR,Campeonato Brasileiro Série A,32
+555055,2026-10-24T19:30:00Z,TIMED,4364,Mirassol FC,1776,São Paulo FC,Campeonato Brasileiro Série A,32
+555059,2026-10-24T19:30:00Z,TIMED,1782,EC Vitória,1768,CA Paranaense,Campeonato Brasileiro Série A,32
+555056,2026-10-24T21:30:00Z,TIMED,1769,SE Palmeiras,4286,RB Bragantino,Campeonato Brasileiro Série A,32
+555058,2026-10-24T21:30:00Z,TIMED,1780,CR Vasco da Gama,1779,SC Corinthians Paulista,Campeonato Brasileiro Série A,32
+555050,2026-10-24T22:30:00Z,TIMED,1772,Chapecoense AF,1765,Fluminense FC,Campeonato Brasileiro Série A,32
