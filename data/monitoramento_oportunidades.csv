@@ -515,3 +515,7 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19722778-14,2026-10-10 15:37:25,19722778,Hearts x St. Mirren,74,14,4 x 0,BAIXA,Hearts,56.1,12.2,50.0,50.0,2.0,AO_VIVO,,,,ALTA,100.0,,17
 19722776-15,2026-10-10 15:37:25,19722776,Rangers x Kilmarnock,75,15,3 x 0,BAIXA,Rangers,54.4,8.8,50.0,59.0,1.0,AO_VIVO,,,,ALTA,100.0,,8
 19722780-15,2026-10-10 15:37:25,19722780,Dundee United x Hibernian,77,15,1 x 0,BAIXA,Dundee United,51.3,2.6,50.0,45.0,3.0,AO_VIVO,,,,ALTA,100.0,,12
+19722778-16,2026-10-10 15:42:25,19722778,Hearts x St. Mirren,82,16,5 x 0,PÓS_GOL,Hearts,57.6,15.2,50.0,50.0,3.0,AO_VIVO,,,,ALTA,100.0,,19
+19722779-17,2026-10-10 15:42:25,19722779,Falkirk x Dundee,85,17,1 x 1,BAIXA,Dundee,56.4,12.8,50.0,44.0,7.0,AO_VIVO,,,,ALTA,100.0,,5
+19722776-16,2026-10-10 15:42:25,19722776,Rangers x Kilmarnock,80,16,3 x 0,BAIXA,Rangers,54.3,8.6,50.0,58.0,1.0,AO_VIVO,,,,ALTA,100.0,,10
+19722780-16,2026-10-10 15:42:25,19722780,Dundee United x Hibernian,80,16,1 x 0,BAIXA,Dundee United,51.3,2.6,50.0,45.0,3.0,AO_VIVO,,,,ALTA,100.0,,16
