@@ -570,3 +570,4 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713911-9,2026-10-11 15:07:25,19713911,Brøndby IF x Lyngby Boldklub,46,9,3 x 0,BAIXA,Brøndby IF,50.6,1.2,50.0,41.0,2.0,AO_VIVO,,,,ALTA,100.0,,9
 19713911-10,2026-10-11 15:12:25,19713911,Brøndby IF x Lyngby Boldklub,51,10,4 x 0,PÓS_GOL,Brøndby IF,50.3,0.6,50.0,40.0,2.0,AO_VIVO,,,,ALTA,100.0,,10
 19713911-11,2026-10-11 15:17:25,19713911,Brøndby IF x Lyngby Boldklub,55,11,4 x 0,BAIXA,Brøndby IF,52.1,4.2,50.0,41.0,4.0,AO_VIVO,,,,ALTA,100.0,,11
+19713911-12,2026-10-11 15:22:25,19713911,Brøndby IF x Lyngby Boldklub,62,12,4 x 0,BAIXA,Brøndby IF,51.5,3.0,50.0,38.0,4.0,AO_VIVO,,,,ALTA,100.0,,13
