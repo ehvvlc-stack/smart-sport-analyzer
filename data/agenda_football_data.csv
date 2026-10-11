@@ -1,5 +1,5 @@
 fixture_id,data_hora,status,casa_id,casa,fora_id,fora,competicao,rodada
-555038,2026-10-11T00:00:00Z,IN_PLAY,1776,São Paulo FC,1782,EC Vitória,Campeonato Brasileiro Série A,30
+555038,2026-10-11T00:00:00Z,FINISHED,1776,São Paulo FC,1782,EC Vitória,Campeonato Brasileiro Série A,30
 555030,2026-10-11T19:00:00Z,TIMED,1766,CA Mineiro,6685,Santos FC,Campeonato Brasileiro Série A,30
 555035,2026-10-11T20:30:00Z,TIMED,1783,CR Flamengo,1765,Fluminense FC,Campeonato Brasileiro Série A,30
 555036,2026-10-11T20:30:00Z,TIMED,1767,Grêmio FBPA,6684,SC Internacional,Campeonato Brasileiro Série A,30
