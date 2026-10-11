@@ -565,4 +565,5 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19722781-13,2026-10-11 14:37:25,19722781,Aberdeen x St. Johnstone,68,13,0 x 1,BAIXA,Aberdeen,62.8,25.6,50.0,60.0,9.0,AO_VIVO,,,,ALTA,100.0,,8
 19713911-6,2026-10-11 14:37:25,19713911,Brøndby IF x Lyngby Boldklub,32,6,2 x 0,PÓS_GOL,Lyngby Boldklub,56.7,13.4,50.0,62.0,2.0,AO_VIVO,,,,ALTA,100.0,,4
 19722781-15,2026-10-11 14:52:25,19722781,Aberdeen x St. Johnstone,78,15,0 x 1,BAIXA,Aberdeen,64.3,28.6,50.0,64.0,11.0,AO_VIVO,,,,ALTA,100.0,,10
-19713911-8,2026-10-11 14:52:25,19713911,Brøndby IF x Lyngby Boldklub,40,8,3 x 0,PÓS_GOL,Lyngby Boldklub,50.9,1.8,50.0,58.0,-1.0,AO_VIVO,,,,ALTA,100.0,,6
+19713911-8,2026-10-11 14:57:25,19713911,Brøndby IF x Lyngby Boldklub,40,8,3 x 0,PÓS_GOL,Lyngby Boldklub,50.9,1.8,50.0,58.0,-1.0,AO_VIVO,,,,ALTA,100.0,,6
+19722781-18,2026-10-11 14:57:25,19722781,Aberdeen x St. Johnstone,90,18,0 x 1,BAIXA,Aberdeen,64.5,29.0,50.0,65.0,11.0,AO_VIVO,,,,ALTA,100.0,,12
