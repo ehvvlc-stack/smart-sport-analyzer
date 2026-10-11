@@ -541,5 +541,7 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713915-9,2026-10-11 13:12:25,19713915,Randers FC x Viborg FF,45,9,0 x 1,BAIXA,Randers FC,51.1,2.2,50.0,47.0,1.0,AO_VIVO,,,,ALTA,100.0,,2
 19722781-1,2026-10-11 13:07:25,19722781,Aberdeen x St. Johnstone,7,1,0 x 0,BAIXA,Aberdeen,56.4,12.8,50.0,50.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
 19713907-9,2026-10-11 13:17:25,19713907,Silkeborg IF x Horsens,48,9,1 x 2,BAIXA,Silkeborg IF,56.0,12.0,50.0,72.0,2.0,AO_VIVO,,,,ALTA,100.0,,6
-19722781-2,2026-10-11 13:17:25,19722781,Aberdeen x St. Johnstone,14,2,0 x 1,BAIXA,St. Johnstone,56.6,13.2,50.0,58.0,1.0,AO_VIVO,,,,ALTA,100.0,,2
+19722781-2,2026-10-11 13:22:25,19722781,Aberdeen x St. Johnstone,14,2,0 x 1,BAIXA,St. Johnstone,52.8,5.6,50.0,41.0,1.0,AO_VIVO,,,,ALTA,100.0,,2
 19713915-11,2026-10-11 13:17:25,19713915,Randers FC x Viborg FF,56,11,0 x 1,BAIXA,Randers FC,52.1,4.2,50.0,48.0,1.0,AO_VIVO,,,,ALTA,100.0,,3
+19713915-12,2026-10-11 13:22:25,19713915,Randers FC x Viborg FF,62,12,0 x 1,BAIXA,Randers FC,51.7,3.4,50.0,49.0,1.0,AO_VIVO,,,,ALTA,100.0,,6
+19713907-12,2026-10-11 13:22:25,19713907,Silkeborg IF x Horsens,63,12,2 x 2,PÓS_GOL,Silkeborg IF,56.2,12.4,50.0,72.0,1.0,AO_VIVO,,,,ALTA,100.0,,8
