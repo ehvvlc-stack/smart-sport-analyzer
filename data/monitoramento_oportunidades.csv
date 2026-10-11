@@ -579,3 +579,4 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713912-2,2026-10-11 16:47:25,19713912,FC Midtjylland x FC København,12,2,1 x 0,PÓS_GOL,FC Midtjylland,60.5,21.0,50.0,44.0,1.0,AO_VIVO,,,,ALTA,100.0,,1
 19713912-9,2026-10-11 17:07:25,19713912,FC Midtjylland x FC København,46,9,1 x 0,BAIXA,FC Midtjylland,61.1,22.2,50.0,42.0,1.0,AO_VIVO,,,,ALTA,100.0,,3
 19713912-10,2026-10-11 17:22:25,19713912,FC Midtjylland x FC København,54,10,1 x 1,BAIXA,FC København,56.4,12.8,50.0,61.0,1.0,AO_VIVO,,,,ALTA,100.0,,6
+19713912-12,2026-10-11 17:27:25,19713912,FC Midtjylland x FC København,64,12,2 x 1,PÓS_GOL,FC København,57.4,14.8,50.0,63.0,1.0,AO_VIVO,,,,ALTA,100.0,,8
