@@ -590,3 +590,4 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713909-5,2026-10-12 17:37:26,19713909,AGF x Sønderjyske Fodbold,25,5,2 x 0,BAIXA,AGF,55.9,11.8,50.0,55.0,2.0,AO_VIVO,,,,ALTA,100.0,,4
 19713909-7,2026-10-12 17:42:26,19713909,AGF x Sønderjyske Fodbold,38,7,3 x 0,PÓS_GOL,AGF,55.9,11.8,50.0,55.0,3.0,AO_VIVO,,,,ALTA,100.0,,5
 19713909-9,2026-10-12 18:22:25,19713909,AGF x Sønderjyske Fodbold,46,9,3 x 0,BAIXA,Sønderjyske Fodbold,51.5,3.0,50.0,48.0,-1.0,AO_VIVO,,,,ALTA,100.0,,7
+19713909-13,2026-10-12 18:27:25,19713909,AGF x Sønderjyske Fodbold,67,13,3 x 0,BAIXA,Sønderjyske Fodbold,51.3,2.6,50.0,47.0,-1.0,AO_VIVO,,,,ALTA,100.0,,10
