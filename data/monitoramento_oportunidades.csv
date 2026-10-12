@@ -585,3 +585,4 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713912-16,2026-10-11 17:47:25,19713912,FC Midtjylland x FC København,81,16,2 x 1,BAIXA,FC København,52.5,5.0,50.0,66.0,-1.0,FINALIZADO,2026-10-11 18:12:25,2 x 1,ULTIMO_OBSERVADO,ALTA,100.0,,13
 19713912-18,2026-10-11 18:07:25,19713912,FC Midtjylland x FC København,90,18,2 x 1,BAIXA,FC Midtjylland,50.0,0.0,50.0,35.0,2.0,FINALIZADO,2026-10-11 18:12:25,2 x 1,ULTIMO_OBSERVADO,ALTA,100.0,,19
 19713909-0,2026-10-12 17:02:25,19713909,AGF x Sønderjyske Fodbold,2,0,0 x 0,BAIXA,Sønderjyske Fodbold,51.3,2.6,50.0,56.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
+19713909-1,2026-10-12 17:07:25,19713909,AGF x Sønderjyske Fodbold,7,1,0 x 0,BAIXA,Sønderjyske Fodbold,55.5,11.0,50.0,46.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
