@@ -72,6 +72,11 @@ VERSAO_FILTRO_V44 = "V4.4-SILENCIOSO-MIN60-IND70-VENCENDO-ODD2-01"
 V41_PILOTO_TELEGRAM_ATIVO = os.getenv(
     "V41_PILOTO_TELEGRAM_ATIVO", "0"
 ).strip().lower() in {"1", "true", "sim", "yes", "on"}
+V44_TELEGRAM_EXPERIMENTAL_ATIVO = os.getenv(
+    "V44_TELEGRAM_EXPERIMENTAL_ATIVO", "0"
+).strip().lower() in {"1", "true", "sim", "yes", "on"}
+V44_ODD_MIN_TELEGRAM = 1.31
+V44_ODD_MAX_TELEGRAM = 2.00
 RELATORIO_DIARIO_ATIVO = os.getenv("RELATORIO_DIARIO_ATIVO", "1").strip() == "1"
 RELATORIO_DIARIO_HORA = int(os.getenv("RELATORIO_DIARIO_HORA", "20"))
 RELATORIO_DIARIO_MINUTO = int(os.getenv("RELATORIO_DIARIO_MINUTO", "0"))
@@ -2283,6 +2288,26 @@ def registrar_alerta_af(linha):
         f"{bloco_odds}\n\n"
         "🧪 Sinal estatístico em validação; nenhuma aposta é automática."
     )
+    odd_v44_telegram = numero_af(odd_previsao_v44)
+    if (
+        V44_TELEGRAM_EXPERIMENTAL_ATIVO
+        and elegivel_v44 == "SIM"
+        and previsao_v44 == "TIME_DESTAQUE"
+        and V44_ODD_MIN_TELEGRAM <= odd_v44_telegram < V44_ODD_MAX_TELEGRAM
+    ):
+        enviar_alerta_telegram(
+            "🧪 SINAL EXPERIMENTAL V4.4 — SIMULAÇÃO\n\n"
+            f"⚽ Jogo: {linha['jogo']}\n"
+            f"⏱ Minuto observado: {int(numero_af(linha['minuto']))}'\n"
+            f"📍 Placar: {linha['placar']}\n"
+            f"🔎 Time em destaque: {linha['time_destaque']}\n"
+            f"💰 Odd apenas registrada: {odd_v44_telegram:.2f}\n"
+            f"📊 Índice de pressão: {numero_af(linha['indice_destaque']):.1f}%\n\n"
+            "📋 Critérios: até 60 minutos, índice 70+, time vencendo "
+            "e odd entre 1,31 e 1,99.\n"
+            "🚫 Não realizar aposta. Uso exclusivo para validação estatística.\n"
+            "Nenhuma aposta é executada automaticamente."
+        )
     if (
         V41_PILOTO_TELEGRAM_ATIVO
         and elegivel_v41 == "SIM"
