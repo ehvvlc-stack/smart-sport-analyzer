@@ -612,6 +612,7 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19722770-3,2026-10-17 14:17:33,19722770,St. Johnstone x Dundee United,17,3,0 x 0,BAIXA,Dundee United,60.9,21.8,50.0,55.0,2.0,AO_VIVO,,,,ALTA,100.0,,0
 19722772-2,2026-10-17 14:22:33,19722772,Hibernian x Falkirk,13,2,0 x 1,PÓS_GOL,Hibernian,65.3,30.6,50.0,65.0,1.0,AO_VIVO,,,,ALTA,100.0,,2
 19722771-3,2026-10-17 14:32:33,19722771,Kilmarnock x Motherwell,17,3,1 x 1,PÓS_GOL,Motherwell,68.8,37.6,50.0,56.0,2.0,AO_VIVO,,,,ALTA,100.0,,2
-19722770-4,2026-10-17 14:32:33,19722770,St. Johnstone x Dundee United,21,4,1 x 0,PÓS_GOL,Dundee United,50.6,1.2,50.0,56.0,0.0,AO_VIVO,,,,ALTA,100.0,,1
-19722772-5,2026-10-17 14:32:33,19722772,Hibernian x Falkirk,25,5,0 x 1,BAIXA,Hibernian,58.3,16.6,50.0,67.0,1.0,AO_VIVO,,,,ALTA,100.0,,3
-19722775-6,2026-10-17 14:32:33,19722775,Aberdeen x St. Mirren,31,6,1 x 0,BAIXA,St. Mirren,63.9,27.8,50.0,74.0,3.0,AO_VIVO,,,,ALTA,100.0,,2
+19722770-4,2026-10-17 14:37:33,19722770,St. Johnstone x Dundee United,21,4,1 x 0,PÓS_GOL,Dundee United,52.0,4.0,50.0,59.0,0.0,AO_VIVO,,,,ALTA,100.0,,1
+19722772-5,2026-10-17 14:37:33,19722772,Hibernian x Falkirk,25,5,0 x 1,BAIXA,Hibernian,60.1,20.2,50.0,68.0,1.0,AO_VIVO,,,,ALTA,100.0,,3
+19722775-6,2026-10-17 14:37:33,19722775,Aberdeen x St. Mirren,31,6,1 x 0,BAIXA,St. Mirren,58.3,16.6,50.0,71.0,3.0,AO_VIVO,,,,ALTA,100.0,,2
+19722771-7,2026-10-17 14:37:33,19722771,Kilmarnock x Motherwell,35,7,1 x 1,BAIXA,Motherwell,69.0,38.0,50.0,57.0,3.0,AO_VIVO,,,,ALTA,100.0,,4
