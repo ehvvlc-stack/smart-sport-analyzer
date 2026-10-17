@@ -636,5 +636,7 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19722775-15,2026-10-17 15:47:34,19722775,Aberdeen x St. Mirren,77,15,3 x 1,BAIXA,St. Mirren,59.1,18.2,50.0,65.0,4.0,AO_VIVO,,,,ALTA,100.0,,16
 19722772-15,2026-10-17 15:42:33,19722772,Hibernian x Falkirk,79,15,1 x 2,BAIXA,Hibernian,59.4,18.8,50.0,70.0,4.0,AO_VIVO,,,,ALTA,100.0,,15
 19722770-16,2026-10-17 15:47:34,19722770,St. Johnstone x Dundee United,84,16,1 x 1,BAIXA,Dundee United,55.7,11.4,50.0,62.0,3.0,AO_VIVO,,,,ALTA,100.0,,11
-19722771-16,2026-10-17 15:47:34,19722771,Kilmarnock x Motherwell,81,16,3 x 2,BAIXA,Kilmarnock,50.0,0.0,50.0,53.0,2.0,AO_VIVO,,,,ALTA,100.0,,16
-19722772-16,2026-10-17 15:47:34,19722772,Hibernian x Falkirk,84,16,1 x 2,BAIXA,Hibernian,57.5,15.0,50.0,70.0,3.0,AO_VIVO,,,,ALTA,100.0,,17
+19722771-16,2026-10-17 15:52:34,19722771,Kilmarnock x Motherwell,81,16,3 x 2,BAIXA,Kilmarnock,50.0,0.0,50.0,53.0,2.0,AO_VIVO,,,,ALTA,100.0,,16
+19722772-16,2026-10-17 15:52:34,19722772,Hibernian x Falkirk,84,16,1 x 2,BAIXA,Hibernian,57.5,15.0,50.0,70.0,3.0,AO_VIVO,,,,ALTA,100.0,,17
+19722770-18,2026-10-17 15:52:34,19722770,St. Johnstone x Dundee United,90,18,1 x 1,BAIXA,Dundee United,55.7,11.4,50.0,62.0,3.0,AO_VIVO,,,,ALTA,100.0,,13
+19722775-18,2026-10-17 15:52:34,19722775,Aberdeen x St. Mirren,90,18,3 x 1,BAIXA,St. Mirren,59.2,18.4,50.0,65.0,4.0,AO_VIVO,,,,ALTA,100.0,,17
