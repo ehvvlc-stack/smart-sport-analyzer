@@ -642,3 +642,4 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19722775-18,2026-10-17 16:07:33,19722775,Aberdeen x St. Mirren,90,18,3 x 1,BAIXA,St. Mirren,59.2,18.4,50.0,65.0,4.0,FINALIZADO,2026-10-17 16:12:34,3 x 1,ULTIMO_OBSERVADO,ALTA,100.0,,17
 19722773-1,2026-10-17 19:07:33,19722773,Dundee x Rangers,7,1,0 x 0,BAIXA,Rangers,50.9,1.8,50.0,54.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
 19722773-2,2026-10-17 19:12:33,19722773,Dundee x Rangers,12,2,0 x 0,BAIXA,Rangers,53.8,7.6,50.0,67.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
+19722773-3,2026-10-17 19:17:34,19722773,Dundee x Rangers,17,3,0 x 0,BAIXA,Rangers,57.3,14.6,50.0,54.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
