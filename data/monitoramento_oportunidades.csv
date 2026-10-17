@@ -651,3 +651,4 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19722773-12,2026-10-17 20:22:34,19722773,Dundee x Rangers,60,12,1 x 2,PÓS_GOL,Dundee,50.3,0.6,50.0,45.0,1.0,AO_VIVO,,,,ALTA,100.0,,3
 19722773-13,2026-10-17 20:32:34,19722773,Dundee x Rangers,69,13,2 x 2,PÓS_GOL,Dundee,50.1,0.2,50.0,43.0,1.0,AO_VIVO,,,,ALTA,100.0,,6
 19722773-15,2026-10-17 20:37:34,19722773,Dundee x Rangers,77,15,2 x 2,BAIXA,Rangers,52.4,4.8,50.0,58.0,0.0,AO_VIVO,,,,ALTA,100.0,,10
+19722773-16,2026-10-17 20:42:34,19722773,Dundee x Rangers,84,16,2 x 2,BAIXA,Rangers,54.1,8.2,50.0,59.0,1.0,AO_VIVO,,,,ALTA,100.0,,11
