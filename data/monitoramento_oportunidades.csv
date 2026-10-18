@@ -695,3 +695,4 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713903-17,2026-10-18 16:07:33,19713903,Odense BK x Brøndby IF,86,17,2 x 1,BAIXA,Brøndby IF,57.7,15.4,50.0,55.0,7.0,FINALIZADO,2026-10-18 16:12:33,2 x 1,ULTIMO_OBSERVADO,ALTA,100.0,,19
 19713899-1,2026-10-18 16:07:33,19713899,FC København x AGF,7,1,0 x 0,BAIXA,FC København,50.2,0.4,50.0,51.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
 19713899-2,2026-10-18 16:12:33,19713899,FC København x AGF,12,2,0 x 0,BAIXA,FC København,68.6,37.2,50.0,55.0,1.0,AO_VIVO,,,,ALTA,100.0,,0
+19713899-3,2026-10-18 16:17:33,19713899,FC København x AGF,17,3,0 x 0,BAIXA,FC København,60.0,20.0,50.0,45.0,1.0,AO_VIVO,,,,ALTA,100.0,,0
