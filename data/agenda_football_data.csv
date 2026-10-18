@@ -1,5 +1,5 @@
 fixture_id,data_hora,status,casa_id,casa,fora_id,fora,competicao,rodada
-555049,2026-10-18T00:00:00Z,IN_PLAY,1776,São Paulo FC,1780,CR Vasco da Gama,Campeonato Brasileiro Série A,31
+555049,2026-10-18T00:00:00Z,FINISHED,1776,São Paulo FC,1780,CR Vasco da Gama,Campeonato Brasileiro Série A,31
 555045,2026-10-18T19:00:00Z,TIMED,1765,Fluminense FC,6685,Santos FC,Campeonato Brasileiro Série A,31
 555046,2026-10-18T19:00:00Z,TIMED,1767,Grêmio FBPA,1771,Cruzeiro EC,Campeonato Brasileiro Série A,31
 555042,2026-10-18T21:30:00Z,TIMED,1777,EC Bahia,1783,CR Flamengo,Campeonato Brasileiro Série A,31
