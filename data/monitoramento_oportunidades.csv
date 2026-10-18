@@ -670,4 +670,5 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713901-14,2026-10-18 13:37:33,19713901,Sønderjyske Fodbold x Silkeborg IF,70,14,3 x 0,BAIXA,Sønderjyske Fodbold,63.4,26.8,50.0,62.0,9.0,AO_VIVO,,,,ALTA,100.0,,15
 19713898-14,2026-10-18 13:37:33,19713898,Lyngby Boldklub x Nordsjælland,74,14,3 x 2,PÓS_GOL,Nordsjælland,64.0,28.0,50.0,60.0,5.0,AO_VIVO,,,,ALTA,100.0,,16
 19713901-15,2026-10-18 13:42:34,19713901,Sønderjyske Fodbold x Silkeborg IF,78,15,4 x 0,PÓS_GOL,Sønderjyske Fodbold,61.0,22.0,50.0,61.0,8.0,AO_VIVO,,,,ALTA,100.0,,17
-19713898-16,2026-10-18 13:42:34,19713898,Lyngby Boldklub x Nordsjælland,81,16,3 x 3,BAIXA,Nordsjælland,61.2,22.4,50.0,60.0,4.0,AO_VIVO,,,,ALTA,100.0,,20
+19713898-16,2026-10-18 13:47:33,19713898,Lyngby Boldklub x Nordsjælland,81,16,3 x 3,BAIXA,Nordsjælland,61.0,22.0,50.0,60.0,4.0,AO_VIVO,,,,ALTA,100.0,,22
+19713901-16,2026-10-18 13:47:33,19713901,Sønderjyske Fodbold x Silkeborg IF,81,16,4 x 0,PÓS_GOL,Sønderjyske Fodbold,61.4,22.8,50.0,62.0,8.0,AO_VIVO,,,,ALTA,100.0,,19
