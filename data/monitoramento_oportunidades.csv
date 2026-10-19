@@ -706,3 +706,4 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713899-17,2026-10-18 17:47:33,19713899,FC København x AGF,85,17,1 x 1,BAIXA,FC København,58.6,17.2,50.0,49.0,5.0,FINALIZADO,2026-10-18 18:12:34,1 x 1,ULTIMO_OBSERVADO,ALTA,100.0,,12
 19713899-18,2026-10-18 18:07:33,19713899,FC København x AGF,90,18,1 x 1,BAIXA,FC København,60.5,21.0,50.0,51.0,10.0,FINALIZADO,2026-10-18 18:12:34,1 x 1,ULTIMO_OBSERVADO,ALTA,100.0,,13
 19713896-1,2026-10-19 17:07:34,19713896,Viborg FF x FC Midtjylland,7,1,0 x 0,BAIXA,FC Midtjylland,52.8,5.6,50.0,53.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
+19713896-2,2026-10-19 17:12:34,19713896,Viborg FF x FC Midtjylland,12,2,0 x 0,BAIXA,FC Midtjylland,54.3,8.6,50.0,52.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
