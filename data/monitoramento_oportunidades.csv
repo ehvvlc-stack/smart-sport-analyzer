@@ -713,3 +713,4 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713896-9,2026-10-19 18:07:33,19713896,Viborg FF x FC Midtjylland,46,9,0 x 0,BAIXA,FC Midtjylland,50.4,0.8,50.0,54.0,-1.0,AO_VIVO,,,,ALTA,100.0,,5
 19713896-10,2026-10-19 18:12:33,19713896,Viborg FF x FC Midtjylland,51,10,0 x 1,PÓS_GOL,FC Midtjylland,53.2,6.4,50.0,53.0,0.0,AO_VIVO,,,,ALTA,100.0,,6
 19713896-11,2026-10-19 18:22:33,19713896,Viborg FF x FC Midtjylland,59,11,1 x 1,PÓS_GOL,FC Midtjylland,51.3,2.6,50.0,54.0,-1.0,AO_VIVO,,,,ALTA,100.0,,8
+19713896-13,2026-10-19 18:27:34,19713896,Viborg FF x FC Midtjylland,66,13,1 x 2,PÓS_GOL,FC Midtjylland,51.3,2.6,50.0,54.0,-1.0,AO_VIVO,,,,ALTA,100.0,,10
