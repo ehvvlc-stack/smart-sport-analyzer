@@ -1,5 +1,5 @@
 fixture_id,data_hora,status,casa_id,casa,fora_id,fora,competicao,rodada
-555052,2026-10-23T23:00:00Z,TIMED,1771,Cruzeiro EC,4287,Clube do Remo,Campeonato Brasileiro Série A,32
+555052,2026-10-23T23:00:00Z,IN_PLAY,1771,Cruzeiro EC,4287,Clube do Remo,Campeonato Brasileiro Série A,32
 555054,2026-10-24T19:30:00Z,TIMED,6684,SC Internacional,1770,Botafogo FR,Campeonato Brasileiro Série A,32
 555055,2026-10-24T19:30:00Z,TIMED,4364,Mirassol FC,1776,São Paulo FC,Campeonato Brasileiro Série A,32
 555059,2026-10-24T19:30:00Z,TIMED,1782,EC Vitória,1768,CA Paranaense,Campeonato Brasileiro Série A,32
