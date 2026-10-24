@@ -739,3 +739,7 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19722768-3,2026-10-24 14:17:34,19722768,Falkirk x Kilmarnock,17,3,0 x 0,BAIXA,Kilmarnock,58.3,16.6,50.0,37.0,1.0,AO_VIVO,,,,ALTA,100.0,,0
 19722765-3,2026-10-24 14:17:34,19722765,Rangers x St. Johnstone,17,3,0 x 0,BAIXA,Rangers,73.9,47.8,50.0,79.0,5.0,AO_VIVO,,,,ALTA,100.0,,0
 19722764-3,2026-10-24 14:17:34,19722764,St. Mirren x Dundee,17,3,0 x 0,BAIXA,St. Mirren,57.2,14.4,50.0,34.0,1.0,AO_VIVO,,,,ALTA,100.0,,0
+19722769-3,2026-10-24 14:22:34,19722769,Dundee United x Aberdeen,17,3,1 x 0,PÓS_GOL,Aberdeen,55.8,11.6,50.0,55.0,2.0,AO_VIVO,,,,ALTA,100.0,,2
+19722768-4,2026-10-24 14:22:34,19722768,Falkirk x Kilmarnock,22,4,0 x 0,BAIXA,Kilmarnock,52.3,4.6,50.0,39.0,1.0,AO_VIVO,,,,ALTA,100.0,,0
+19722765-4,2026-10-24 14:22:34,19722765,Rangers x St. Johnstone,22,4,0 x 0,BAIXA,Rangers,72.2,44.4,50.0,71.0,6.0,AO_VIVO,,,,ALTA,100.0,,0
+19722764-4,2026-10-24 14:22:34,19722764,St. Mirren x Dundee,20,4,1 x 0,PÓS_GOL,St. Mirren,58.5,17.0,50.0,40.0,1.0,AO_VIVO,,,,ALTA,100.0,,1
