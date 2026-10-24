@@ -3,7 +3,7 @@ fixture_id,data_hora,status,casa_id,casa,fora_id,fora,competicao,rodada
 555055,2026-10-24T19:30:00Z,TIMED,4364,Mirassol FC,1776,São Paulo FC,Campeonato Brasileiro Série A,32
 555059,2026-10-24T19:30:00Z,TIMED,1782,EC Vitória,1768,CA Paranaense,Campeonato Brasileiro Série A,32
 555056,2026-10-24T21:30:00Z,IN_PLAY,1769,SE Palmeiras,4286,RB Bragantino,Campeonato Brasileiro Série A,32
-555058,2026-10-24T21:30:00Z,FINISHED,1780,CR Vasco da Gama,1779,SC Corinthians Paulista,Campeonato Brasileiro Série A,32
+555058,2026-10-24T21:30:00Z,TIMED,1780,CR Vasco da Gama,1779,SC Corinthians Paulista,Campeonato Brasileiro Série A,32
 555050,2026-10-24T22:30:00Z,IN_PLAY,1772,Chapecoense AF,1765,Fluminense FC,Campeonato Brasileiro Série A,32
 555057,2026-10-25T01:00:00Z,TIMED,6685,Santos FC,1777,EC Bahia,Campeonato Brasileiro Série A,32
 555051,2026-10-26T22:30:00Z,TIMED,4241,Coritiba FBC,1767,Grêmio FBPA,Campeonato Brasileiro Série A,32
