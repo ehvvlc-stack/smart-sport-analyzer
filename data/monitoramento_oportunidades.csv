@@ -824,4 +824,4 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713882-9,2026-10-25 16:17:34,19713882,Horsens x Sønderjyske Fodbold,46,9,3 x 1,PÓS_GOL,Horsens,50.3,0.6,50.0,48.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",7
 19722766-18,2026-10-25 16:02:34,19722766,Motherwell x Hearts,90,18,0 x 2,BAIXA,Motherwell,53.1,6.2,50.0,54.0,1.0,FINALIZADO,2026-10-25 16:07:34,0 x 2,ULTIMO_OBSERVADO,ALTA,100.0,,19
 19713882-12,2026-10-25 16:22:34,19713882,Horsens x Sønderjyske Fodbold,62,12,3 x 1,BAIXA,Sønderjyske Fodbold,62.0,24.0,50.0,54.0,2.0,AO_VIVO,,,,ALTA,100.0,,9
-19713882-13,2026-10-25 16:27:34,19713882,Horsens x Sønderjyske Fodbold,66,13,4 x 1,PÓS_GOL,Sønderjyske Fodbold,54.5,9.0,50.0,54.0,1.0,AO_VIVO,,,,ALTA,100.0,,10
+19713882-13,2026-10-25 16:32:34,19713882,Horsens x Sønderjyske Fodbold,66,13,4 x 1,PÓS_GOL,Sønderjyske Fodbold,57.0,14.0,50.0,55.0,2.0,AO_VIVO,,,,ALTA,100.0,,10
