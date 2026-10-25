@@ -780,8 +780,9 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713888-0,2026-10-25 13:02:34,19713888,FC Midtjylland x Lyngby Boldklub,2,0,0 x 0,BAIXA,FC Midtjylland,61.1,22.2,50.0,100.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
 19713884-1,2026-10-25 13:07:34,19713884,Silkeborg IF x Nordsjælland,7,1,0 x 0,BAIXA,Nordsjælland,65.4,30.8,50.0,69.0,1.0,AO_VIVO,,,,ALTA,100.0,,0
 19713888-1,2026-10-25 13:07:34,19713888,FC Midtjylland x Lyngby Boldklub,7,1,0 x 0,BAIXA,FC Midtjylland,74.6,49.2,50.0,82.0,1.0,AO_VIVO,,,,ALTA,100.0,,0
-19722767-10,2026-10-25 13:17:34,19722767,Hibernian x Celtic,52,10,1 x 2,BAIXA,Celtic,56.4,12.8,50.0,62.0,1.0,AO_VIVO,,,,ALTA,100.0,,6
+19722767-10,2026-10-25 13:22:34,19722767,Hibernian x Celtic,52,10,1 x 2,BAIXA,Celtic,57.6,15.2,50.0,62.0,1.0,AO_VIVO,,,,ALTA,100.0,,6
 19713884-2,2026-10-25 13:12:34,19713884,Silkeborg IF x Nordsjælland,12,2,0 x 0,BAIXA,Nordsjælland,62.2,24.4,50.0,55.0,1.0,AO_VIVO,,,,ALTA,100.0,,0
 19713888-2,2026-10-25 13:12:34,19713888,FC Midtjylland x Lyngby Boldklub,12,2,0 x 0,BAIXA,FC Midtjylland,74.2,48.4,50.0,80.0,2.0,AO_VIVO,,,,ALTA,100.0,,0
 19713884-3,2026-10-25 13:17:34,19713884,Silkeborg IF x Nordsjælland,17,3,0 x 0,BAIXA,Nordsjælland,61.1,22.2,50.0,50.0,2.0,AO_VIVO,,,,ALTA,100.0,,0
-19713888-3,2026-10-25 13:17:34,19713888,FC Midtjylland x Lyngby Boldklub,18,3,1 x 0,PÓS_GOL,FC Midtjylland,73.7,47.4,50.0,78.0,2.0,AO_VIVO,,,,ALTA,100.0,,1
+19713888-3,2026-10-25 13:22:34,19713888,FC Midtjylland x Lyngby Boldklub,17,3,1 x 0,PÓS_GOL,FC Midtjylland,72.8,45.6,50.0,74.0,3.0,AO_VIVO,,,,ALTA,100.0,,1
+19713884-4,2026-10-25 13:22:34,19713884,Silkeborg IF x Nordsjælland,22,4,0 x 0,BAIXA,Nordsjælland,53.2,6.4,50.0,43.0,3.0,AO_VIVO,,,,ALTA,100.0,,0
