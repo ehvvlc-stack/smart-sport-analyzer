@@ -830,4 +830,4 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713882-17,2026-10-25 16:52:34,19713882,Horsens x Sønderjyske Fodbold,86,17,5 x 1,BAIXA,Sønderjyske Fodbold,57.4,14.8,50.0,53.0,3.0,AO_VIVO,,,,ALTA,100.0,,19
 19713882-18,2026-10-25 17:07:48,19713882,Horsens x Sønderjyske Fodbold,90,18,5 x 1,PÓS_GOL,Sønderjyske Fodbold,54.0,8.0,50.0,53.0,2.0,AO_VIVO,,,,ALTA,100.0,,20
 19713886-0,2026-10-25 17:02:34,19713886,AGF x Viborg FF,2,0,0 x 0,BAIXA,AGF,72.3,44.6,50.0,100.0,1.0,AO_VIVO,,,,ALTA,100.0,,0
-19713886-1,2026-10-25 17:07:48,19713886,AGF x Viborg FF,7,1,0 x 0,BAIXA,AGF,64.9,29.8,50.0,67.0,1.0,AO_VIVO,,,,ALTA,100.0,,0
+19713886-1,2026-10-25 17:12:34,19713886,AGF x Viborg FF,8,1,1 x 0,PÓS_GOL,AGF,66.5,33.0,50.0,74.0,1.0,AO_VIVO,,,,ALTA,100.0,,1
