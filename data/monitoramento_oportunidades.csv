@@ -828,3 +828,4 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713882-14,2026-10-25 16:37:34,19713882,Horsens x Sønderjyske Fodbold,74,14,4 x 1,BAIXA,Sønderjyske Fodbold,57.2,14.4,50.0,54.0,2.0,AO_VIVO,,,,ALTA,100.0,,12
 19713882-16,2026-10-25 16:42:34,19713882,Horsens x Sønderjyske Fodbold,83,16,4 x 1,BAIXA,Sønderjyske Fodbold,58.0,16.0,50.0,53.0,3.0,AO_VIVO,,,,ALTA,100.0,,16
 19713882-17,2026-10-25 16:52:34,19713882,Horsens x Sønderjyske Fodbold,86,17,5 x 1,BAIXA,Sønderjyske Fodbold,57.4,14.8,50.0,53.0,3.0,AO_VIVO,,,,ALTA,100.0,,19
+19713882-18,2026-10-25 16:57:34,19713882,Horsens x Sønderjyske Fodbold,90,18,5 x 1,PÓS_GOL,Sønderjyske Fodbold,54.3,8.6,50.0,53.0,2.0,AO_VIVO,,,,ALTA,100.0,,20
