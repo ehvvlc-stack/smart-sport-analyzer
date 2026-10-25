@@ -1,5 +1,5 @@
 fixture_id,data_hora,status,casa_id,casa,fora_id,fora,competicao,rodada
-555057,2026-10-25T01:00:00Z,IN_PLAY,6685,Santos FC,1777,EC Bahia,Campeonato Brasileiro Série A,32
+555057,2026-10-25T01:00:00Z,TIMED,6685,Santos FC,1777,EC Bahia,Campeonato Brasileiro Série A,32
 555051,2026-10-26T22:30:00Z,TIMED,4241,Coritiba FBC,1767,Grêmio FBPA,Campeonato Brasileiro Série A,32
 555053,2026-10-26T23:00:00Z,TIMED,1783,CR Flamengo,1766,CA Mineiro,Campeonato Brasileiro Série A,32
 555062,2026-10-28T22:30:00Z,TIMED,4286,RB Bragantino,1772,Chapecoense AF,Campeonato Brasileiro Série A,33
