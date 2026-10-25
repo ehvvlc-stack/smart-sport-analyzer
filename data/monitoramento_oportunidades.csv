@@ -819,3 +819,5 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19722766-15,2026-10-25 15:37:34,19722766,Motherwell x Hearts,79,15,0 x 1,BAIXA,Motherwell,53.6,7.2,50.0,54.0,2.0,AO_VIVO,,,,ALTA,100.0,,12
 19713882-7,2026-10-25 15:37:34,19713882,Horsens x Sønderjyske Fodbold,36,7,2 x 1,BAIXA,Sønderjyske Fodbold,50.7,1.4,50.0,50.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",5
 19722766-16,2026-10-25 15:42:34,19722766,Motherwell x Hearts,82,16,0 x 1,BAIXA,Motherwell,53.6,7.2,50.0,54.0,2.0,AO_VIVO,,,,ALTA,100.0,,14
+19713882-8,2026-10-25 15:47:34,19713882,Horsens x Sønderjyske Fodbold,43,8,2 x 1,BAIXA,Horsens,50.7,1.4,50.0,50.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",5
+19722766-17,2026-10-25 15:47:34,19722766,Motherwell x Hearts,88,17,0 x 2,PÓS_GOL,Motherwell,53.4,6.8,50.0,53.0,2.0,AO_VIVO,,,,ALTA,100.0,,17
