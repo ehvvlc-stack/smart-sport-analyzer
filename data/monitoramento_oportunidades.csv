@@ -850,3 +850,7 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713891-12,2026-10-26 19:32:34,19713891,FC København x Odense BK,61,12,0 x 1,BAIXA,FC København,55.2,10.4,50.0,66.0,2.0,FINALIZADO,2026-10-26 20:12:34,1 x 1,ULTIMO_OBSERVADO,ALTA,100.0,,7
 19713891-15,2026-10-26 19:42:34,19713891,FC København x Odense BK,79,15,1 x 1,PÓS_GOL,FC København,56.1,12.2,50.0,67.0,2.0,FINALIZADO,2026-10-26 20:12:34,1 x 1,ULTIMO_OBSERVADO,ALTA,100.0,,11
 19713891-17,2026-10-26 20:07:34,19713891,FC København x Odense BK,86,17,1 x 1,BAIXA,FC København,56.2,12.4,50.0,68.0,2.0,FINALIZADO,2026-10-26 20:12:34,1 x 1,ULTIMO_OBSERVADO,ALTA,100.0,,13
+19722761-0,2026-10-28 19:47:34,19722761,Dundee x Kilmarnock,2,0,0 x 0,BAIXA,Dundee,50.0,0.0,50.0,0.0,1.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.dribbles, away.dribbles",0
+19722763-0,2026-10-28 19:47:34,19722763,Aberdeen x Falkirk,2,0,0 x 0,BAIXA,Aberdeen,54.7,9.4,50.0,71.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
+19722759-0,2026-10-28 19:47:34,19722759,St. Johnstone x Motherwell,2,0,0 x 0,BAIXA,Motherwell,58.7,17.4,50.0,39.0,1.0,AO_VIVO,,,,ALTA,100.0,,0
+19722758-0,2026-10-28 19:47:34,19722758,St. Mirren x Hibernian,2,0,0 x 0,BAIXA,Hibernian,58.3,16.6,50.0,87.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
