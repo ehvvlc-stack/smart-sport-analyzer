@@ -1,7 +1,7 @@
 fixture_id,data_hora,status,casa_id,casa,fora_id,fora,competicao,rodada
 555061,2026-10-29T00:30:00Z,FINISHED,1777,EC Bahia,1776,São Paulo FC,Campeonato Brasileiro Série A,33
 555067,2026-10-29T00:30:00Z,FINISHED,4287,Clube do Remo,1770,Botafogo FR,Campeonato Brasileiro Série A,33
-555060,2026-10-29T22:30:00Z,TIMED,1766,CA Mineiro,1771,Cruzeiro EC,Campeonato Brasileiro Série A,33
+555060,2026-10-29T22:30:00Z,IN_PLAY,1766,CA Mineiro,1771,Cruzeiro EC,Campeonato Brasileiro Série A,33
 555069,2026-10-29T23:00:00Z,TIMED,1780,CR Vasco da Gama,1783,CR Flamengo,Campeonato Brasileiro Série A,33
 555066,2026-10-30T00:30:00Z,TIMED,1767,Grêmio FBPA,1768,CA Paranaense,Campeonato Brasileiro Série A,33
 555063,2026-10-30T23:00:00Z,TIMED,1779,SC Corinthians Paulista,4364,Mirassol FC,Campeonato Brasileiro Série A,33
