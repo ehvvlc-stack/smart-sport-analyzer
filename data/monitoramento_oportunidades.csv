@@ -939,3 +939,5 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713876-16,2026-10-30 19:47:34,19713876,Lyngby Boldklub x Randers FC,82,16,2 x 1,BAIXA,Randers FC,52.9,5.8,50.0,46.0,1.0,FINALIZADO,2026-10-30 20:12:34,2 x 1,ULTIMO_OBSERVADO,ALTA,100.0,,14
 19713876-17,2026-10-30 20:07:34,19713876,Lyngby Boldklub x Randers FC,87,17,2 x 1,BAIXA,Randers FC,53.8,7.6,50.0,49.0,1.0,FINALIZADO,2026-10-30 20:12:34,2 x 1,ULTIMO_OBSERVADO,ALTA,100.0,,17
 19722753-0,2026-10-31 15:02:34,19722753,Motherwell x St. Mirren,2,0,0 x 0,BAIXA,Motherwell,58.1,16.2,50.0,86.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
+19722754-1,2026-10-31 15:07:34,19722754,Kilmarnock x St. Johnstone,7,1,0 x 0,BAIXA,Kilmarnock,58.1,16.2,50.0,36.0,1.0,AO_VIVO,,,,ALTA,100.0,,0
+19722753-1,2026-10-31 15:07:34,19722753,Motherwell x St. Mirren,7,1,0 x 0,BAIXA,Motherwell,53.8,7.6,50.0,67.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
