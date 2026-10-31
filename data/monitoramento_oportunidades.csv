@@ -956,5 +956,6 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19722754-11,2026-10-31 16:22:34,19722754,Kilmarnock x St. Johnstone,58,11,2 x 1,BAIXA,Kilmarnock,57.3,14.6,50.0,57.0,4.0,AO_VIVO,,,,ALTA,100.0,,14
 19722753-13,2026-10-31 16:27:34,19722753,Motherwell x St. Mirren,65,13,0 x 0,BAIXA,Motherwell,56.4,12.8,50.0,54.0,3.0,AO_VIVO,,,,ALTA,100.0,,8
 19722754-13,2026-10-31 16:27:34,19722754,Kilmarnock x St. Johnstone,65,13,2 x 2,PÓS_GOL,Kilmarnock,57.6,15.2,50.0,58.0,5.0,AO_VIVO,,,,ALTA,100.0,,16
-19722754-14,2026-10-31 16:37:34,19722754,Kilmarnock x St. Johnstone,71,14,2 x 2,BAIXA,Kilmarnock,57.1,14.2,50.0,59.0,6.0,AO_VIVO,,,,ALTA,100.0,,18
+19722754-14,2026-10-31 16:42:34,19722754,Kilmarnock x St. Johnstone,71,14,2 x 2,BAIXA,Kilmarnock,57.9,15.8,50.0,61.0,7.0,AO_VIVO,,,,ALTA,100.0,,18
 19722753-14,2026-10-31 16:37:34,19722753,Motherwell x St. Mirren,73,14,0 x 0,BAIXA,Motherwell,56.2,12.4,50.0,53.0,3.0,AO_VIVO,,,,ALTA,100.0,,11
+19722753-16,2026-10-31 16:42:34,19722753,Motherwell x St. Mirren,82,16,1 x 0,BAIXA,Motherwell,55.7,11.4,50.0,51.0,3.0,AO_VIVO,,,,ALTA,100.0,,13
