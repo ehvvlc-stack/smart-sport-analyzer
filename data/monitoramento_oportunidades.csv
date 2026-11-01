@@ -962,3 +962,5 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19722754-16,2026-10-31 17:07:34,19722754,Kilmarnock x St. Johnstone,83,16,2 x 2,BAIXA,Kilmarnock,60.4,20.8,50.0,63.0,8.0,FINALIZADO,2026-10-31 17:32:34,2 x 2,ULTIMO_OBSERVADO,ALTA,100.0,,19
 19722753-17,2026-10-31 16:47:34,19722753,Motherwell x St. Mirren,89,17,1 x 0,BAIXA,Motherwell,57.1,14.2,50.0,53.0,4.0,FINALIZADO,2026-10-31 17:12:34,1 x 0,ULTIMO_OBSERVADO,ALTA,100.0,,16
 19722753-18,2026-10-31 17:07:34,19722753,Motherwell x St. Mirren,90,18,1 x 0,BAIXA,Motherwell,55.5,11.0,50.0,52.0,3.0,FINALIZADO,2026-10-31 17:12:34,1 x 0,ULTIMO_OBSERVADO,ALTA,100.0,,20
+19713872-0,2026-11-01 13:02:34,19713872,Viborg FF x Horsens,2,0,0 x 0,BAIXA,Viborg FF,56.0,12.0,50.0,77.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
+19713880-0,2026-11-01 13:02:34,19713880,Odense BK x Silkeborg IF,2,0,0 x 0,BAIXA,Odense BK,59.1,18.2,50.0,91.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
