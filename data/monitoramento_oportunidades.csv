@@ -1004,5 +1004,6 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713870-14,2026-11-01 16:37:34,19713870,Nordsjælland x FC Midtjylland,74,14,2 x 2,PÓS_GOL,Nordsjælland,56.4,12.8,50.0,52.0,2.0,AO_VIVO,,,,ALTA,100.0,,11
 19713870-15,2026-11-01 16:47:34,19713870,Nordsjælland x FC Midtjylland,78,15,2 x 2,BAIXA,Nordsjælland,58.6,17.2,50.0,52.0,4.0,AO_VIVO,,,,ALTA,100.0,,15
 19713870-17,2026-11-01 16:57:34,19713870,Nordsjælland x FC Midtjylland,86,17,2 x 2,BAIXA,Nordsjælland,56.2,12.4,50.0,51.0,4.0,AO_VIVO,,,,ALTA,100.0,,16
-19713870-18,2026-11-01 17:07:34,19713870,Nordsjælland x FC Midtjylland,90,18,2 x 3,PÓS_GOL,Nordsjælland,56.7,13.4,50.0,52.0,4.0,AO_VIVO,,,,ALTA,100.0,,17
+19713870-18,2026-11-01 17:12:34,19713870,Nordsjælland x FC Midtjylland,90,18,2 x 3,PÓS_GOL,Nordsjælland,56.8,13.6,50.0,52.0,4.0,AO_VIVO,,,,ALTA,100.0,,17
 19713874-1,2026-11-01 17:07:34,19713874,Brøndby IF x AGF,7,1,0 x 0,BAIXA,AGF,51.3,2.6,50.0,56.0,0.0,AO_VIVO,,,,ALTA,100.0,,0
+19713874-2,2026-11-01 17:12:34,19713874,Brøndby IF x AGF,12,2,0 x 0,BAIXA,Brøndby IF,56.0,12.0,50.0,60.0,1.0,AO_VIVO,,,,ALTA,100.0,,0
