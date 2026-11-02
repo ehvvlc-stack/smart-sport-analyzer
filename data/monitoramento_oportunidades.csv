@@ -1023,3 +1023,4 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713878-2,2026-11-02 18:12:34,19713878,Sønderjyske Fodbold x FC København,12,2,0 x 0,BAIXA,FC København,50.1,0.2,50.0,79.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
 19713878-3,2026-11-02 18:17:34,19713878,Sønderjyske Fodbold x FC København,17,3,0 x 0,BAIXA,FC København,50.6,1.2,50.0,81.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
 19713878-4,2026-11-02 18:22:34,19713878,Sønderjyske Fodbold x FC København,20,4,0 x 1,PÓS_GOL,FC København,50.4,0.8,50.0,80.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",1
+19713878-5,2026-11-02 18:27:34,19713878,Sønderjyske Fodbold x FC København,27,5,0 x 1,BAIXA,Sønderjyske Fodbold,50.5,1.0,50.0,24.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",3
