@@ -1020,3 +1020,4 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713874-18,2026-11-01 19:07:34,19713874,Brøndby IF x AGF,90,18,2 x 0,BAIXA,Brøndby IF,51.5,3.0,50.0,47.0,3.0,FINALIZADO,2026-11-01 19:12:35,2 x 0,ULTIMO_OBSERVADO,ALTA,100.0,,16
 19713878-0,2026-11-02 18:02:34,19713878,Sønderjyske Fodbold x FC København,2,0,0 x 0,BAIXA,Sønderjyske Fodbold,56.4,12.8,50.0,50.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
 19713878-1,2026-11-02 18:07:34,19713878,Sønderjyske Fodbold x FC København,7,1,0 x 0,BAIXA,Sønderjyske Fodbold,50.3,0.6,50.0,23.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
+19713878-2,2026-11-02 18:12:34,19713878,Sønderjyske Fodbold x FC København,12,2,0 x 0,BAIXA,FC København,50.1,0.2,50.0,79.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
