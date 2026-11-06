@@ -1044,3 +1044,4 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713858-10,2026-11-06 19:07:34,19713858,Silkeborg IF x Lyngby Boldklub,52,10,0 x 0,BAIXA,Lyngby Boldklub,63.7,27.4,50.0,47.0,1.0,AO_VIVO,,,,ALTA,100.0,,0
 19713858-11,2026-11-06 19:12:34,19713858,Silkeborg IF x Lyngby Boldklub,57,11,0 x 0,BAIXA,Lyngby Boldklub,64.1,28.2,50.0,48.0,1.0,AO_VIVO,,,,ALTA,100.0,,0
 19713858-12,2026-11-06 19:22:34,19713858,Silkeborg IF x Lyngby Boldklub,60,12,1 x 0,PÓS_GOL,Lyngby Boldklub,64.3,28.6,50.0,49.0,1.0,AO_VIVO,,,,ALTA,100.0,,3
+19713858-14,2026-11-06 19:27:34,19713858,Silkeborg IF x Lyngby Boldklub,70,14,1 x 0,BAIXA,Lyngby Boldklub,65.0,30.0,50.0,49.0,1.0,AO_VIVO,,,,ALTA,100.0,,6
