@@ -1058,3 +1058,5 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19722749-8,2026-11-07 16:17:35,19722749,Dundee United x Motherwell,41,8,1 x 1,PÓS_GOL,Dundee United,51.3,2.6,50.0,48.0,1.0,AO_VIVO,,,,ALTA,100.0,,6
 19722748-9,2026-11-07 16:12:34,19722748,St. Johnstone x Dundee,47,9,1 x 1,PÓS_GOL,Dundee,51.5,3.0,50.0,42.0,1.0,AO_VIVO,,,,ALTA,100.0,,6
 19722748-11,2026-11-07 16:17:35,19722748,St. Johnstone x Dundee,56,11,1 x 1,BAIXA,Dundee,53.9,7.8,50.0,42.0,2.0,AO_VIVO,,,,ALTA,100.0,,7
+19722748-12,2026-11-07 16:22:35,19722748,St. Johnstone x Dundee,60,12,1 x 1,BAIXA,Dundee,55.8,11.6,50.0,42.0,3.0,AO_VIVO,,,,ALTA,100.0,,10
+19722749-11,2026-11-07 16:22:35,19722749,Dundee United x Motherwell,56,11,1 x 1,BAIXA,Dundee United,52.5,5.0,50.0,49.0,2.0,AO_VIVO,,,,ALTA,100.0,,7
