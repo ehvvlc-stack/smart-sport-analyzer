@@ -1085,3 +1085,4 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19722751-15,2026-11-07 19:22:34,19722751,Aberdeen x Hibernian,79,15,0 x 2,PÓS_GOL,Aberdeen,50.6,1.2,50.0,45.0,2.0,AO_VIVO,,,,ALTA,100.0,,11
 19722751-16,2026-11-07 19:27:34,19722751,Aberdeen x Hibernian,80,16,0 x 2,PÓS_GOL,Aberdeen,50.1,0.2,50.0,44.0,2.0,AO_VIVO,,,,ALTA,100.0,,13
 19722751-17,2026-11-07 19:32:34,19722751,Aberdeen x Hibernian,87,17,0 x 3,PÓS_GOL,Hibernian,50.2,0.4,50.0,57.0,-2.0,AO_VIVO,,,,ALTA,100.0,,14
+19722751-18,2026-11-07 19:37:34,19722751,Aberdeen x Hibernian,90,18,0 x 4,PÓS_GOL,Hibernian,50.3,0.6,50.0,58.0,-2.0,AO_VIVO,,,,ALTA,100.0,,15
