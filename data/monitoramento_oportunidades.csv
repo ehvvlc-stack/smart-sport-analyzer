@@ -1050,3 +1050,5 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713858-17,2026-11-06 19:47:34,19713858,Silkeborg IF x Lyngby Boldklub,89,17,1 x 0,BAIXA,Lyngby Boldklub,65.7,31.4,50.0,52.0,1.0,FINALIZADO,2026-11-06 20:07:35,1 x 0,ULTIMO_OBSERVADO,ALTA,100.0,,11
 19713858-18,2026-11-06 20:02:34,19713858,Silkeborg IF x Lyngby Boldklub,90,18,1 x 0,BAIXA,Lyngby Boldklub,66.2,32.4,50.0,52.0,1.0,FINALIZADO,2026-11-06 20:07:35,1 x 0,ULTIMO_OBSERVADO,ALTA,100.0,,13
 19722748-0,2026-11-07 15:02:34,19722748,St. Johnstone x Dundee,2,0,0 x 0,BAIXA,St. Johnstone,61.1,22.2,50.0,100.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
+19722749-1,2026-11-07 15:07:35,19722749,Dundee United x Motherwell,7,1,0 x 0,BAIXA,Motherwell,63.6,27.2,50.0,61.0,1.0,AO_VIVO,,,,ALTA,100.0,,0
+19722748-1,2026-11-07 15:07:35,19722748,St. Johnstone x Dundee,5,1,1 x 0,PÓS_GOL,St. Johnstone,53.6,7.2,50.0,66.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",1
