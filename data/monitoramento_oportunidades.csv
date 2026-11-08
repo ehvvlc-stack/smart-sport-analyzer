@@ -1096,4 +1096,4 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19722747-17,2026-11-07 22:07:34,19722747,St. Mirren x Rangers,87,17,0 x 2,BAIXA,St. Mirren,56.6,13.2,50.0,55.0,3.0,FINALIZADO,2026-11-07 22:12:35,0 x 2,ULTIMO_OBSERVADO,ALTA,100.0,,16
 19713866-1,2026-11-08 11:07:35,19713866,FC København x Brøndby IF,7,1,0 x 0,BAIXA,Brøndby IF,61.1,22.2,50.0,100.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
 19713866-2,2026-11-08 11:22:35,19713866,FC København x Brøndby IF,11,2,0 x 0,BAIXA,FC København,69.7,39.4,50.0,60.0,3.0,AO_VIVO,,,,ALTA,100.0,,1
-19713866-3,2026-11-08 12:02:34,19713866,FC København x Brøndby IF,18,3,0 x 0,BAIXA,FC København,57.4,14.8,50.0,52.0,3.0,AO_VIVO,,,,ALTA,100.0,,2
+19713866-3,2026-11-08 12:07:34,19713866,FC København x Brøndby IF,18,3,0 x 0,BAIXA,FC København,57.1,14.2,50.0,51.0,3.0,AO_VIVO,,,,ALTA,100.0,,2
