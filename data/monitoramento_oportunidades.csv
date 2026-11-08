@@ -1114,6 +1114,6 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713860-17,2026-11-08 14:47:34,19713860,AGF x Horsens,88,17,2 x 0,PÓS_GOL,AGF,55.4,10.8,50.0,61.0,2.0,FINALIZADO,2026-11-08 15:12:34,2 x 0,ULTIMO_OBSERVADO,ALTA,100.0,,11
 19713860-18,2026-11-08 15:07:34,19713860,AGF x Horsens,90,18,2 x 0,PÓS_GOL,AGF,54.5,9.0,50.0,59.0,2.0,FINALIZADO,2026-11-08 15:12:34,2 x 0,ULTIMO_OBSERVADO,ALTA,100.0,,15
 19713864-0,2026-11-08 15:02:35,19713864,Randers FC x Nordsjælland,2,0,0 x 0,BAIXA,Nordsjælland,55.1,10.2,50.0,73.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
-19722746-0,2026-11-08 15:12:34,19722746,Hearts x Falkirk,4,0,0 x 1,PÓS_GOL,Falkirk,54.1,8.2,50.0,47.0,1.0,AO_VIVO,,,,ALTA,100.0,,1
+19722746-0,2026-11-08 15:17:34,19722746,Hearts x Falkirk,4,0,0 x 1,PÓS_GOL,Falkirk,54.3,8.6,50.0,48.0,2.0,AO_VIVO,,,,ALTA,100.0,,1
 19713864-1,2026-11-08 15:07:34,19713864,Randers FC x Nordsjælland,7,1,0 x 0,BAIXA,Randers FC,51.4,2.8,50.0,62.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
-19713864-2,2026-11-08 15:12:34,19713864,Randers FC x Nordsjælland,10,2,0 x 0,PÓS_GOL,Nordsjælland,51.8,3.6,50.0,58.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",2
+19713864-2,2026-11-08 15:17:34,19713864,Randers FC x Nordsjælland,10,2,0 x 0,PÓS_GOL,Nordsjælland,50.6,1.2,50.0,55.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",2
