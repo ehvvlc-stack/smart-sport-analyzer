@@ -1098,3 +1098,4 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713866-2,2026-11-08 11:22:35,19713866,FC København x Brøndby IF,11,2,0 x 0,BAIXA,FC København,69.7,39.4,50.0,60.0,3.0,AO_VIVO,,,,ALTA,100.0,,1
 19713866-3,2026-11-08 12:17:34,19713866,FC København x Brøndby IF,18,3,0 x 0,BAIXA,FC København,58.5,17.0,50.0,51.0,4.0,AO_VIVO,,,,ALTA,100.0,,2
 19713866-11,2026-11-08 12:22:35,19713866,FC København x Brøndby IF,57,11,1 x 0,PÓS_GOL,FC København,58.0,16.0,50.0,51.0,4.0,AO_VIVO,,,,ALTA,100.0,,4
+19713866-12,2026-11-08 12:27:34,19713866,FC København x Brøndby IF,63,12,1 x 0,BAIXA,FC København,58.5,17.0,50.0,53.0,4.0,AO_VIVO,,,,ALTA,100.0,,6
