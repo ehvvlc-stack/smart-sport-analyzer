@@ -1151,4 +1151,5 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713862-7,2026-11-08 17:47:35,19713862,FC Midtjylland x Sønderjyske Fodbold,35,7,1 x 1,BAIXA,Sønderjyske Fodbold,50.7,1.4,50.0,40.0,1.0,AO_VIVO,,,,ALTA,100.0,,4
 19722750-15,2026-11-08 17:37:34,19722750,Celtic x Kilmarnock,76,15,1 x 0,BAIXA,Celtic,52.9,5.8,50.0,59.0,5.0,AO_VIVO,,,,ALTA,100.0,,14
 19722750-16,2026-11-08 17:42:35,19722750,Celtic x Kilmarnock,82,16,1 x 0,BAIXA,Celtic,52.7,5.4,50.0,59.0,5.0,AO_VIVO,,,,ALTA,100.0,,16
-19722750-17,2026-11-08 17:47:35,19722750,Celtic x Kilmarnock,89,17,1 x 0,BAIXA,Celtic,52.7,5.4,50.0,59.0,5.0,AO_VIVO,,,,ALTA,100.0,,19
+19722750-17,2026-11-08 17:52:35,19722750,Celtic x Kilmarnock,89,17,1 x 0,BAIXA,Celtic,52.7,5.4,50.0,59.0,5.0,AO_VIVO,,,,ALTA,100.0,,19
+19713862-9,2026-11-08 17:52:35,19713862,FC Midtjylland x Sønderjyske Fodbold,45,9,1 x 1,BAIXA,FC Midtjylland,52.4,4.8,50.0,61.0,0.0,AO_VIVO,,,,ALTA,100.0,,5
