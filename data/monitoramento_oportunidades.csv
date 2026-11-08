@@ -1155,3 +1155,4 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713862-9,2026-11-08 18:07:34,19713862,FC Midtjylland x Sønderjyske Fodbold,46,9,1 x 1,BAIXA,FC Midtjylland,52.0,4.0,50.0,61.0,0.0,AO_VIVO,,,,ALTA,100.0,,6
 19713862-10,2026-11-08 18:12:34,19713862,FC Midtjylland x Sønderjyske Fodbold,51,10,1 x 1,BAIXA,FC Midtjylland,52.7,5.4,50.0,62.0,0.0,AO_VIVO,,,,ALTA,100.0,,7
 19713862-11,2026-11-08 18:17:35,19713862,FC Midtjylland x Sønderjyske Fodbold,56,11,1 x 2,PÓS_GOL,FC Midtjylland,53.1,6.2,50.0,62.0,0.0,AO_VIVO,,,,ALTA,100.0,,8
+19713862-12,2026-11-08 18:22:34,19713862,FC Midtjylland x Sønderjyske Fodbold,60,12,1 x 2,BAIXA,FC Midtjylland,54.4,8.8,50.0,63.0,1.0,AO_VIVO,,,,ALTA,100.0,,10
