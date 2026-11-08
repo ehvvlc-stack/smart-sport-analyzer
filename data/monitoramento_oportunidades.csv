@@ -1101,5 +1101,6 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713866-12,2026-11-08 12:32:34,19713866,FC København x Brøndby IF,63,12,1 x 0,BAIXA,FC København,58.0,16.0,50.0,52.0,4.0,AO_VIVO,,,,ALTA,100.0,,6
 19713866-14,2026-11-08 12:37:35,19713866,FC København x Brøndby IF,71,14,1 x 0,BAIXA,FC København,57.8,15.6,50.0,51.0,4.0,AO_VIVO,,,,ALTA,100.0,,8
 19713866-15,2026-11-08 12:47:34,19713866,FC København x Brøndby IF,76,15,1 x 0,BAIXA,FC København,55.2,10.4,50.0,50.0,3.0,AO_VIVO,,,,ALTA,100.0,,11
-19713866-17,2026-11-08 13:07:34,19713866,FC København x Brøndby IF,86,17,1 x 0,BAIXA,FC København,56.4,12.8,50.0,48.0,4.0,AO_VIVO,,,,ALTA,100.0,,14
+19713866-17,2026-11-08 13:12:35,19713866,FC København x Brøndby IF,86,17,1 x 0,BAIXA,FC København,56.4,12.8,50.0,48.0,4.0,AO_VIVO,,,,ALTA,100.0,,14
 19713860-1,2026-11-08 13:07:34,19713860,AGF x Horsens,7,1,0 x 0,BAIXA,Horsens,56.8,13.6,50.0,52.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
+19713860-2,2026-11-08 13:12:35,19713860,AGF x Horsens,12,2,0 x 0,BAIXA,Horsens,52.6,5.2,50.0,52.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
