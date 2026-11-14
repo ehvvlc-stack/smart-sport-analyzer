@@ -23,3 +23,4 @@ fixture_id,data_hora,status,casa_id,casa,fora_id,fora,competicao,rodada
 555091,2026-11-25T23:00:00Z,TIMED,1766,CA Mineiro,1779,SC Corinthians Paulista,Campeonato Brasileiro Série A,36
 555108,2026-11-26T23:00:00Z,TIMED,1776,São Paulo FC,4287,Clube do Remo,Campeonato Brasileiro Série A,37
 555105,2026-11-27T23:00:00Z,TIMED,1765,Fluminense FC,1771,Cruzeiro EC,Campeonato Brasileiro Série A,37
+555101,2026-11-29T00:00:00Z,TIMED,1770,Botafogo FR,1777,EC Bahia,Campeonato Brasileiro Série A,37
