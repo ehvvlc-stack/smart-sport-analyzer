@@ -1220,3 +1220,4 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19722744-9,2026-11-21 18:57:35,19722744,Dundee x Hearts,46,9,0 x 4,BAIXA,Hearts,57.1,14.2,50.0,55.0,3.0,AO_VIVO,,,,ALTA,100.0,,9
 19722744-11,2026-11-21 19:07:35,19722744,Dundee x Hearts,59,11,0 x 4,BAIXA,Hearts,56.7,13.4,50.0,55.0,3.0,AO_VIVO,,,,ALTA,100.0,,14
 19722744-13,2026-11-21 19:17:35,19722744,Dundee x Hearts,65,13,0 x 4,BAIXA,Hearts,59.1,18.2,50.0,58.0,4.0,AO_VIVO,,,,ALTA,100.0,,15
+19722744-15,2026-11-21 19:22:35,19722744,Dundee x Hearts,76,15,0 x 5,BAIXA,Hearts,59.5,19.0,50.0,60.0,4.0,AO_VIVO,,,,ALTA,100.0,,18
