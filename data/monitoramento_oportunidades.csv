@@ -1169,7 +1169,7 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713849-12,2026-11-20 19:32:35,19713849,AGF x Lyngby Boldklub,64,12,2 x 1,BAIXA,AGF,58.3,16.6,50.0,58.0,2.0,FINALIZADO,2026-11-20 20:12:35,2 x 1,ULTIMO_OBSERVADO,ALTA,100.0,,10
 19713849-14,2026-11-20 19:42:35,19713849,AGF x Lyngby Boldklub,73,14,2 x 1,BAIXA,AGF,56.4,12.8,50.0,55.0,2.0,FINALIZADO,2026-11-20 20:12:35,2 x 1,ULTIMO_OBSERVADO,ALTA,100.0,,11
 19713849-17,2026-11-20 20:07:35,19713849,AGF x Lyngby Boldklub,85,17,2 x 1,BAIXA,AGF,55.2,10.4,50.0,52.0,2.0,FINALIZADO,2026-11-20 20:12:35,2 x 1,ULTIMO_OBSERVADO,ALTA,100.0,,13
-19722743-1,2026-11-21 15:47:35,19722743,Falkirk x St. Johnstone,6,1,1 x 0,PÓS_GOL,St. Johnstone,57.7,15.4,50.0,54.0,2.0,AO_VIVO,,,,ALTA,100.0,,1
+19722743-1,2026-11-21 15:52:35,19722743,Falkirk x St. Johnstone,6,1,1 x 0,PÓS_GOL,St. Johnstone,57.7,15.4,50.0,54.0,2.0,AO_VIVO,,,,ALTA,100.0,,1
 19722742-1,2026-11-21 15:32:35,19722742,Hibernian x Dundee United,8,1,0 x 1,PÓS_GOL,Hibernian,53.1,6.2,50.0,52.0,0.0,AO_VIVO,,,,ALTA,100.0,,2
 19722745-1,2026-11-21 15:07:35,19722745,Celtic x St. Mirren,7,1,0 x 0,BAIXA,Celtic,50.0,0.0,50.0,50.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
 19722741-1,2026-11-21 15:07:35,19722741,Kilmarnock x Aberdeen,7,1,0 x 0,BAIXA,Kilmarnock,66.2,32.4,50.0,44.0,1.0,AO_VIVO,,,,ALTA,100.0,,0
@@ -1180,7 +1180,7 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19722745-4,2026-11-21 15:22:35,19722745,Celtic x St. Mirren,22,4,0 x 0,BAIXA,St. Mirren,51.8,3.6,50.0,51.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
 19722741-3,2026-11-21 15:27:35,19722741,Kilmarnock x Aberdeen,19,3,1 x 2,PÓS_GOL,Kilmarnock,67.0,34.0,50.0,48.0,5.0,AO_VIVO,,,,ALTA,100.0,,4
 19722745-5,2026-11-21 15:27:35,19722745,Celtic x St. Mirren,27,5,0 x 0,BAIXA,Celtic,50.3,0.6,50.0,54.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
-19722741-6,2026-11-21 15:47:35,19722741,Kilmarnock x Aberdeen,30,6,1 x 3,PÓS_GOL,Kilmarnock,65.5,31.0,50.0,54.0,6.0,AO_VIVO,,,,ALTA,100.0,,5
+19722741-6,2026-11-21 15:52:35,19722741,Kilmarnock x Aberdeen,30,6,1 x 3,PÓS_GOL,Kilmarnock,65.5,31.0,50.0,54.0,6.0,AO_VIVO,,,,ALTA,100.0,,5
 19722745-6,2026-11-21 15:37:35,19722745,Celtic x St. Mirren,33,6,1 x 0,PÓS_GOL,St. Mirren,50.2,0.4,50.0,48.0,0.0,AO_VIVO,,,,ALTA,100.0,,1
-19722742-7,2026-11-21 15:47:35,19722742,Hibernian x Dundee United,39,7,0 x 2,PÓS_GOL,Hibernian,52.7,5.4,50.0,53.0,0.0,AO_VIVO,,,,ALTA,100.0,,6
-19722745-8,2026-11-21 15:47:35,19722745,Celtic x St. Mirren,42,8,3 x 0,PÓS_GOL,Celtic,50.3,0.6,50.0,53.0,0.0,AO_VIVO,,,,ALTA,100.0,,3
+19722742-7,2026-11-21 15:52:35,19722742,Hibernian x Dundee United,39,7,0 x 2,PÓS_GOL,Hibernian,52.5,5.0,50.0,54.0,0.0,AO_VIVO,,,,ALTA,100.0,,6
+19722745-8,2026-11-21 15:52:35,19722745,Celtic x St. Mirren,42,8,3 x 0,PÓS_GOL,St. Mirren,51.7,3.4,50.0,48.0,1.0,AO_VIVO,,,,ALTA,100.0,,3
