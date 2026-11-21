@@ -1226,4 +1226,4 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19722740-0,2026-11-21 20:02:35,19722740,Motherwell x Rangers,2,0,0 x 0,BAIXA,Rangers,63.4,26.8,50.0,60.0,1.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.dribbles, away.dribbles",0
 19722740-1,2026-11-21 20:12:35,19722740,Motherwell x Rangers,8,1,0 x 1,PÓS_GOL,Rangers,64.0,28.0,50.0,70.0,4.0,AO_VIVO,,,,ALTA,100.0,,1
 19722740-2,2026-11-21 20:22:35,19722740,Motherwell x Rangers,14,2,1 x 1,BAIXA,Rangers,61.3,22.6,50.0,73.0,4.0,AO_VIVO,,,,ALTA,100.0,,2
-19722740-4,2026-11-21 20:42:35,19722740,Motherwell x Rangers,21,4,1 x 1,PÓS_GOL,Rangers,60.1,20.2,50.0,63.0,7.0,AO_VIVO,,,,ALTA,100.0,,3
+19722740-4,2026-11-21 20:47:35,19722740,Motherwell x Rangers,21,4,1 x 1,PÓS_GOL,Rangers,58.9,17.8,50.0,61.0,7.0,AO_VIVO,,,,ALTA,100.0,,3
