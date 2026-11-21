@@ -1190,4 +1190,7 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19722742-10,2026-11-21 16:12:35,19722742,Hibernian x Dundee United,53,10,0 x 3,PÓS_GOL,Hibernian,51.0,2.0,50.0,52.0,0.0,AO_VIVO,,,,ALTA,100.0,,7
 19722742-11,2026-11-21 16:17:35,19722742,Hibernian x Dundee United,58,11,0 x 3,BAIXA,Dundee United,51.9,3.8,50.0,50.0,0.0,AO_VIVO,,,,ALTA,100.0,,9
 19722741-11,2026-11-21 16:17:35,19722741,Kilmarnock x Aberdeen,57,11,2 x 3,PÓS_GOL,Kilmarnock,58.8,17.6,50.0,55.0,9.0,AO_VIVO,,,,ALTA,100.0,,9
-19722743-11,2026-11-21 16:17:35,19722743,Falkirk x St. Johnstone,58,11,2 x 0,BAIXA,St. Johnstone,60.0,20.0,50.0,58.0,4.0,AO_VIVO,,,,ALTA,100.0,,7
+19722743-11,2026-11-21 16:22:35,19722743,Falkirk x St. Johnstone,58,11,2 x 0,BAIXA,St. Johnstone,60.5,21.0,50.0,60.0,4.0,AO_VIVO,,,,ALTA,100.0,,7
+19722742-12,2026-11-21 16:22:35,19722742,Hibernian x Dundee United,60,12,0 x 4,PÓS_GOL,Dundee United,52.5,5.0,50.0,51.0,0.0,AO_VIVO,,,,ALTA,100.0,,13
+19722741-12,2026-11-21 16:22:35,19722741,Kilmarnock x Aberdeen,61,12,2 x 3,BAIXA,Kilmarnock,60.8,21.6,50.0,55.0,9.0,AO_VIVO,,,,ALTA,100.0,,11
+19722745-12,2026-11-21 16:22:35,19722745,Celtic x St. Mirren,61,12,3 x 0,BAIXA,St. Mirren,50.2,0.4,50.0,48.0,1.0,AO_VIVO,,,,ALTA,100.0,,5
