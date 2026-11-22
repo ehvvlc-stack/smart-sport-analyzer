@@ -1235,3 +1235,5 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713845-0,2026-11-22 13:02:35,19713845,Horsens x Silkeborg IF,2,0,0 x 0,BAIXA,Horsens,54.7,9.4,50.0,71.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
 19713851-1,2026-11-22 13:07:35,19713851,Viborg FF x Randers FC,7,1,0 x 0,BAIXA,Viborg FF,56.2,12.4,50.0,78.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
 19713845-1,2026-11-22 13:07:35,19713845,Horsens x Silkeborg IF,7,1,0 x 0,BAIXA,Silkeborg IF,57.0,14.0,50.0,53.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
+19713851-2,2026-11-22 13:12:35,19713851,Viborg FF x Randers FC,12,2,0 x 0,BAIXA,Viborg FF,59.9,19.8,50.0,66.0,0.0,AO_VIVO,,,,ALTA,100.0,,0
+19713845-2,2026-11-22 13:12:35,19713845,Horsens x Silkeborg IF,12,2,0 x 0,BAIXA,Silkeborg IF,55.5,11.0,50.0,46.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
