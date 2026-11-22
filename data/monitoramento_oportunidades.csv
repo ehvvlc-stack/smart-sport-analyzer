@@ -1285,4 +1285,4 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713848-12,2026-11-22 18:22:35,19713848,Nordsjælland x FC København,62,12,1 x 0,BAIXA,FC København,53.9,7.8,50.0,52.0,2.0,AO_VIVO,,,,ALTA,100.0,,8
 19713848-13,2026-11-22 18:27:35,19713848,Nordsjælland x FC København,67,13,2 x 0,PÓS_GOL,FC København,51.6,3.2,50.0,50.0,1.0,AO_VIVO,,,,ALTA,100.0,,12
 19713848-14,2026-11-22 18:37:35,19713848,Nordsjælland x FC København,74,14,4 x 0,PÓS_GOL,FC København,50.1,0.2,50.0,51.0,1.0,AO_VIVO,,,,ALTA,100.0,,16
-19713848-16,2026-11-22 18:47:35,19713848,Nordsjælland x FC København,84,16,5 x 0,PÓS_GOL,Nordsjælland,50.1,0.2,50.0,53.0,-1.0,AO_VIVO,,,,ALTA,100.0,,22
+19713848-16,2026-11-22 18:52:35,19713848,Nordsjælland x FC København,84,16,5 x 0,PÓS_GOL,FC København,50.1,0.2,50.0,47.0,1.0,AO_VIVO,,,,ALTA,100.0,,22
