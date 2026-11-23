@@ -1286,4 +1286,4 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713848-13,2026-11-22 18:27:35,19713848,Nordsjælland x FC København,67,13,2 x 0,PÓS_GOL,FC København,51.6,3.2,50.0,50.0,1.0,FINALIZADO,2026-11-22 19:32:36,5 x 0,ULTIMO_OBSERVADO,ALTA,100.0,,12
 19713848-14,2026-11-22 18:37:35,19713848,Nordsjælland x FC København,74,14,4 x 0,PÓS_GOL,FC København,50.1,0.2,50.0,51.0,1.0,FINALIZADO,2026-11-22 19:32:36,5 x 0,ULTIMO_OBSERVADO,ALTA,100.0,,16
 19713848-16,2026-11-22 19:07:35,19713848,Nordsjælland x FC København,84,16,5 x 0,PÓS_GOL,Nordsjælland,52.0,4.0,50.0,55.0,0.0,FINALIZADO,2026-11-22 19:32:36,5 x 0,ULTIMO_OBSERVADO,ALTA,100.0,,22
-19713853-1,2026-11-23 18:12:35,19713853,Brøndby IF x FC Midtjylland,6,1,0 x 0,BAIXA,Brøndby IF,54.1,8.2,50.0,59.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",1
+19713853-1,2026-11-23 18:17:35,19713853,Brøndby IF x FC Midtjylland,6,1,0 x 0,BAIXA,FC Midtjylland,50.3,0.6,50.0,51.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",1
