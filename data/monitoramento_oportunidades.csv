@@ -1296,3 +1296,4 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19713853-17,2026-11-23 20:07:35,19713853,Brøndby IF x FC Midtjylland,86,17,0 x 2,BAIXA,Brøndby IF,61.7,23.4,50.0,54.0,6.0,FINALIZADO,2026-11-23 20:12:35,0 x 2,ULTIMO_OBSERVADO,ALTA,100.0,,21
 19722755-1,2026-11-24 19:52:35,19722755,Hibernian x Dundee,7,1,0 x 0,BAIXA,Hibernian,62.8,25.6,50.0,79.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
 19722755-2,2026-11-24 19:57:35,19722755,Hibernian x Dundee,12,2,0 x 0,BAIXA,Hibernian,52.8,5.6,50.0,72.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
+19722755-3,2026-11-24 20:02:35,19722755,Hibernian x Dundee,17,3,0 x 0,BAIXA,Hibernian,52.3,4.6,50.0,70.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
