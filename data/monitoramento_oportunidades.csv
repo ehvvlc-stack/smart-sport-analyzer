@@ -1297,3 +1297,5 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19722755-1,2026-11-24 19:52:35,19722755,Hibernian x Dundee,7,1,0 x 0,BAIXA,Hibernian,62.8,25.6,50.0,79.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
 19722755-2,2026-11-24 19:57:35,19722755,Hibernian x Dundee,12,2,0 x 0,BAIXA,Hibernian,52.8,5.6,50.0,72.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
 19722755-3,2026-11-24 20:02:35,19722755,Hibernian x Dundee,17,3,0 x 0,BAIXA,Hibernian,52.3,4.6,50.0,70.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
+19722755-4,2026-11-24 20:07:35,19722755,Hibernian x Dundee,22,4,0 x 0,BAIXA,Hibernian,63.3,26.6,50.0,72.0,1.0,AO_VIVO,,,,ALTA,100.0,,0
+19722752-1,2026-11-24 20:07:35,19722752,Rangers x Aberdeen,7,1,0 x 0,BAIXA,Rangers,64.3,28.6,50.0,64.0,1.0,AO_VIVO,,,,ALTA,100.0,,0
