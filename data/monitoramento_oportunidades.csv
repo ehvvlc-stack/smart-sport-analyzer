@@ -1322,4 +1322,4 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19722752-16,2026-11-24 21:47:35,19722752,Rangers x Aberdeen,84,16,3 x 2,BAIXA,Rangers,51.3,2.6,50.0,64.0,-1.0,FINALIZADO,2026-11-24 22:12:37,3 x 2,ULTIMO_OBSERVADO,ALTA,100.0,,19
 19722752-18,2026-11-24 22:07:35,19722752,Rangers x Aberdeen,90,18,3 x 2,BAIXA,Rangers,50.4,0.8,50.0,61.0,-1.0,FINALIZADO,2026-11-24 22:12:37,3 x 2,ULTIMO_OBSERVADO,ALTA,100.0,,22
 19713841-1,2026-11-27 18:07:35,19713841,Sønderjyske Fodbold x Brøndby IF,7,1,0 x 0,BAIXA,Sønderjyske Fodbold,58.4,16.8,50.0,59.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
-19713841-2,2026-11-27 18:42:36,19713841,Sønderjyske Fodbold x Brøndby IF,12,2,1 x 0,PÓS_GOL,Sønderjyske Fodbold,56.3,12.6,50.0,36.0,1.0,AO_VIVO,,,,ALTA,100.0,,1
+19713841-2,2026-11-27 18:47:35,19713841,Sønderjyske Fodbold x Brøndby IF,12,2,1 x 0,PÓS_GOL,Brøndby IF,54.2,8.4,50.0,65.0,0.0,AO_VIVO,,,,ALTA,100.0,,1
