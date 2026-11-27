@@ -1,5 +1,5 @@
 fixture_id,data_hora,status,casa_id,casa,fora_id,fora,competicao,rodada
-555105,2026-11-27T23:00:00Z,IN_PLAY,1765,Fluminense FC,1771,Cruzeiro EC,Campeonato Brasileiro Série A,37
+555105,2026-11-27T23:00:00Z,TIMED,1765,Fluminense FC,1771,Cruzeiro EC,Campeonato Brasileiro Série A,37
 555101,2026-11-29T00:00:00Z,TIMED,1770,Botafogo FR,1777,EC Bahia,Campeonato Brasileiro Série A,37
 555104,2026-11-29T19:00:00Z,TIMED,4241,Coritiba FBC,1783,CR Flamengo,Campeonato Brasileiro Série A,37
 555109,2026-11-29T19:00:00Z,TIMED,1782,EC Vitória,6685,Santos FC,Campeonato Brasileiro Série A,37
