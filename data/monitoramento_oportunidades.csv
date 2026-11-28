@@ -1386,3 +1386,4 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19722736-4,2026-11-28 18:07:35,19722736,Motherwell x Hibernian,22,4,0 x 0,BAIXA,Motherwell,54.8,9.6,50.0,43.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
 19722736-5,2026-11-28 18:12:35,19722736,Motherwell x Hibernian,27,5,0 x 0,BAIXA,Motherwell,66.2,32.4,50.0,44.0,2.0,AO_VIVO,,,,ALTA,100.0,,0
 19722736-6,2026-11-28 18:17:36,19722736,Motherwell x Hibernian,30,6,1 x 0,PÓS_GOL,Motherwell,66.8,33.6,50.0,47.0,2.0,AO_VIVO,,,,ALTA,100.0,,1
+19722736-7,2026-11-28 18:22:35,19722736,Motherwell x Hibernian,35,7,1 x 0,BAIXA,Motherwell,67.3,34.6,50.0,49.0,2.0,AO_VIVO,,,,ALTA,100.0,,2
