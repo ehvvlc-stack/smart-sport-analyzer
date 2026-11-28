@@ -1382,3 +1382,4 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19722735-18,2026-11-28 17:12:35,19722735,Rangers x Falkirk,90,18,2 x 1,BAIXA,Rangers,67.0,34.0,50.0,67.0,12.0,FINALIZADO,2026-11-28 17:17:35,2 x 1,ULTIMO_OBSERVADO,ALTA,100.0,,22
 19722736-1,2026-11-28 17:52:35,19722736,Motherwell x Hibernian,7,1,0 x 0,BAIXA,Motherwell,53.0,6.0,50.0,35.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
 19722736-2,2026-11-28 17:57:35,19722736,Motherwell x Hibernian,12,2,0 x 0,BAIXA,Motherwell,55.2,10.4,50.0,45.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
+19722736-3,2026-11-28 18:02:35,19722736,Motherwell x Hibernian,17,3,0 x 0,BAIXA,Motherwell,55.0,10.0,50.0,44.0,0.0,AO_VIVO,,,,MÃ‰DIA,66.7,"home.corners, away.corners",0
