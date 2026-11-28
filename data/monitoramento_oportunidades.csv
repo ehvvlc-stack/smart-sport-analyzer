@@ -1368,4 +1368,7 @@ id_snapshot,data_hora,fixture_id,jogo,minuto,bucket_5min,placar,nivel,time_desta
 19722734-13,2026-11-28 16:27:35,19722734,St. Mirren x Kilmarnock,68,13,1 x 4,PÓS_GOL,Kilmarnock,53.2,6.4,50.0,38.0,5.0,AO_VIVO,,,,ALTA,100.0,,9
 19722738-14,2026-11-28 16:32:36,19722738,Dundee United x St. Johnstone,71,14,2 x 6,BAIXA,Dundee United,53.2,6.4,50.0,60.0,2.0,AO_VIVO,,,,ALTA,100.0,,14
 19722739-14,2026-11-28 16:32:36,19722739,Aberdeen x Dundee,72,14,2 x 0,BAIXA,Aberdeen,54.3,8.6,50.0,55.0,2.0,AO_VIVO,,,,ALTA,100.0,,12
-19722734-14,2026-11-28 16:32:36,19722734,St. Mirren x Kilmarnock,73,14,1 x 4,BAIXA,Kilmarnock,53.6,7.2,50.0,38.0,5.0,AO_VIVO,,,,ALTA,100.0,,13
+19722734-14,2026-11-28 16:37:35,19722734,St. Mirren x Kilmarnock,73,14,1 x 4,BAIXA,Kilmarnock,53.1,6.2,50.0,37.0,4.0,AO_VIVO,,,,ALTA,100.0,,13
+19722739-16,2026-11-28 16:37:35,19722739,Aberdeen x Dundee,81,16,2 x 0,BAIXA,Aberdeen,54.9,9.8,50.0,56.0,2.0,AO_VIVO,,,,ALTA,100.0,,14
+19722735-14,2026-11-28 16:37:35,19722735,Rangers x Falkirk,74,14,0 x 1,BAIXA,Rangers,66.4,32.8,50.0,65.0,8.0,AO_VIVO,,,,ALTA,100.0,,16
+19722738-15,2026-11-28 16:37:35,19722738,Dundee United x St. Johnstone,78,15,2 x 6,BAIXA,Dundee United,53.3,6.6,50.0,60.0,2.0,AO_VIVO,,,,ALTA,100.0,,16
